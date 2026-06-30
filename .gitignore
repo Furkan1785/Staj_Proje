@@ -1,0 +1,43 @@
+# .NET
+**/obj/
+**/bin/
+*.user
+.vs/
+*.suo
+
+# NuGet
+*.nupkg
+packages/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+# ASP.NET / Publish
+**/publish/
+**/Properties/launchSettings.json
+
+# Entity Framework
+*.db
+*.db-shm
+*.db-wal
+
+# Docker / env
+.env
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
