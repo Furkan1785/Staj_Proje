@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SakaryaERP.Data;
+using SakaryaERP.Data.Repositories;
+using SakaryaERP.Middleware;
 using SakaryaERP.Models;
+using SakaryaERP.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +29,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ICariRepository, CariRepository>();
+builder.Services.AddScoped<ICariService, CariService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -33,9 +38,11 @@ var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
