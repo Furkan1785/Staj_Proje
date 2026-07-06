@@ -1,6 +1,16 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SakaryaERP.Models;
 
-public enum CariTipi { Musteri, Tedarikci, HerIkisi }
+public enum CariTipi
+{
+    [Display(Name = "Müşteri")]
+    Musteri,
+    [Display(Name = "Tedarikçi")]
+    Tedarikci,
+    [Display(Name = "Her İkisi")]
+    HerIkisi
+}
 
 public enum FisTipi { Borc, Alacak, Mahsup }
 

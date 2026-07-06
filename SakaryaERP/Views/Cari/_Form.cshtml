@@ -1,0 +1,53 @@
+@model CariFormViewModel
+
+<input type="hidden" asp-for="Id" />
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <label asp-for="CariKodu" class="form-label"></label>
+        <input asp-for="CariKodu" class="form-control" />
+        <span asp-validation-for="CariKodu" class="text-danger"></span>
+    </div>
+    <div class="col-md-5">
+        <label asp-for="Unvan" class="form-label"></label>
+        <input asp-for="Unvan" class="form-control" />
+        <span asp-validation-for="Unvan" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="CariTipi" class="form-label"></label>
+        <select asp-for="CariTipi" class="form-select" asp-items="Html.GetEnumSelectList<CariTipi>()"></select>
+        <span asp-validation-for="CariTipi" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="VergiNo" class="form-label"></label>
+        <input asp-for="VergiNo" class="form-control" />
+        <span asp-validation-for="VergiNo" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Telefon" class="form-label"></label>
+        <input asp-for="Telefon" class="form-control" />
+        <span asp-validation-for="Telefon" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="EMail" class="form-label"></label>
+        <input asp-for="EMail" class="form-control" />
+        <span asp-validation-for="EMail" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-8">
+        <label asp-for="Adres" class="form-label"></label>
+        <textarea asp-for="Adres" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Adres" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="KrediLimiti" class="form-label"></label>
+        <input asp-for="KrediLimiti" class="form-control" />
+        <span asp-validation-for="KrediLimiti" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="mt-4">
+    <button type="submit" class="btn btn-primary">Kaydet</button>
+    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+</div>
