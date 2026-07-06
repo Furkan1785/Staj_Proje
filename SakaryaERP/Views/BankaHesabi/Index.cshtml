@@ -93,7 +93,15 @@
             var tablo = new DataTable('#bankaHesabiTablosu', {
                 order: [[0, 'asc']],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
-                columnDefs: [{ targets: -1, orderable: false, searchable: false }]
+                columns: [
+                    null, // Hesap Adı
+                    null, // Banka Adı
+                    null, // IBAN
+                    null, // Bakiye
+                    null, // Para Birimi
+                    null, // Durum
+                    { orderable: false, searchable: false } // İşlemler
+                ]
             });
 
             tablo.on('draw', function () {

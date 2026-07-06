@@ -87,7 +87,13 @@
             var tablo = new DataTable('#kasaHesabiTablosu', {
                 order: [[0, 'asc']],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
-                columnDefs: [{ targets: -1, orderable: false, searchable: false }]
+                columns: [
+                    null, // Kasa Adı
+                    null, // Bakiye
+                    null, // Para Birimi
+                    null, // Durum
+                    { orderable: false, searchable: false } // İşlemler
+                ]
             });
 
             tablo.on('draw', function () {

@@ -84,7 +84,12 @@
             var tablo = new DataTable('#subeTablosu', {
                 order: [[0, 'asc']],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
-                columnDefs: [{ targets: -1, orderable: false, searchable: false }]
+                columns: [
+                    null, // Şube Adı
+                    null, // Adres
+                    null, // Durum
+                    { orderable: false, searchable: false } // İşlemler
+                ]
             });
 
             tablo.on('draw', function () {
