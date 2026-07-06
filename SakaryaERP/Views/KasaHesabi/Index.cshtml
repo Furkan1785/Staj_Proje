@@ -99,7 +99,6 @@
             tablo.on('draw', function () {
                 document.getElementById('kayitSayaci').textContent = tablo.rows({ search: 'applied' }).count() + ' kayıt';
             });
-            tablo.draw();
 
             sutunFiltreleriBagla('kasaHesabiTablosu', tablo);
         });
