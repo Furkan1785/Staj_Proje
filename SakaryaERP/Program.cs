@@ -31,6 +31,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICariRepository, CariRepository>();
 builder.Services.AddScoped<ICariService, CariService>();
+builder.Services.AddScoped<IBankaHesabiService, BankaHesabiService>();
+builder.Services.AddScoped<IKasaHesabiService, KasaHesabiService>();
+builder.Services.AddScoped<ISubeService, SubeService>();
 
 builder.Services.AddControllersWithViews();
 

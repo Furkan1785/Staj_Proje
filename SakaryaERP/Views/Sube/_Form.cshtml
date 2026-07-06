@@ -1,0 +1,21 @@
+@model SubeFormViewModel
+
+<input type="hidden" asp-for="Id" />
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="SubeAdi" class="form-label"></label>
+        <input asp-for="SubeAdi" class="form-control" />
+        <span asp-validation-for="SubeAdi" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Adres" class="form-label"></label>
+        <textarea asp-for="Adres" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Adres" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="mt-4">
+    <button type="submit" class="btn btn-primary">Kaydet</button>
+    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+</div>

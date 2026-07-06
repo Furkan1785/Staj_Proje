@@ -12,4 +12,8 @@ public interface IRepository<T> where T : BaseEntity
     void Update(T entity);
     void SoftDelete(T entity);
     IQueryable<T> Query();
+
+    // Global soft-delete filtresini yok sayar; pasif kayıtları da döndürür (Aktif Et için gerekli)
+    IQueryable<T> QueryTumu();
+    Task<T?> GetByIdTumuAsync(int id);
 }

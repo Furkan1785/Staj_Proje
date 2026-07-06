@@ -1,0 +1,15 @@
+@model BankaHesabiFormViewModel
+@{
+    ViewData["Title"] = "Banka Hesabı Düzenle";
+}
+
+<h3 class="mb-4">Banka Hesabı Düzenle</h3>
+
+<form asp-action="Duzenle" method="post" class="p-4 border rounded bg-white">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <partial name="_Form" model="Model" />
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

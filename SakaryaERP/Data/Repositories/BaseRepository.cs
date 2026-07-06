@@ -39,4 +39,10 @@ public class BaseRepository<T> : IRepository<T> where T : BaseEntity
 
     public IQueryable<T> Query()
         => _dbSet.AsQueryable();
+
+    public IQueryable<T> QueryTumu()
+        => _dbSet.IgnoreQueryFilters();
+
+    public Task<T?> GetByIdTumuAsync(int id)
+        => _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id);
 }

@@ -1,0 +1,15 @@
+@model SubeFormViewModel
+@{
+    ViewData["Title"] = "Yeni Şube";
+}
+
+<h3 class="mb-4">Yeni Şube</h3>
+
+<form asp-action="Ekle" method="post" class="p-4 border rounded bg-white">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <partial name="_Form" model="Model" />
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
