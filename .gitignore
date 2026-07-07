@@ -41,3 +41,7 @@ Thumbs.db
 # IDE
 .idea/
 *.swp
+
+# Node (scripts/)
+node_modules/
+package-lock.json

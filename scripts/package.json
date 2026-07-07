@@ -1,0 +1,8 @@
+{
+  "name": "sakaryaerp-scripts",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "chrome-remote-interface": "^0.34.0"
+  }
+}
