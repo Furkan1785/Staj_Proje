@@ -95,10 +95,7 @@
                 document.getElementById('kayitSayaci').textContent = json.recordsFiltered + ' kayıt';
             });
 
-            document.querySelectorAll('#cariFisiTablosu thead tr:nth-child(2) .sutun-filtre').forEach(function (eleman, index) {
-                eleman.addEventListener('keyup', function () { tablo.column(index).search(this.value).draw(); });
-                eleman.addEventListener('change', function () { tablo.column(index).search(this.value).draw(); });
-            });
+            sutunFiltreleriBagla('cariFisiTablosu', tablo);
         });
     </script>
 }
