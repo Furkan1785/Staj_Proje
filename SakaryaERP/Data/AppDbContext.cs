@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SakaryaERP.Models;
 
 namespace SakaryaERP.Data;
@@ -51,6 +52,28 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
             var condition = Expression.Equal(property, Expression.Constant(false));
             var lambda = Expression.Lambda(condition, parameter);
             modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
+        }
+
+        // Npgsql, DateTime.Kind'a göre sütun tipini zorluyor: "with time zone" sadece Kind=Utc,
+        // "without time zone" sadece Kind=Unspecified kabul ediyor. Uygulama tek saat diliminde (TR)
+        // çalıştığından tüm DateTime sütunlarını "without time zone" yapıp, hangi Kind ile gelirse gelsin
+        // (form'dan Unspecified, DateTime.UtcNow'dan Utc, DateTime.Now/Today'den Local) bir value converter
+        // ile Unspecified'a normalize ediyoruz. Böylece her yeni tarih alanında (Gün 8 Vade Tarihi vb.)
+        // bu hatayla tekrar karşılaşılmaz.
+        var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+            v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified),
+            v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified));
+
+        var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Unspecified) : v,
+            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Unspecified) : v);
+
+        foreach (var property in modelBuilder.Model.GetEntityTypes()
+            .SelectMany(t => t.GetProperties())
+            .Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)))
+        {
+            property.SetColumnType("timestamp without time zone");
+            property.SetValueConverter(property.ClrType == typeof(DateTime) ? dateTimeConverter : nullableDateTimeConverter);
         }
 
         // HesapPlani öz-ilişki (hiyerarşik)
@@ -178,6 +201,10 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
 
         modelBuilder.Entity<HesapPlani>()
             .HasIndex(h => h.HesapKodu)
+            .IsUnique();
+
+        modelBuilder.Entity<CariFisi>()
+            .HasIndex(f => f.FisNo)
             .IsUnique();
     }
 

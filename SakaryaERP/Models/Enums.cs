@@ -12,9 +12,25 @@ public enum CariTipi
     HerIkisi
 }
 
-public enum FisTipi { Borc, Alacak, Mahsup }
+public enum FisTipi
+{
+    [Display(Name = "Borç")]
+    Borc,
+    [Display(Name = "Alacak")]
+    Alacak,
+    [Display(Name = "Mahsup")]
+    Mahsup
+}
 
-public enum OdemeYontemi { Nakit, Havale, KrediKarti }
+public enum OdemeYontemi
+{
+    [Display(Name = "Nakit")]
+    Nakit,
+    [Display(Name = "Havale")]
+    Havale,
+    [Display(Name = "Kredi Kartı")]
+    KrediKarti
+}
 
 public enum BelgeTipi { Cek, Senet }
 

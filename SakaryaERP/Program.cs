@@ -34,6 +34,7 @@ builder.Services.AddScoped<ICariService, CariService>();
 builder.Services.AddScoped<IBankaHesabiService, BankaHesabiService>();
 builder.Services.AddScoped<IKasaHesabiService, KasaHesabiService>();
 builder.Services.AddScoped<ISubeService, SubeService>();
+builder.Services.AddScoped<ICariFisiService, CariFisiService>();
 
 builder.Services.AddControllersWithViews();
 

@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Cari Fişleri";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Cari Fişleri</h3>
+    <div class="d-flex align-items-center gap-3">
+        <span id="kayitSayaci" class="badge bg-secondary">0 kayıt</span>
+        <a asp-action="Ekle" class="btn btn-primary">+ Yeni Fiş</a>
+    </div>
+</div>
+
+@if (TempData["Basari"] != null)
+{
+    <div class="alert alert-success">@TempData["Basari"]</div>
+}
+
+<div class="table-responsive">
+    <table id="cariFisiTablosu" class="table table-striped table-bordered align-middle w-100 grid-sticky-header">
+        <thead>
+            <tr>
+                <th>Fiş No</th>
+                <th>Tarih</th>
+                <th>Cari</th>
+                <th>Fiş Tipi</th>
+                <th>Tutar</th>
+                <th>Ödeme Yöntemi</th>
+                <th>Banka/Kasa Hesabı</th>
+                <th>Açıklama</th>
+            </tr>
+            <tr>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th>
+                    <select class="form-select form-select-sm sutun-filtre">
+                        <option value="">Tümü</option>
+                        <option value="Borc">Borç</option>
+                        <option value="Alacak">Alacak</option>
+                        <option value="Mahsup">Mahsup</option>
+                    </select>
+                </th>
+                <th></th>
+                <th>
+                    <select class="form-select form-select-sm sutun-filtre">
+                        <option value="">Tümü</option>
+                        <option value="Nakit">Nakit</option>
+                        <option value="Havale">Havale</option>
+                        <option value="KrediKarti">Kredi Kartı</option>
+                    </select>
+                </th>
+                <th></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.bootstrap5.min.css" />
+    <script src="~/lib/datatables/js/dataTables.min.js"></script>
+    <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            var tablo = new DataTable('#cariFisiTablosu', {
+                processing: true,
+                serverSide: true,
+                ajax: { url: '@Url.Action("ListeVerisi", "CariFisi")', type: 'POST' },
+                order: [[1, 'desc']],
+                language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
+                columns: [
+                    { data: 'fisNo' },
+                    {
+                        data: 'tarih',
+                        render: function (data) {
+                            return new Date(data).toLocaleDateString('tr-TR');
+                        }
+                    },
+                    { data: 'cariUnvan' },
+                    { data: 'fisTipiText' },
+                    {
+                        data: 'tutar',
+                        render: function (data) {
+                            return Number(data).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+                        }
+                    },
+                    { data: 'odemeYontemiText' },
+                    { data: 'hesapAdi', defaultContent: '' },
+                    { data: 'aciklama', defaultContent: '' }
+                ]
+            });
+
+            tablo.on('xhr.dt', function (e, settings, json) {
+                document.getElementById('kayitSayaci').textContent = json.recordsFiltered + ' kayıt';
+            });
+
+            document.querySelectorAll('#cariFisiTablosu thead tr:nth-child(2) .sutun-filtre').forEach(function (eleman, index) {
+                eleman.addEventListener('keyup', function () { tablo.column(index).search(this.value).draw(); });
+                eleman.addEventListener('change', function () { tablo.column(index).search(this.value).draw(); });
+            });
+        });
+    </script>
+}
