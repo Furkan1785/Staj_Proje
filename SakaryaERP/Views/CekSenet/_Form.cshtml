@@ -1,0 +1,55 @@
+@model CekSenetFormViewModel
+
+<input type="hidden" asp-for="Id" />
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <label asp-for="BelgeTipi" class="form-label"></label>
+        <select asp-for="BelgeTipi" class="form-select" asp-items="Html.GetEnumSelectList<BelgeTipi>()"></select>
+        <span asp-validation-for="BelgeTipi" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="BelgeNo" class="form-label"></label>
+        <input asp-for="BelgeNo" class="form-control" />
+        <span asp-validation-for="BelgeNo" class="text-danger"></span>
+    </div>
+    <div class="col-md-5">
+        <label asp-for="CariId" class="form-label"></label>
+        <select asp-for="CariId" class="form-select" asp-items="Model.CariListesi">
+            <option value="">Seçiniz</option>
+        </select>
+        <span asp-validation-for="CariId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3">
+        <label asp-for="VadeTarihi" class="form-label"></label>
+        <input asp-for="VadeTarihi" class="form-control" />
+        <span asp-validation-for="VadeTarihi" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="Tutar" class="form-label"></label>
+        <input asp-for="Tutar" class="form-control" />
+        <span asp-validation-for="Tutar" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="BankaAdi" class="form-label"></label>
+        <input asp-for="BankaAdi" class="form-control" />
+        <span asp-validation-for="BankaAdi" class="text-danger"></span>
+    </div>
+    <div class="col-md-3">
+        <label asp-for="SubeAdi" class="form-label"></label>
+        <input asp-for="SubeAdi" class="form-control" />
+        <span asp-validation-for="SubeAdi" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-8">
+        <label asp-for="CiroBilgisi" class="form-label"></label>
+        <textarea asp-for="CiroBilgisi" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="CiroBilgisi" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="mt-4">
+    <button type="submit" class="btn btn-primary">Kaydet</button>
+    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+</div>

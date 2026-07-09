@@ -38,5 +38,10 @@ public static class DbSeeder
         await cariFisiService.CreateAsync(new CariFisi { CariId = cari1.Id, Tarih = DateTime.Today.AddDays(-10), FisTipi = FisTipi.Borc, Tutar = 15000, OdemeYontemi = OdemeYontemi.Havale, BankaHesabiId = banka1.Id, Aciklama = "Satış faturası borçlandırma" });
         await cariFisiService.CreateAsync(new CariFisi { CariId = cari1.Id, Tarih = DateTime.Today.AddDays(-3), FisTipi = FisTipi.Alacak, Tutar = 5000, OdemeYontemi = OdemeYontemi.Havale, BankaHesabiId = banka1.Id, Aciklama = "Kısmi tahsilat" });
         await cariFisiService.CreateAsync(new CariFisi { CariId = cari2.Id, Tarih = DateTime.Today.AddDays(-5), FisTipi = FisTipi.Borc, Tutar = 8000, OdemeYontemi = OdemeYontemi.Nakit, KasaHesabiId = kasa1.Id, Aciklama = "Nakit ödeme" });
+
+        var cekSenetService = services.GetRequiredService<ICekSenetService>();
+        await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Cek, BelgeNo = "0123456", CariId = cari1.Id, VadeTarihi = DateTime.Today.AddDays(-4), Tutar = 12000, BankaAdi = "Garanti BBVA", SubeAdi = "Kadıköy Şubesi" });
+        await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Senet, BelgeNo = "S-2026-014", CariId = cari2.Id, VadeTarihi = DateTime.Today, Tutar = 6500, BankaAdi = null, SubeAdi = null });
+        await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Cek, BelgeNo = "0123789", CariId = cari2.Id, VadeTarihi = DateTime.Today.AddDays(20), Tutar = 9800, BankaAdi = "İş Bankası", SubeAdi = "Serdivan Şubesi" });
     }
 }

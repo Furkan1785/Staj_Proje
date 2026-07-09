@@ -32,9 +32,27 @@ public enum OdemeYontemi
     KrediKarti
 }
 
-public enum BelgeTipi { Cek, Senet }
+public enum BelgeTipi
+{
+    [Display(Name = "Çek")]
+    Cek,
+    [Display(Name = "Senet")]
+    Senet
+}
 
-public enum CekSenetDurum { Portfolyde, Tahsilde, Ciro, Karsiliqsiz, TahsilEdildi }
+public enum CekSenetDurum
+{
+    [Display(Name = "Portföyde")]
+    Portfoyde,
+    [Display(Name = "Tahsilde")]
+    Tahsilde,
+    [Display(Name = "Ciro")]
+    Ciro,
+    [Display(Name = "Karşılıksız")]
+    Karsiliksiz,
+    [Display(Name = "Tahsil Edildi")]
+    TahsilEdildi
+}
 
 public enum HesapTipi { Aktif, Pasif, Gelir, Gider, Ozkaynak }
 

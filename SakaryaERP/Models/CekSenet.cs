@@ -10,7 +10,7 @@ public class CekSenet : BaseEntity
     public decimal Tutar { get; set; }
     public string? BankaAdi { get; set; }
     public string? SubeAdi { get; set; }
-    public CekSenetDurum Durum { get; set; } = CekSenetDurum.Portfolyde;
+    public CekSenetDurum Durum { get; set; } = CekSenetDurum.Portfoyde;
 
     public Cari Cari { get; set; } = null!;
 }
