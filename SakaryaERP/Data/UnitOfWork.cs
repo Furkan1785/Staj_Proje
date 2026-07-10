@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SakaryaERP.Data.Repositories;
 using SakaryaERP.Models;
 
@@ -26,6 +28,9 @@ public class UnitOfWork : IUnitOfWork
 
     public Task<int> SaveChangesAsync()
         => _context.SaveChangesAsync();
+
+    public Task<IDbContextTransaction> BeginTransactionAsync()
+        => _context.Database.BeginTransactionAsync();
 
     public void Dispose()
         => _context.Dispose();

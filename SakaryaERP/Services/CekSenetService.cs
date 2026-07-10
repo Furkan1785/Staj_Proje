@@ -7,10 +7,12 @@ namespace SakaryaERP.Services;
 public class CekSenetService : ICekSenetService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICariFisiService _cariFisiService;
 
-    public CekSenetService(IUnitOfWork unitOfWork)
+    public CekSenetService(IUnitOfWork unitOfWork, ICariFisiService cariFisiService)
     {
         _unitOfWork = unitOfWork;
+        _cariFisiService = cariFisiService;
     }
 
     public async Task<IEnumerable<CekSenet>> GetAllAsync()
@@ -99,5 +101,79 @@ public class CekSenetService : ICekSenetService
 
         var kayitlar = await query.Skip(start).Take(length).ToListAsync();
         return (kayitlar, toplamKayit, filtrelenmisKayit);
+    }
+
+    public async Task TahsileVerAsync(int id)
+    {
+        var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+
+        if (cekSenet.Durum != CekSenetDurum.Portfoyde)
+            throw new InvalidOperationException("Sadece portföydeki bir belge tahsile verilebilir.");
+
+        cekSenet.Durum = CekSenetDurum.Tahsilde;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task CiroEtAsync(int id, string ciroBilgisi)
+    {
+        var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+
+        if (cekSenet.Durum != CekSenetDurum.Portfoyde)
+            throw new InvalidOperationException("Sadece portföydeki bir belge ciro edilebilir.");
+
+        if (string.IsNullOrWhiteSpace(ciroBilgisi))
+            throw new InvalidOperationException("Ciro bilgisi girilmelidir.");
+
+        cekSenet.Durum = CekSenetDurum.Ciro;
+        cekSenet.CiroBilgisi = ciroBilgisi;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task KarsiliksizYapAsync(int id)
+    {
+        var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+
+        if (cekSenet.Durum != CekSenetDurum.Tahsilde)
+            throw new InvalidOperationException("Sadece tahsildeki bir belge karşılıksız işaretlenebilir.");
+
+        cekSenet.Durum = CekSenetDurum.Karsiliksiz;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    // Sadece bu geçişte otomatik cari hareketi oluşur (CLAUDE.md kuralı): belge fiilen
+    // tahsil edildiğinde cari alacaklanır ve seçilen banka/kasa hesabına para girer.
+    // CariFisi oluşturma + Durum güncellemesi tek transaction'da, ya hep ya hiç yapılır.
+    public async Task TahsilEdildiYapAsync(int id, int? bankaHesabiId, int? kasaHesabiId)
+    {
+        var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+
+        if (cekSenet.Durum != CekSenetDurum.Tahsilde)
+            throw new InvalidOperationException("Sadece tahsildeki bir belge tahsil edildi yapılabilir.");
+
+        if (bankaHesabiId is null && kasaHesabiId is null)
+            throw new InvalidOperationException("Tahsilatın yapıldığı banka veya kasa hesabı seçilmelidir.");
+
+        await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+        await _cariFisiService.CreateAsync(new CariFisi
+        {
+            CariId = cekSenet.CariId,
+            Tarih = DateTime.Today,
+            FisTipi = FisTipi.Alacak,
+            Tutar = cekSenet.Tutar,
+            OdemeYontemi = bankaHesabiId is not null ? OdemeYontemi.Havale : OdemeYontemi.Nakit,
+            BankaHesabiId = bankaHesabiId,
+            KasaHesabiId = kasaHesabiId,
+            Aciklama = $"{(cekSenet.BelgeTipi == BelgeTipi.Cek ? "Çek" : "Senet")} tahsilatı - Belge No: {cekSenet.BelgeNo}"
+        });
+
+        cekSenet.Durum = CekSenetDurum.TahsilEdildi;
+        await _unitOfWork.SaveChangesAsync();
+
+        await transaction.CommitAsync();
     }
 }

@@ -10,5 +10,6 @@ public class CekSenetListItemViewModel
     public decimal Tutar { get; set; }
     public string? BankaAdi { get; set; }
     public string? SubeAdi { get; set; }
+    public string Durum { get; set; } = "";
     public string DurumText { get; set; } = "";
 }

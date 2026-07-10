@@ -10,14 +10,34 @@ public class CekSenetController : Controller
 {
     private readonly ICekSenetService _cekSenetService;
     private readonly ICariService _cariService;
+    private readonly IBankaHesabiService _bankaHesabiService;
+    private readonly IKasaHesabiService _kasaHesabiService;
 
-    public CekSenetController(ICekSenetService cekSenetService, ICariService cariService)
+    public CekSenetController(
+        ICekSenetService cekSenetService,
+        ICariService cariService,
+        IBankaHesabiService bankaHesabiService,
+        IKasaHesabiService kasaHesabiService)
     {
         _cekSenetService = cekSenetService;
         _cariService = cariService;
+        _bankaHesabiService = bankaHesabiService;
+        _kasaHesabiService = kasaHesabiService;
     }
 
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index()
+    {
+        var bankaHesaplari = await _bankaHesabiService.GetAllAsync();
+        var kasaHesaplari = await _kasaHesabiService.GetAllAsync();
+
+        return View(new CekSenetIndexViewModel
+        {
+            BankaHesabiListesi = bankaHesaplari.Where(b => !b.IsDeleted)
+                .Select(b => new SelectListItem($"{b.HesapAdi} ({b.BankaAdi})", b.Id.ToString())),
+            KasaHesabiListesi = kasaHesaplari.Where(k => !k.IsDeleted)
+                .Select(k => new SelectListItem(k.KasaAdi, k.Id.ToString()))
+        });
+    }
 
     [HttpPost]
     public async Task<IActionResult> ListeVerisi()
@@ -47,6 +67,7 @@ public class CekSenetController : Controller
             Tutar = c.Tutar,
             BankaAdi = c.BankaAdi,
             SubeAdi = c.SubeAdi,
+            Durum = c.Durum.ToString(),
             DurumText = DurumMetni(c.Durum)
         });
 
@@ -150,6 +171,70 @@ public class CekSenetController : Controller
         }
 
         TempData["Basari"] = "Çek/Senet kaydı güncellendi.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TahsileVer(int id)
+    {
+        try
+        {
+            await _cekSenetService.TahsileVerAsync(id);
+            TempData["Basari"] = "Belge tahsile verildi.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CiroEt(int id, string ciroBilgisi)
+    {
+        try
+        {
+            await _cekSenetService.CiroEtAsync(id, ciroBilgisi);
+            TempData["Basari"] = "Belge ciro edildi.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TahsilEdildi(int id, int? bankaHesabiId, int? kasaHesabiId)
+    {
+        try
+        {
+            await _cekSenetService.TahsilEdildiYapAsync(id, bankaHesabiId, kasaHesabiId);
+            TempData["Basari"] = "Belge tahsil edildi, cari ve hesap bakiyesi güncellendi.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Karsiliksiz(int id)
+    {
+        try
+        {
+            await _cekSenetService.KarsiliksizYapAsync(id);
+            TempData["Basari"] = "Belge karşılıksız olarak işaretlendi.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
         return RedirectToAction(nameof(Index));
     }
 

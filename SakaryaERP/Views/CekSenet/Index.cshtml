@@ -1,3 +1,4 @@
+@model CekSenetIndexViewModel
 @{
     ViewData["Title"] = "Çek/Senet";
 }
@@ -14,6 +15,17 @@
 {
     <div class="alert alert-success">@TempData["Basari"]</div>
 }
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger">@TempData["Hata"]</div>
+}
+
+<p class="text-muted small mb-2">
+    Vade rengi (sadece Portföyde/Tahsilde belgeler için):
+    <span class="badge bg-danger">Vadesi geçmiş</span>
+    <span class="badge bg-warning text-dark">Vadesi bugün</span>
+    <span class="badge bg-success">Vadesi ileri tarihte</span>
+</p>
 
 <div class="table-responsive">
     <table id="cekSenetTablosu" class="table table-striped table-bordered align-middle w-100 grid-sticky-header">
@@ -60,12 +72,85 @@
     </table>
 </div>
 
+<form id="csrfTokenHolder" class="d-none">@Html.AntiForgeryToken()</form>
+
+<div class="modal fade" id="ciroModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" asp-action="CiroEt" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ciro Et</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="ciroId" />
+                <label class="form-label">Ciro Bilgisi</label>
+                <textarea name="ciroBilgisi" class="form-control" rows="2" required placeholder="Kime/hangi cariye ciro edildiği"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="tahsilEdildiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" asp-action="TahsilEdildi" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tahsil Edildi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="tahsilEdildiId" />
+                <input type="hidden" name="bankaHesabiId" id="tahsilEdildiBankaHesabiId" />
+                <input type="hidden" name="kasaHesabiId" id="tahsilEdildiKasaHesabiId" />
+                <label class="form-label">Tahsilatın Yapıldığı Hesap</label>
+                <select id="tahsilEdildiHesapSecimi" class="form-select" required>
+                    <option value="">Seçiniz</option>
+                    @if (Model.BankaHesabiListesi.Any())
+                    {
+                        <optgroup label="Banka Hesapları">
+                            @foreach (var b in Model.BankaHesabiListesi)
+                            {
+                                <option value="banka-@b.Value">@b.Text</option>
+                            }
+                        </optgroup>
+                    }
+                    @if (Model.KasaHesabiListesi.Any())
+                    {
+                        <optgroup label="Kasa Hesapları">
+                            @foreach (var k in Model.KasaHesabiListesi)
+                            {
+                                <option value="kasa-@k.Value">@k.Text</option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @section Scripts {
     <link rel="stylesheet" href="~/lib/datatables/css/dataTables.bootstrap5.min.css" />
     <script src="~/lib/datatables/js/dataTables.min.js"></script>
     <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(function () {
+            var csrfToken = document.querySelector('#csrfTokenHolder input[name="__RequestVerificationToken"]').value;
+
+            function aksiyonFormuOlustur(action, id, dugmeSinifi, dugmeMetni, onay) {
+                return '<form method="post" action="/CekSenet/' + action + '" class="d-inline" onsubmit="return confirm(\'' + onay + '\')">' +
+                    '<input type="hidden" name="__RequestVerificationToken" value="' + csrfToken + '" />' +
+                    '<input type="hidden" name="id" value="' + id + '" />' +
+                    '<button type="submit" class="btn btn-sm ' + dugmeSinifi + '">' + dugmeMetni + '</button></form>';
+            }
+
             var tablo = new DataTable('#cekSenetTablosu', {
                 processing: true,
                 serverSide: true,
@@ -95,11 +180,36 @@
                         data: 'id',
                         orderable: false,
                         searchable: false,
-                        render: function (id) {
-                            return '<a href="/CekSenet/Duzenle/' + id + '" class="btn btn-sm btn-outline-primary">Düzenle</a>';
+                        render: function (id, type, row) {
+                            var html = '<div class="d-flex flex-wrap gap-1">';
+                            html += '<a href="/CekSenet/Duzenle/' + id + '" class="btn btn-sm btn-outline-primary">Düzenle</a>';
+                            if (row.durum === 'Portfoyde') {
+                                html += aksiyonFormuOlustur('TahsileVer', id, 'btn-outline-success', 'Tahsile Ver', 'Bu belge tahsile verilsin mi?');
+                                html += '<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ciroModal" data-id="' + id + '">Ciro Et</button>';
+                            } else if (row.durum === 'Tahsilde') {
+                                html += '<button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#tahsilEdildiModal" data-id="' + id + '">Tahsil Edildi</button>';
+                                html += aksiyonFormuOlustur('Karsiliksiz', id, 'btn-outline-danger', 'Karşılıksız', 'Bu belge karşılıksız olarak işaretlensin mi? Bu işlem geri alınamaz.');
+                            }
+                            html += '</div>';
+                            return html;
                         }
                     }
-                ]
+                ],
+                createdRow: function (row, data) {
+                    if (data.durum === 'Portfoyde' || data.durum === 'Tahsilde') {
+                        var bugun = new Date();
+                        bugun.setHours(0, 0, 0, 0);
+                        var vade = new Date(data.vadeTarihi);
+                        vade.setHours(0, 0, 0, 0);
+                        if (vade < bugun) {
+                            row.classList.add('table-danger');
+                        } else if (vade.getTime() === bugun.getTime()) {
+                            row.classList.add('table-warning');
+                        } else {
+                            row.classList.add('table-success');
+                        }
+                    }
+                }
             });
 
             tablo.on('xhr.dt', function (e, settings, json) {
@@ -107,6 +217,23 @@
             });
 
             sutunFiltreleriBagla('cekSenetTablosu', tablo);
+
+            document.getElementById('ciroModal').addEventListener('show.bs.modal', function (event) {
+                document.getElementById('ciroId').value = event.relatedTarget.getAttribute('data-id');
+            });
+
+            var tahsilEdildiSelect = document.getElementById('tahsilEdildiHesapSecimi');
+            document.getElementById('tahsilEdildiModal').addEventListener('show.bs.modal', function (event) {
+                document.getElementById('tahsilEdildiId').value = event.relatedTarget.getAttribute('data-id');
+                tahsilEdildiSelect.value = '';
+                document.getElementById('tahsilEdildiBankaHesabiId').value = '';
+                document.getElementById('tahsilEdildiKasaHesabiId').value = '';
+            });
+            tahsilEdildiSelect.addEventListener('change', function () {
+                var parcalar = this.value.split('-');
+                document.getElementById('tahsilEdildiBankaHesabiId').value = parcalar[0] === 'banka' ? parcalar[1] : '';
+                document.getElementById('tahsilEdildiKasaHesabiId').value = parcalar[0] === 'kasa' ? parcalar[1] : '';
+            });
         });
     </script>
 }
