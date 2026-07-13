@@ -41,7 +41,7 @@ public class CariFisiService : ICariFisiService
 
         // Borç fişi carinin bize olan borcunu artırır (bakiye +); Alacak/Mahsup azaltır (bakiye -).
         // Karşılığında ilişkili banka/kasa hesabında ters yönde hareket olur (Borç = ödeme yapıldı/çıkış, Alacak = tahsilat/giriş).
-        var cariYonu = fis.FisTipi == FisTipi.Borc ? 1 : -1;
+        var cariYonu = CariYonKatsayisi(fis.FisTipi);
         cari.Bakiye += cariYonu * fis.Tutar;
 
         if (fis.BankaHesabiId is not null)
@@ -118,4 +118,32 @@ public class CariFisiService : ICariFisiService
         var kayitlar = await query.Skip(start).Take(length).ToListAsync();
         return (kayitlar, toplamKayit, filtrelenmisKayit);
     }
+
+    public async Task<(Cari Cari, decimal DevirBakiye, List<(CariFisi Fis, decimal KumulatifBakiye)> Satirlar)> GetEkstreAsync(
+        int cariId, DateTime baslangic, DateTime bitis)
+    {
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(cariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+
+        var tumFisler = await _unitOfWork.Repository<CariFisi>().QueryTumu()
+            .Where(f => f.CariId == cariId && !f.IsDeleted)
+            .OrderBy(f => f.Tarih).ThenBy(f => f.Id)
+            .ToListAsync();
+
+        var devirBakiye = tumFisler
+            .Where(f => f.Tarih < baslangic)
+            .Sum(f => CariYonKatsayisi(f.FisTipi) * f.Tutar);
+
+        var kumulatif = devirBakiye;
+        var satirlar = new List<(CariFisi Fis, decimal KumulatifBakiye)>();
+        foreach (var fis in tumFisler.Where(f => f.Tarih >= baslangic && f.Tarih <= bitis))
+        {
+            kumulatif += CariYonKatsayisi(fis.FisTipi) * fis.Tutar;
+            satirlar.Add((fis, kumulatif));
+        }
+
+        return (cari, devirBakiye, satirlar);
+    }
+
+    private static int CariYonKatsayisi(FisTipi fisTipi) => fisTipi == FisTipi.Borc ? 1 : -1;
 }

@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 using SakaryaERP.Data;
 using SakaryaERP.Data.Repositories;
 using SakaryaERP.Middleware;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
