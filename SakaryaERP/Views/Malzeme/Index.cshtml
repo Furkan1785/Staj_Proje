@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Malzeme Listesi";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Malzeme Listesi</h3>
+    <span id="kayitSayaci" class="badge bg-secondary">0 kayıt</span>
+</div>
+
+<div class="table-responsive">
+    <table id="malzemeTablosu" class="table table-striped table-bordered align-middle w-100 grid-sticky-header">
+        <thead>
+            <tr>
+                <th>Malzeme Kodu</th>
+                <th>Barkod</th>
+                <th>Malzeme Adı</th>
+                <th>Marka</th>
+                <th>Kalite</th>
+                <th>Tip</th>
+                <th>Birim</th>
+                <th>Kategori</th>
+                <th>Temin Türü</th>
+                <th>Stok Tipi</th>
+                <th>Alış Fiyatı</th>
+                <th>Satış Fiyatı</th>
+                <th>KDV Oranı</th>
+                <th>Min Stok</th>
+                <th>Max Stok</th>
+                <th>Raf No</th>
+                <th>Bakiye</th>
+            </tr>
+            <tr>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th>
+                    <select class="form-select form-select-sm sutun-filtre">
+                        <option value="">Tümü</option>
+                        <option value="Alis">Alış</option>
+                        <option value="Uretim">Üretim</option>
+                        <option value="AlisUretim">Alış+Üretim</option>
+                    </select>
+                </th>
+                <th>
+                    <select class="form-select form-select-sm sutun-filtre">
+                        <option value="">Tümü</option>
+                        <option value="TicariMal">Ticari Mal</option>
+                        <option value="Hammadde">Hammadde</option>
+                        <option value="YariMamul">Yarı Mamul</option>
+                        <option value="Mamul">Mamul</option>
+                    </select>
+                </th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.bootstrap5.min.css" />
+    <script src="~/lib/datatables/js/dataTables.min.js"></script>
+    <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            function sayiFormatla(data) {
+                return Number(data).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+            }
+
+            var tablo = new DataTable('#malzemeTablosu', {
+                processing: true,
+                serverSide: true,
+                ajax: { url: '@Url.Action("ListeVerisi", "Malzeme")', type: 'POST' },
+                order: [[0, 'asc']],
+                language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
+                columns: [
+                    { data: 'malzemeKodu' },
+                    { data: 'barkod', defaultContent: '' },
+                    { data: 'malzemeAdi' },
+                    { data: 'marka', defaultContent: '' },
+                    { data: 'kalite', defaultContent: '' },
+                    { data: 'tip', defaultContent: '' },
+                    { data: 'birim' },
+                    { data: 'kategoriAdi', defaultContent: '' },
+                    { data: 'teminTuruText' },
+                    { data: 'stokTipiText' },
+                    { data: 'alisFiyati', render: sayiFormatla },
+                    { data: 'satisFiyati', render: sayiFormatla },
+                    { data: 'kdvOrani', render: sayiFormatla },
+                    { data: 'minStokMiktari', render: sayiFormatla },
+                    { data: 'maxStokMiktari', render: sayiFormatla },
+                    { data: 'rafNo', defaultContent: '' },
+                    { data: 'bakiye', render: sayiFormatla }
+                ]
+            });
+
+            tablo.on('xhr.dt', function (e, settings, json) {
+                document.getElementById('kayitSayaci').textContent = json.recordsFiltered + ' kayıt';
+            });
+
+            sutunFiltreleriBagla('malzemeTablosu', tablo);
+        });
+    </script>
+}

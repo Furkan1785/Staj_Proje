@@ -39,6 +39,8 @@ builder.Services.AddScoped<IKasaHesabiService, KasaHesabiService>();
 builder.Services.AddScoped<ISubeService, SubeService>();
 builder.Services.AddScoped<ICariFisiService, CariFisiService>();
 builder.Services.AddScoped<ICekSenetService, CekSenetService>();
+builder.Services.AddScoped<IMalzemeKategoriService, MalzemeKategoriService>();
+builder.Services.AddScoped<IMalzemeService, MalzemeService>();
 
 builder.Services.AddControllersWithViews();
 

@@ -58,9 +58,27 @@ public enum HesapTipi { Aktif, Pasif, Gelir, Gider, Ozkaynak }
 
 public enum HareketTipi { Giris, Cikis, Transfer, Fire }
 
-public enum TeminTuru { Alis, Uretim, AlisUretim }
+public enum TeminTuru
+{
+    [Display(Name = "Alış")]
+    Alis,
+    [Display(Name = "Üretim")]
+    Uretim,
+    [Display(Name = "Alış+Üretim")]
+    AlisUretim
+}
 
-public enum StokTipi { TicariMal, Hammadde, YariMamul, Mamul }
+public enum StokTipi
+{
+    [Display(Name = "Ticari Mal")]
+    TicariMal,
+    [Display(Name = "Hammadde")]
+    Hammadde,
+    [Display(Name = "Yarı Mamul")]
+    YariMamul,
+    [Display(Name = "Mamul")]
+    Mamul
+}
 
 public enum BelgeDurum { Beklemede, Onaylandi, Iptal }
 
