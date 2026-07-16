@@ -1,0 +1,100 @@
+@model MalzemeDetayViewModel
+@{
+    ViewData["Title"] = "Malzeme Detayı";
+
+    string stokDurumSinifi;
+    string stokDurumMetni;
+    if (Model.Bakiye < Model.MinStokMiktari)
+    {
+        stokDurumSinifi = "bg-danger";
+        stokDurumMetni = "Kritik Stok";
+    }
+    else if (Model.Bakiye > Model.MaxStokMiktari)
+    {
+        stokDurumSinifi = "bg-warning text-dark";
+        stokDurumMetni = "Stok Fazlası";
+    }
+    else
+    {
+        stokDurumSinifi = "bg-success";
+        stokDurumMetni = "Normal";
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">@Model.MalzemeAdi <small class="text-muted">(@Model.MalzemeKodu)</small></h3>
+    <div class="d-flex gap-2">
+        <a asp-action="Duzenle" asp-route-id="@Model.Id" class="btn btn-outline-primary">Düzenle</a>
+        <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">Malzeme Bilgileri</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Barkod</dt>
+                    <dd class="col-sm-8">@(Model.Barkod ?? "-")</dd>
+                    <dt class="col-sm-4">Marka</dt>
+                    <dd class="col-sm-8">@(Model.Marka ?? "-")</dd>
+                    <dt class="col-sm-4">Kalite</dt>
+                    <dd class="col-sm-8">@(Model.Kalite ?? "-")</dd>
+                    <dt class="col-sm-4">Tip</dt>
+                    <dd class="col-sm-8">@(Model.Tip ?? "-")</dd>
+                    <dt class="col-sm-4">Birim</dt>
+                    <dd class="col-sm-8">@Model.Birim</dd>
+                    <dt class="col-sm-4">Kategori</dt>
+                    <dd class="col-sm-8">@(Model.KategoriAdi ?? "-")</dd>
+                    <dt class="col-sm-4">Temin Türü</dt>
+                    <dd class="col-sm-8">@Model.TeminTuruText</dd>
+                    <dt class="col-sm-4">Stok Tipi</dt>
+                    <dd class="col-sm-8">@Model.StokTipiText</dd>
+                    <dt class="col-sm-4">Raf No</dt>
+                    <dd class="col-sm-8">@(Model.RafNo ?? "-")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Fiyat Bilgileri</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Alış Fiyatı</dt>
+                    <dd class="col-sm-7">@Model.AlisFiyati.ToString("N2")</dd>
+                    <dt class="col-sm-5">Satış Fiyatı</dt>
+                    <dd class="col-sm-7">@Model.SatisFiyati.ToString("N2")</dd>
+                    <dt class="col-sm-5">KDV Oranı</dt>
+                    <dd class="col-sm-7">%@Model.KdvOrani.ToString("N0")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                Stok Bilgisi
+                <span class="badge @stokDurumSinifi">@stokDurumMetni</span>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Bakiye</dt>
+                    <dd class="col-sm-7">@Model.Bakiye.ToString("N2") @Model.Birim</dd>
+                    <dt class="col-sm-5">Min Stok Miktarı</dt>
+                    <dd class="col-sm-7">@Model.MinStokMiktari.ToString("N2") @Model.Birim</dd>
+                    <dt class="col-sm-5">Max Stok Miktarı</dt>
+                    <dd class="col-sm-7">@Model.MaxStokMiktari.ToString("N2") @Model.Birim</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">Son İşlemler</div>
+    <div class="card-body text-center text-muted">
+        Bu malzemeye ait henüz bir stok hareketi kaydedilmedi.
+    </div>
+</div>

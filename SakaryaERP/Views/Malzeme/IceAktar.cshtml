@@ -1,0 +1,46 @@
+@model MalzemeIceAktarViewModel
+@{
+    ViewData["Title"] = "Malzeme İçe Aktar";
+}
+
+<h3 class="mb-4">Malzeme İçe Aktar</h3>
+
+<div class="p-4 border rounded bg-white mb-4">
+    <p>
+        Excel dosyasındaki her satır bir malzeme kaydı oluşturur. Sütun sırası şablondaki ile
+        birebir aynı olmalıdır (Kategori sütununda mevcut bir kategori adı yazılmalı, Temin Türü/Stok
+        Tipi sütunlarında ekrandaki Türkçe metinler — ör. "Alış", "Ticari Mal" — kullanılmalıdır).
+        Bakiye alanı içe aktarılamaz, her yeni malzeme 0 bakiye ile başlar.
+    </p>
+    <a asp-action="IceAktarSablonu" class="btn btn-outline-secondary btn-sm mb-3">Şablon İndir</a>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <form asp-action="IceAktar" method="post" enctype="multipart/form-data" class="row g-3 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label">Excel Dosyası (.xlsx)</label>
+            <input type="file" name="dosya" class="form-control" accept=".xlsx" required />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Yükle</button>
+        </div>
+    </form>
+</div>
+
+@if (Model.BasariliSayisi > 0)
+{
+    <div class="alert alert-success">@Model.BasariliSayisi malzeme başarıyla içe aktarıldı.</div>
+}
+
+@if (Model.Hatalar.Count > 0)
+{
+    <div class="alert alert-danger">
+        <strong>@Model.Hatalar.Count satır içe aktarılamadı:</strong>
+        <ul class="mb-0">
+            @foreach (var hata in Model.Hatalar)
+            {
+                <li>@hata</li>
+            }
+        </ul>
+    </div>
+}
