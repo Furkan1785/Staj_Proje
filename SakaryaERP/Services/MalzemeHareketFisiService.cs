@@ -1,0 +1,90 @@
+using Microsoft.EntityFrameworkCore;
+using SakaryaERP.Data;
+using SakaryaERP.Models;
+
+namespace SakaryaERP.Services;
+
+public class MalzemeHareketFisiService : IMalzemeHareketFisiService
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    public MalzemeHareketFisiService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<MalzemeHareketFisi> CreateAsync(MalzemeHareketFisi fis, List<MalzemeHareketFisiKalemi> kalemler)
+    {
+        if (kalemler.Count == 0)
+            throw new InvalidOperationException("Fişte en az bir kalem olmalıdır.");
+
+        if (kalemler.Any(k => k.Miktar <= 0))
+            throw new InvalidOperationException("Tüm kalemlerin miktarı sıfırdan büyük olmalıdır.");
+
+        var subeVarMi = await _unitOfWork.Repository<Sube>().QueryTumu().AnyAsync(s => s.Id == fis.SubeId);
+        if (!subeVarMi)
+            throw new InvalidOperationException("Şube bulunamadı.");
+
+        var kalemMalzemeIdleri = kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+        var gecerliMalzemeSayisi = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .CountAsync(m => kalemMalzemeIdleri.Contains(m.Id));
+        if (gecerliMalzemeSayisi != kalemMalzemeIdleri.Count)
+            throw new InvalidOperationException("Kalemlerden biri geçersiz bir malzemeye ait.");
+
+        var toplamSayi = await _unitOfWork.Repository<MalzemeHareketFisi>().QueryTumu().CountAsync();
+        fis.FisNo = $"MH-{toplamSayi + 1:000000}";
+        fis.Durum = BelgeDurum.Beklemede;
+        fis.Kalemler = kalemler;
+
+        await _unitOfWork.Repository<MalzemeHareketFisi>().AddAsync(fis);
+        await _unitOfWork.SaveChangesAsync();
+        return fis;
+    }
+
+    public async Task<(IEnumerable<MalzemeHareketFisi> Kayitlar, int ToplamKayit, int FiltrelenmisKayit)> GetSayfaliListeAsync(
+        int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu)
+    {
+        var query = _unitOfWork.Repository<MalzemeHareketFisi>().QueryTumu()
+            .Include(f => f.Sube)
+            .Include(f => f.Kalemler)
+            .Where(f => !f.IsDeleted);
+
+        var toplamKayit = await query.CountAsync();
+
+        if (!string.IsNullOrWhiteSpace(genelArama))
+        {
+            query = query.Where(f =>
+                EF.Functions.ILike(f.FisNo, $"%{genelArama}%") ||
+                EF.Functions.ILike(f.Sube.SubeAdi, $"%{genelArama}%"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(0)))
+            query = query.Where(f => EF.Functions.ILike(f.FisNo, $"%{sutunAramalari[0]}%"));
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(2))
+            && Enum.TryParse<HareketTipi>(sutunAramalari[2], out var hareketTipiFiltre))
+            query = query.Where(f => f.HareketTipi == hareketTipiFiltre);
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(3)))
+            query = query.Where(f => EF.Functions.ILike(f.Sube.SubeAdi, $"%{sutunAramalari[3]}%"));
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(5))
+            && Enum.TryParse<BelgeDurum>(sutunAramalari[5], out var durumFiltre))
+            query = query.Where(f => f.Durum == durumFiltre);
+
+        var filtrelenmisKayit = await query.CountAsync();
+
+        var azalan = siralamaYonu == "desc";
+        query = siralamaSutunu switch
+        {
+            0 => azalan ? query.OrderByDescending(f => f.FisNo) : query.OrderBy(f => f.FisNo),
+            2 => azalan ? query.OrderByDescending(f => f.HareketTipi) : query.OrderBy(f => f.HareketTipi),
+            3 => azalan ? query.OrderByDescending(f => f.Sube.SubeAdi) : query.OrderBy(f => f.Sube.SubeAdi),
+            5 => azalan ? query.OrderByDescending(f => f.Durum) : query.OrderBy(f => f.Durum),
+            _ => azalan ? query.OrderByDescending(f => f.Tarih) : query.OrderBy(f => f.Tarih)
+        };
+
+        var kayitlar = await query.Skip(start).Take(length).ToListAsync();
+        return (kayitlar, toplamKayit, filtrelenmisKayit);
+    }
+}

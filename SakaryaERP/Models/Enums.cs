@@ -56,7 +56,17 @@ public enum CekSenetDurum
 
 public enum HesapTipi { Aktif, Pasif, Gelir, Gider, Ozkaynak }
 
-public enum HareketTipi { Giris, Cikis, Transfer, Fire }
+public enum HareketTipi
+{
+    [Display(Name = "Giriş")]
+    Giris,
+    [Display(Name = "Çıkış")]
+    Cikis,
+    [Display(Name = "Transfer")]
+    Transfer,
+    [Display(Name = "Fire")]
+    Fire
+}
 
 public enum TeminTuru
 {
@@ -80,6 +90,14 @@ public enum StokTipi
     Mamul
 }
 
-public enum BelgeDurum { Beklemede, Onaylandi, Iptal }
+public enum BelgeDurum
+{
+    [Display(Name = "Beklemede")]
+    Beklemede,
+    [Display(Name = "Onaylandı")]
+    Onaylandi,
+    [Display(Name = "İptal")]
+    Iptal
+}
 
 public enum TalepDurum { Yeni, Isleniyor, Tamamlandi, Iptal }

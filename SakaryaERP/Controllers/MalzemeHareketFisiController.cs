@@ -1,0 +1,133 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using SakaryaERP.Models;
+using SakaryaERP.Services;
+using SakaryaERP.ViewModels;
+
+namespace SakaryaERP.Controllers;
+
+public class MalzemeHareketFisiController : Controller
+{
+    private readonly IMalzemeHareketFisiService _malzemeHareketFisiService;
+    private readonly ISubeService _subeService;
+    private readonly IMalzemeService _malzemeService;
+
+    public MalzemeHareketFisiController(
+        IMalzemeHareketFisiService malzemeHareketFisiService, ISubeService subeService, IMalzemeService malzemeService)
+    {
+        _malzemeHareketFisiService = malzemeHareketFisiService;
+        _subeService = subeService;
+        _malzemeService = malzemeService;
+    }
+
+    public IActionResult Index() => View();
+
+    [HttpPost]
+    public async Task<IActionResult> ListeVerisi()
+    {
+        var form = Request.Form;
+        var draw = int.Parse(form["draw"].FirstOrDefault() ?? "1");
+        var start = int.Parse(form["start"].FirstOrDefault() ?? "0");
+        var length = int.Parse(form["length"].FirstOrDefault() ?? "10");
+        var genelArama = form["search[value]"].FirstOrDefault();
+        var siralamaSutunu = int.Parse(form["order[0][column]"].FirstOrDefault() ?? "1");
+        var siralamaYonu = form["order[0][dir]"].FirstOrDefault() ?? "desc";
+
+        var sutunAramalari = new string?[6];
+        for (var i = 0; i < sutunAramalari.Length; i++)
+            sutunAramalari[i] = form[$"columns[{i}][search][value]"].FirstOrDefault();
+
+        var (kayitlar, toplamKayit, filtrelenmisKayit) = await _malzemeHareketFisiService.GetSayfaliListeAsync(
+            start, length, genelArama, sutunAramalari, siralamaSutunu, siralamaYonu);
+
+        var veri = kayitlar.Select(f => new MalzemeHareketFisiListItemViewModel
+        {
+            Id = f.Id,
+            FisNo = f.FisNo,
+            Tarih = f.Tarih,
+            HareketTipiText = HareketTipiMetni(f.HareketTipi),
+            SubeAdi = f.Sube.SubeAdi,
+            KalemSayisi = f.Kalemler.Count,
+            DurumText = DurumMetni(f.Durum)
+        });
+
+        return Json(new { draw, recordsTotal = toplamKayit, recordsFiltered = filtrelenmisKayit, data = veri });
+    }
+
+    public async Task<IActionResult> Ekle()
+    {
+        var vm = new MalzemeHareketFisiFormViewModel();
+        await DoldurListeler(vm);
+        return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Ekle(MalzemeHareketFisiFormViewModel vm)
+    {
+        // Boş bırakılmış (malzeme seçilmemiş) satırları yok say — kullanıcı fazladan
+        // satır ekleyip kullanmadan bırakmış olabilir, bu bir hata değil.
+        vm.Kalemler = vm.Kalemler.Where(k => k.MalzemeId is not null).ToList();
+
+        if (!ModelState.IsValid)
+        {
+            await DoldurListeler(vm);
+            return View(vm);
+        }
+
+        try
+        {
+            var fis = new MalzemeHareketFisi
+            {
+                Tarih = vm.Tarih,
+                HareketTipi = vm.HareketTipi,
+                SubeId = vm.SubeId!.Value
+            };
+            var kalemler = vm.Kalemler.Select(k => new MalzemeHareketFisiKalemi
+            {
+                MalzemeId = k.MalzemeId!.Value,
+                Miktar = k.Miktar,
+                Aciklama = k.Aciklama
+            }).ToList();
+
+            await _malzemeHareketFisiService.CreateAsync(fis, kalemler);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("", ex.Message);
+            await DoldurListeler(vm);
+            return View(vm);
+        }
+
+        TempData["Basari"] = "Malzeme hareket fişi kaydedildi.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task DoldurListeler(MalzemeHareketFisiFormViewModel vm)
+    {
+        var subeler = await _subeService.GetAllAsync();
+        vm.SubeListesi = subeler.Where(s => !s.IsDeleted)
+            .Select(s => new SelectListItem(s.SubeAdi, s.Id.ToString()));
+
+        var malzemeler = await _malzemeService.GetTumListeAsync();
+        ViewData["MalzemeListesiJson"] = malzemeler
+            .Select(m => new { id = m.Id, kod = m.MalzemeKodu, ad = m.MalzemeAdi, birim = m.Birim });
+    }
+
+    private static string HareketTipiMetni(HareketTipi tip) => tip switch
+    {
+        HareketTipi.Giris => "Giriş",
+        HareketTipi.Cikis => "Çıkış",
+        HareketTipi.Transfer => "Transfer",
+        HareketTipi.Fire => "Fire",
+        _ => tip.ToString()
+    };
+
+    private static string DurumMetni(BelgeDurum durum) => durum switch
+    {
+        BelgeDurum.Beklemede => "Beklemede",
+        BelgeDurum.Onaylandi => "Onaylandı",
+        BelgeDurum.Iptal => "İptal",
+        _ => durum.ToString()
+    };
+}

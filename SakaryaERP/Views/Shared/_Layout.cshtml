@@ -35,8 +35,12 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="CekSenet" asp-action="Index">Çek/Senet</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Malzeme" asp-action="Index">Malzemeler</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Malzeme</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Malzeme" asp-action="Index">Malzeme Kartları</a></li>
+                                <li><a class="dropdown-item" asp-controller="MalzemeHareketFisi" asp-action="Index">Hareket Fişleri</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Sube" asp-action="Index">Şubeler</a>

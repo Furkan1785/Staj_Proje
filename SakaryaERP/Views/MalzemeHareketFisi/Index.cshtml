@@ -1,0 +1,91 @@
+@{
+    ViewData["Title"] = "Malzeme Hareket Fişleri";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Malzeme Hareket Fişleri</h3>
+    <div class="d-flex align-items-center gap-3">
+        <span id="kayitSayaci" class="badge bg-secondary">0 kayıt</span>
+        <a asp-action="Ekle" class="btn btn-primary">+ Yeni Fiş</a>
+    </div>
+</div>
+
+@if (TempData["Basari"] != null)
+{
+    <div class="alert alert-success">@TempData["Basari"]</div>
+}
+
+<div class="table-responsive">
+    <table id="malzemeHareketFisiTablosu" class="table table-striped table-bordered align-middle w-100 grid-sticky-header">
+        <thead>
+            <tr>
+                <th>Fiş No</th>
+                <th>Tarih</th>
+                <th>Hareket Tipi</th>
+                <th>Şube</th>
+                <th>Kalem Sayısı</th>
+                <th>Durum</th>
+            </tr>
+            <tr>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th></th>
+                <th>
+                    <select class="form-select form-select-sm sutun-filtre">
+                        <option value="">Tümü</option>
+                        <option value="Giris">Giriş</option>
+                        <option value="Cikis">Çıkış</option>
+                        <option value="Transfer">Transfer</option>
+                        <option value="Fire">Fire</option>
+                    </select>
+                </th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th></th>
+                <th>
+                    <select class="form-select form-select-sm sutun-filtre">
+                        <option value="">Tümü</option>
+                        <option value="Beklemede">Beklemede</option>
+                        <option value="Onaylandi">Onaylandı</option>
+                        <option value="Iptal">İptal</option>
+                    </select>
+                </th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.bootstrap5.min.css" />
+    <script src="~/lib/datatables/js/dataTables.min.js"></script>
+    <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            var tablo = new DataTable('#malzemeHareketFisiTablosu', {
+                processing: true,
+                serverSide: true,
+                ajax: { url: '@Url.Action("ListeVerisi", "MalzemeHareketFisi")', type: 'POST' },
+                order: [[1, 'desc']],
+                language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
+                columns: [
+                    { data: 'fisNo' },
+                    {
+                        data: 'tarih',
+                        render: function (data) {
+                            return new Date(data).toLocaleDateString('tr-TR');
+                        }
+                    },
+                    { data: 'hareketTipiText' },
+                    { data: 'subeAdi' },
+                    { data: 'kalemSayisi' },
+                    { data: 'durumText' }
+                ]
+            });
+
+            tablo.on('xhr.dt', function (e, settings, json) {
+                document.getElementById('kayitSayaci').textContent = json.recordsFiltered + ' kayıt';
+            });
+
+            sutunFiltreleriBagla('malzemeHareketFisiTablosu', tablo);
+        });
+    </script>
+}

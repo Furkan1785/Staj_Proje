@@ -41,6 +41,7 @@ builder.Services.AddScoped<ICariFisiService, CariFisiService>();
 builder.Services.AddScoped<ICekSenetService, CekSenetService>();
 builder.Services.AddScoped<IMalzemeKategoriService, MalzemeKategoriService>();
 builder.Services.AddScoped<IMalzemeService, MalzemeService>();
+builder.Services.AddScoped<IMalzemeHareketFisiService, MalzemeHareketFisiService>();
 
 builder.Services.AddControllersWithViews();
 
