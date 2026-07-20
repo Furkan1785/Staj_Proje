@@ -48,6 +48,7 @@ public class MalzemeHareketFisiController : Controller
             HareketTipiText = HareketTipiMetni(f.HareketTipi),
             SubeAdi = f.Sube.SubeAdi,
             KalemSayisi = f.Kalemler.Count,
+            Durum = f.Durum.ToString(),
             DurumText = DurumMetni(f.Durum)
         });
 
@@ -103,6 +104,22 @@ public class MalzemeHareketFisiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Onayla(int id)
+    {
+        try
+        {
+            await _malzemeHareketFisiService.OnaylaAsync(id);
+            TempData["Basari"] = "Fiş onaylandı, malzeme bakiyeleri güncellendi.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
     private async Task DoldurListeler(MalzemeHareketFisiFormViewModel vm)
     {
         var subeler = await _subeService.GetAllAsync();
@@ -111,7 +128,7 @@ public class MalzemeHareketFisiController : Controller
 
         var malzemeler = await _malzemeService.GetTumListeAsync();
         ViewData["MalzemeListesiJson"] = malzemeler
-            .Select(m => new { id = m.Id, kod = m.MalzemeKodu, ad = m.MalzemeAdi, birim = m.Birim });
+            .Select(m => new { id = m.Id, kod = m.MalzemeKodu, ad = m.MalzemeAdi, birim = m.Birim, barkod = m.Barkod });
     }
 
     private static string HareketTipiMetni(HareketTipi tip) => tip switch

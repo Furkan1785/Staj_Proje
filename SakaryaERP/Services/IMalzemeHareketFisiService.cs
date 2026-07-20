@@ -8,4 +8,6 @@ public interface IMalzemeHareketFisiService
 
     Task<(IEnumerable<MalzemeHareketFisi> Kayitlar, int ToplamKayit, int FiltrelenmisKayit)> GetSayfaliListeAsync(
         int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu);
+
+    Task OnaylaAsync(int id);
 }

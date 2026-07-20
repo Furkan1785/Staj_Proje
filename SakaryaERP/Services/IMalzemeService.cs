@@ -12,4 +12,8 @@ public interface IMalzemeService
     Task UpdateAsync(Malzeme malzeme);
     Task<IEnumerable<Malzeme>> GetTumListeAsync();
     Task<MalzemeIceAktarSonucu> TopluIceAktarAsync(List<MalzemeImportSatiri> satirlar);
+
+    // Bakiyesi MinStokMiktari'nın altına düşen malzemeler — Gün 14'teki uyarı paneli
+    // ve ileride Dashboard/Gün 15'teki kritik stok raporu için ortak sorgu.
+    Task<IEnumerable<Malzeme>> GetKritikStokListesiAsync();
 }

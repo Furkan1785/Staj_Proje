@@ -87,4 +87,47 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
         var kayitlar = await query.Skip(start).Take(length).ToListAsync();
         return (kayitlar, toplamKayit, filtrelenmisKayit);
     }
+
+    // Transfer, aynı şirket içinde şubeler arası taşımayı temsil eder — Malzeme'nin
+    // tek (şubeye bölünmemiş) Bakiye alanını etkilemez, sadece Giriş/Çıkış/Fire etkiler.
+    public async Task OnaylaAsync(int id)
+    {
+        var fis = await _unitOfWork.Repository<MalzemeHareketFisi>().QueryTumu()
+            .Include(f => f.Kalemler)
+            .FirstOrDefaultAsync(f => f.Id == id)
+            ?? throw new InvalidOperationException("Malzeme hareket fişi bulunamadı.");
+
+        if (fis.Durum != BelgeDurum.Beklemede)
+            throw new InvalidOperationException("Sadece beklemedeki bir fiş onaylanabilir.");
+
+        var malzemeIdleri = fis.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+        var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .Where(m => malzemeIdleri.Contains(m.Id))
+            .ToDictionaryAsync(m => m.Id);
+
+        var yon = HareketYonKatsayisi(fis.HareketTipi);
+
+        foreach (var kalem in fis.Kalemler)
+        {
+            var malzeme = malzemeler[kalem.MalzemeId];
+            var yeniBakiye = malzeme.Bakiye + yon * kalem.Miktar;
+            if (yeniBakiye < 0)
+                throw new InvalidOperationException(
+                    $"{malzeme.MalzemeKodu} için stok yetersiz (mevcut: {malzeme.Bakiye}, istenen: {kalem.Miktar}).");
+
+            malzeme.Bakiye = yeniBakiye;
+        }
+
+        fis.Durum = BelgeDurum.Onaylandi;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private static int HareketYonKatsayisi(HareketTipi tip) => tip switch
+    {
+        HareketTipi.Giris => 1,
+        HareketTipi.Cikis => -1,
+        HareketTipi.Fire => -1,
+        HareketTipi.Transfer => 0,
+        _ => 0
+    };
 }

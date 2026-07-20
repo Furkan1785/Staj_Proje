@@ -25,6 +25,15 @@
         </div>
     </div>
 
+    <div class="mb-3">
+        <label class="form-label">Barkod ile Ekle</label>
+        <div class="input-group" style="max-width: 420px;">
+            <input type="text" id="barkodInput" class="form-control" placeholder="Barkodu okutun veya girin, Enter'a basın" autocomplete="off" />
+            <button type="button" id="barkodEkleBtn" class="btn btn-outline-primary">Ekle</button>
+        </div>
+        <div id="barkodUyari" class="text-danger small mt-1 d-none">Bu barkoda sahip malzeme bulunamadı.</div>
+    </div>
+
     <h5>Kalemler</h5>
     <table id="kalemlerTablosu" class="table table-bordered align-middle">
         <thead>
@@ -105,6 +114,35 @@
                 satirEkle();
                 satirlariYenidenIndeksle();
             });
+
+            var barkodInput = document.getElementById('barkodInput');
+            var barkodUyari = document.getElementById('barkodUyari');
+
+            function barkodIleEkle() {
+                var deger = barkodInput.value.trim();
+                if (!deger) return;
+
+                var bulunan = malzemeListesi.find(function (m) { return m.barkod === deger; });
+                if (!bulunan) {
+                    barkodUyari.classList.remove('d-none');
+                    return;
+                }
+
+                barkodUyari.classList.add('d-none');
+                satirEkle({ malzemeId: bulunan.id, miktar: '', aciklama: '' });
+                satirlariYenidenIndeksle();
+                barkodInput.value = '';
+                var sonSatir = tbody.querySelector('tr:last-child');
+                sonSatir.querySelector('.miktar-input').focus();
+            }
+
+            barkodInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    barkodIleEkle();
+                }
+            });
+            document.getElementById('barkodEkleBtn').addEventListener('click', barkodIleEkle);
 
             if (mevcutKalemler.length > 0) {
                 mevcutKalemler.forEach(function (k) { satirEkle(k); });

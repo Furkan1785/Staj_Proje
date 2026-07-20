@@ -1,3 +1,4 @@
+@model List<KritikStokViewModel>
 @{
     ViewData["Title"] = "Malzeme Listesi";
 }
@@ -15,6 +16,19 @@
 @if (TempData["Basari"] != null)
 {
     <div class="alert alert-success">@TempData["Basari"]</div>
+}
+
+@if (Model.Count > 0)
+{
+    <div class="alert alert-warning">
+        <strong>Kritik stok uyarısı:</strong> @Model.Count malzeme minimum stok seviyesinin altında.
+        <ul class="mb-0 mt-2">
+            @foreach (var m in Model)
+            {
+                <li>@m.MalzemeKodu - @m.MalzemeAdi: bakiye @m.Bakiye.ToString("N2") @m.Birim (min @m.MinStokMiktari.ToString("N2") @m.Birim)</li>
+            }
+        </ul>
+    </div>
 }
 
 <div class="table-responsive">

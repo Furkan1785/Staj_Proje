@@ -28,7 +28,19 @@ public class MalzemeController : Controller
         _logger = logger;
     }
 
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index()
+    {
+        var kritikStoklar = await _malzemeService.GetKritikStokListesiAsync();
+        return View(kritikStoklar.Select(m => new KritikStokViewModel
+        {
+            Id = m.Id,
+            MalzemeKodu = m.MalzemeKodu,
+            MalzemeAdi = m.MalzemeAdi,
+            Birim = m.Birim,
+            Bakiye = m.Bakiye,
+            MinStokMiktari = m.MinStokMiktari
+        }).ToList());
+    }
 
     [HttpPost]
     public async Task<IActionResult> ListeVerisi()

@@ -33,6 +33,12 @@ public class MalzemeService : IMalzemeService
             .Include(m => m.Kategori)
             .FirstOrDefaultAsync(m => m.Id == id);
 
+    public async Task<IEnumerable<Malzeme>> GetKritikStokListesiAsync()
+        => await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .Where(m => !m.IsDeleted && m.Bakiye < m.MinStokMiktari)
+            .OrderBy(m => m.MalzemeKodu)
+            .ToListAsync();
+
     public async Task UpdateAsync(Malzeme malzeme)
     {
         var mevcut = await _unitOfWork.Repository<Malzeme>().GetByIdAsync(malzeme.Id)

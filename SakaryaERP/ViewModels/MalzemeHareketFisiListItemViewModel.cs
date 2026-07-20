@@ -8,5 +8,6 @@ public class MalzemeHareketFisiListItemViewModel
     public string HareketTipiText { get; set; } = "";
     public string SubeAdi { get; set; } = "";
     public int KalemSayisi { get; set; }
+    public string Durum { get; set; } = "";
     public string DurumText { get; set; } = "";
 }
