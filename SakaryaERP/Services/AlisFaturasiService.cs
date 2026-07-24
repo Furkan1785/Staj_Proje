@@ -119,6 +119,15 @@ public class AlisFaturasiService : IAlisFaturasiService
             .AnyAsync(f => f.AlisIrsaliyesiId == alisIrsaliyesiId && f.Durum != BelgeDurum.Iptal);
     }
 
+    public async Task<List<AlisFaturasi>> GetOnaylanmisListeAsync()
+    {
+        return await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+            .Include(f => f.Cari)
+            .Include(f => f.Kalemler)
+            .Where(f => !f.IsDeleted && f.Durum == BelgeDurum.Onaylandi)
+            .ToListAsync();
+    }
+
     public async Task OnaylaAsync(int id)
     {
         var fatura = await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()

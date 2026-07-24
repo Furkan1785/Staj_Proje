@@ -1,0 +1,112 @@
+@model SatinalmaOzetViewModel
+@{
+    ViewData["Title"] = "Satınalma Özet Raporu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Satınalma Özet Raporu</h3>
+    <span class="badge bg-primary fs-6">Genel Toplam: @Model.GenelToplam.ToString("N2")</span>
+</div>
+
+@if (Model.TedarikciToplamlari.Count == 0)
+{
+    <div class="alert alert-info">Henüz onaylanmış bir alış faturası bulunmuyor.</div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">Tedarikçi Bazlı Alış Toplamları</div>
+                <div class="card-body">
+                    <canvas id="tedarikciGrafik" height="260"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">Aylık Alış Trendi</div>
+                <div class="card-body">
+                    <canvas id="aylikGrafik" height="260"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">Tedarikçi Bazlı Alış Toplamları (Tablo)</div>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Tedarikçi</th>
+                        <th class="text-end">Toplam Tutar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.TedarikciToplamlari)
+                    {
+                        <tr>
+                            <td>@t.CariUnvan</td>
+                            <td class="text-end">@t.ToplamTutar.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script>
+        var tedarikciEtiketler = @Json.Serialize(Model.TedarikciToplamlari.Select(t => t.CariUnvan));
+        var tedarikciTutarlar = @Json.Serialize(Model.TedarikciToplamlari.Select(t => t.ToplamTutar));
+        var aylikEtiketler = @Json.Serialize(Model.AylikToplamlar.Select(a => a.Etiket));
+        var aylikTutarlar = @Json.Serialize(Model.AylikToplamlar.Select(a => a.ToplamTutar));
+
+        var mavi = '#2a78d6';
+        var izgaraRengi = '#e1e0d9';
+        var eksenRengi = '#898781';
+
+        if (tedarikciEtiketler.length > 0) {
+            new Chart(document.getElementById('tedarikciGrafik'), {
+                type: 'bar',
+                data: {
+                    labels: tedarikciEtiketler,
+                    datasets: [{ label: 'Toplam Tutar', data: tedarikciTutarlar, backgroundColor: mavi, borderRadius: 4 }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: eksenRengi }, grid: { display: false } },
+                        y: { ticks: { color: eksenRengi }, grid: { color: izgaraRengi } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('aylikGrafik'), {
+                type: 'line',
+                data: {
+                    labels: aylikEtiketler,
+                    datasets: [{
+                        label: 'Toplam Tutar',
+                        data: aylikTutarlar,
+                        borderColor: mavi,
+                        backgroundColor: mavi,
+                        tension: 0.25,
+                        pointRadius: 4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: eksenRengi }, grid: { display: false } },
+                        y: { ticks: { color: eksenRengi }, grid: { color: izgaraRengi } }
+                    }
+                }
+            });
+        }
+    </script>
+}

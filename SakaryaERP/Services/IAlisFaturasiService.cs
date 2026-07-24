@@ -12,6 +12,9 @@ public interface IAlisFaturasiService
     Task<AlisFaturasi?> GetByIdDetayAsync(int id);
     Task<bool> AktifFaturaVarMiAsync(int alisIrsaliyesiId);
 
+    // Satınalma özet raporu için: onaylanmış tüm faturalar (Cari + Kalemler ile).
+    Task<List<AlisFaturasi>> GetOnaylanmisListeAsync();
+
     // Onaylandığında cariye alacak hareketi (CariFisi) eklenir ve Cari.Bakiye güncellenir (tek transaction).
     Task OnaylaAsync(int id);
     Task IptalEtAsync(int id);
