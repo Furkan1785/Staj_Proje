@@ -1,0 +1,90 @@
+@{
+    ViewData["Title"] = "Alış Siparişleri";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Alış Siparişleri</h3>
+    <div class="d-flex align-items-center gap-3">
+        <span id="kayitSayaci" class="badge bg-secondary">0 kayıt</span>
+        <a asp-action="Ekle" class="btn btn-primary">+ Yeni Sipariş</a>
+    </div>
+</div>
+
+@if (TempData["Basari"] != null)
+{
+    <div class="alert alert-success">@TempData["Basari"]</div>
+}
+
+<div class="table-responsive">
+    <table id="alisSiparisiTablosu" class="table table-striped table-bordered align-middle w-100 grid-sticky-header">
+        <thead>
+            <tr>
+                <th>Sipariş No</th>
+                <th>Tarih</th>
+                <th>Tedarikçi</th>
+                <th>Şube</th>
+                <th>Durum</th>
+                <th>Toplam Tutar</th>
+            </tr>
+            <tr>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th>
+                    <select class="form-select form-select-sm sutun-filtre">
+                        <option value="">Tümü</option>
+                        <option value="Beklemede">Beklemede</option>
+                        <option value="Onaylandi">Onaylandı</option>
+                        <option value="Iptal">İptal</option>
+                    </select>
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.bootstrap5.min.css" />
+    <script src="~/lib/datatables/js/dataTables.min.js"></script>
+    <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            var tablo = new DataTable('#alisSiparisiTablosu', {
+                processing: true,
+                serverSide: true,
+                ajax: { url: '@Url.Action("ListeVerisi", "AlisSiparisi")', type: 'POST' },
+                order: [[1, 'desc']],
+                language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
+                columns: [
+                    { data: 'siparisNo' },
+                    {
+                        data: 'tarih',
+                        render: function (data) {
+                            return new Date(data).toLocaleDateString('tr-TR');
+                        }
+                    },
+                    { data: 'cariUnvan' },
+                    { data: 'subeAdi' },
+                    { data: 'durumText' },
+                    {
+                        data: 'toplamTutar',
+                        orderable: false,
+                        searchable: false,
+                        render: function (data) {
+                            return Number(data).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+                        }
+                    }
+                ]
+            });
+
+            tablo.on('xhr.dt', function (e, settings, json) {
+                document.getElementById('kayitSayaci').textContent = json.recordsFiltered + ' kayıt';
+            });
+
+            sutunFiltreleriBagla('alisSiparisiTablosu', tablo);
+        });
+    </script>
+}

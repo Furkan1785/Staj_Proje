@@ -76,5 +76,13 @@ public static class DbSeeder
             [
                 new MalzemeHareketFisiKalemi { MalzemeId = m003.Id, Miktar = 50, Aciklama = "Müşteri siparişi sevkiyatı" }
             ]);
+
+        var alisSiparisiService = services.GetRequiredService<IAlisSiparisiService>();
+        await alisSiparisiService.CreateAsync(
+            new AlisSiparisi { Tarih = DateTime.Today.AddDays(-1), CariId = cari2.Id, SubeId = subeMerkez.Id, Aciklama = "Aylık stok tamamlama siparişi" },
+            [
+                new AlisSiparisiKalemi { MalzemeId = m001.Id, Miktar = 200, BirimFiyat = 45, KdvOrani = 20, Iskonto = 5 },
+                new AlisSiparisiKalemi { MalzemeId = m002.Id, Miktar = 150, BirimFiyat = 58, KdvOrani = 20, Iskonto = 0 }
+            ]);
     }
 }
