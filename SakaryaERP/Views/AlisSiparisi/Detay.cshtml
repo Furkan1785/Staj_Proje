@@ -26,6 +26,10 @@
                 <button type="submit" class="btn btn-outline-danger">İptal Et</button>
             </form>
         }
+        @if (Model.Durum == BelgeDurum.Onaylandi && Model.Kalemler.Any(k => k.KalanMiktar > 0))
+        {
+            <a asp-controller="AlisIrsaliyesi" asp-action="Ekle" asp-route-siparisId="@Model.Id" class="btn btn-outline-primary">İrsaliye Oluştur</a>
+        }
         <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
     </div>
 </div>

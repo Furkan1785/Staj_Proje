@@ -43,6 +43,7 @@ builder.Services.AddScoped<IMalzemeKategoriService, MalzemeKategoriService>();
 builder.Services.AddScoped<IMalzemeService, MalzemeService>();
 builder.Services.AddScoped<IMalzemeHareketFisiService, MalzemeHareketFisiService>();
 builder.Services.AddScoped<IAlisSiparisiService, AlisSiparisiService>();
+builder.Services.AddScoped<IAlisIrsaliyesiService, AlisIrsaliyesiService>();
 
 builder.Services.AddControllersWithViews();
 

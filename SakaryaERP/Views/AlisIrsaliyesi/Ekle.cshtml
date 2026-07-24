@@ -1,0 +1,126 @@
+@model AlisIrsaliyesiFormViewModel
+@{
+    ViewData["Title"] = "Yeni Alış İrsaliyesi";
+}
+
+<h3 class="mb-4">Yeni Alış İrsaliyesi</h3>
+
+@if (Model.SiparisNoGosterim != null)
+{
+    <div class="alert alert-info">Bu irsaliye <strong>@Model.SiparisNoGosterim</strong> numaralı alış siparişinden oluşturuluyor. Kalemler siparişin henüz teslim alınmamış miktarlarıyla önceden dolduruldu.</div>
+}
+
+<form asp-action="Ekle" method="post" class="p-4 border rounded bg-white">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input type="hidden" asp-for="AlisSiparisiId" />
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label asp-for="Tarih" class="form-label"></label>
+            <input asp-for="Tarih" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label asp-for="CariId" class="form-label"></label>
+            <select asp-for="CariId" class="form-select" asp-items="Model.TedarikciListesi">
+                <option value="">Seçiniz</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="SubeId" class="form-label"></label>
+            <select asp-for="SubeId" class="form-select" asp-items="Model.SubeListesi">
+                <option value="">Seçiniz</option>
+            </select>
+        </div>
+        <div class="col-md-8">
+            <label asp-for="Aciklama" class="form-label"></label>
+            <textarea asp-for="Aciklama" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+
+    <h5>Kalemler</h5>
+    <table id="kalemlerTablosu" class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th style="width: 45%">Malzeme</th>
+                <th style="width: 20%">Birim</th>
+                <th style="width: 25%">Miktar</th>
+                <th style="width: 10%"></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <button type="button" id="satirEkleBtn" class="btn btn-outline-secondary btn-sm mb-4">+ Satır Ekle</button>
+
+    <div>
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var malzemeListesi = @Json.Serialize(ViewData["MalzemeListesiJson"]);
+            var mevcutKalemler = @Json.Serialize(Model.Kalemler.Select(k => new { malzemeId = k.MalzemeId, miktar = k.Miktar }));
+            var tbody = document.querySelector('#kalemlerTablosu tbody');
+
+            function birimBul(malzemeId) {
+                var m = malzemeListesi.find(function (x) { return x.id === malzemeId; });
+                return m ? m.birim : '';
+            }
+
+            function satirEkle(veri) {
+                veri = veri || { malzemeId: null, miktar: '' };
+
+                var malzemeOptions = '<option value="">Seçiniz</option>' + malzemeListesi.map(function (m) {
+                    var secili = veri.malzemeId === m.id ? ' selected' : '';
+                    return '<option value="' + m.id + '" data-birim="' + m.birim + '"' + secili + '>' + m.kod + ' - ' + m.ad + '</option>';
+                }).join('');
+
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td><select class="form-select form-select-sm malzeme-secimi" required>' + malzemeOptions + '</select></td>' +
+                    '<td><input type="text" class="form-control form-control-sm birim-goster" readonly value="' + birimBul(veri.malzemeId) + '" /></td>' +
+                    '<td><input type="number" step="0.01" min="0.01" class="form-control form-control-sm miktar-input" value="' + (veri.miktar || '') + '" required /></td>' +
+                    '<td><button type="button" class="btn btn-sm btn-outline-danger satir-sil">Sil</button></td>';
+                tbody.appendChild(tr);
+            }
+
+            function satirlariYenidenIndeksle() {
+                Array.from(tbody.querySelectorAll('tr')).forEach(function (tr, i) {
+                    tr.querySelector('.malzeme-secimi').name = 'Kalemler[' + i + '].MalzemeId';
+                    tr.querySelector('.miktar-input').name = 'Kalemler[' + i + '].Miktar';
+                });
+            }
+
+            tbody.addEventListener('change', function (e) {
+                if (e.target.classList.contains('malzeme-secimi')) {
+                    var secilen = e.target.options[e.target.selectedIndex];
+                    e.target.closest('tr').querySelector('.birim-goster').value = secilen.getAttribute('data-birim') || '';
+                }
+            });
+
+            tbody.addEventListener('click', function (e) {
+                if (e.target.classList.contains('satir-sil')) {
+                    if (tbody.querySelectorAll('tr').length > 1) {
+                        e.target.closest('tr').remove();
+                        satirlariYenidenIndeksle();
+                    }
+                }
+            });
+
+            document.getElementById('satirEkleBtn').addEventListener('click', function () {
+                satirEkle();
+                satirlariYenidenIndeksle();
+            });
+
+            if (mevcutKalemler.length > 0) {
+                mevcutKalemler.forEach(function (k) { satirEkle(k); });
+            } else {
+                satirEkle();
+            }
+            satirlariYenidenIndeksle();
+        })();
+    </script>
+}
