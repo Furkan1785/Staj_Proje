@@ -1,0 +1,177 @@
+using Microsoft.EntityFrameworkCore;
+using SakaryaERP.Data;
+using SakaryaERP.Models;
+
+namespace SakaryaERP.Services;
+
+public class AlisFaturasiService : IAlisFaturasiService
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    public AlisFaturasiService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<AlisFaturasi> CreateAsync(AlisFaturasi fatura, List<AlisFaturasiKalemi> kalemler)
+    {
+        if (kalemler.Count == 0)
+            throw new InvalidOperationException("Faturada en az bir kalem olmalıdır.");
+
+        if (kalemler.Any(k => k.Miktar <= 0))
+            throw new InvalidOperationException("Tüm kalemlerin miktarı sıfırdan büyük olmalıdır.");
+
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+        if (cari.CariTipi != CariTipi.Tedarikci && cari.CariTipi != CariTipi.HerIkisi)
+            throw new InvalidOperationException("Alış faturası sadece tedarikçi olarak işaretli bir cariye açılabilir.");
+
+        var kalemMalzemeIdleri = kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+        var gecerliMalzemeSayisi = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .CountAsync(m => kalemMalzemeIdleri.Contains(m.Id));
+        if (gecerliMalzemeSayisi != kalemMalzemeIdleri.Count)
+            throw new InvalidOperationException("Kalemlerden biri geçersiz bir malzemeye ait.");
+
+        if (fatura.AlisIrsaliyesiId is not null)
+        {
+            var irsaliye = await _unitOfWork.Repository<AlisIrsaliyesi>().QueryTumu()
+                .Include(i => i.Kalemler)
+                .FirstOrDefaultAsync(i => i.Id == fatura.AlisIrsaliyesiId)
+                ?? throw new InvalidOperationException("Alış irsaliyesi bulunamadı.");
+
+            if (irsaliye.Durum != BelgeDurum.Onaylandi)
+                throw new InvalidOperationException("Fatura sadece onaylanmış bir irsaliyeden oluşturulabilir.");
+
+            if (await AktifFaturaVarMiAsync(irsaliye.Id))
+                throw new InvalidOperationException("Bu irsaliye için zaten bir fatura oluşturulmuş.");
+
+            var irsaliyeMalzemeIdleri = irsaliye.Kalemler.Select(k => k.MalzemeId).ToHashSet();
+            if (kalemler.Any(k => !irsaliyeMalzemeIdleri.Contains(k.MalzemeId)))
+                throw new InvalidOperationException("Fatura kalemleri seçilen irsaliyede olmayan bir malzeme içeremez.");
+
+            fatura.AlisSiparisiId = irsaliye.AlisSiparisiId;
+        }
+
+        var toplamSayi = await _unitOfWork.Repository<AlisFaturasi>().QueryTumu().CountAsync();
+        fatura.FaturaNo = $"AF-{toplamSayi + 1:000000}";
+        fatura.Durum = BelgeDurum.Beklemede;
+        fatura.Kalemler = kalemler;
+
+        await _unitOfWork.Repository<AlisFaturasi>().AddAsync(fatura);
+        await _unitOfWork.SaveChangesAsync();
+        return fatura;
+    }
+
+    public async Task<(IEnumerable<AlisFaturasi> Kayitlar, int ToplamKayit, int FiltrelenmisKayit)> GetSayfaliListeAsync(
+        int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu)
+    {
+        var query = _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+            .Include(f => f.Cari)
+            .Include(f => f.AlisIrsaliyesi)
+            .Include(f => f.Kalemler)
+            .Where(f => !f.IsDeleted);
+
+        var toplamKayit = await query.CountAsync();
+
+        if (!string.IsNullOrWhiteSpace(genelArama))
+        {
+            query = query.Where(f => EF.Functions.ILike(f.Cari.Unvan, $"%{genelArama}%"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(0)))
+            query = query.Where(f => EF.Functions.ILike(f.FaturaNo, $"%{sutunAramalari[0]}%"));
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(2)))
+            query = query.Where(f => EF.Functions.ILike(f.Cari.Unvan, $"%{sutunAramalari[2]}%"));
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(4))
+            && Enum.TryParse<BelgeDurum>(sutunAramalari[4], out var durumFiltre))
+            query = query.Where(f => f.Durum == durumFiltre);
+
+        var filtrelenmisKayit = await query.CountAsync();
+
+        var azalan = siralamaYonu == "desc";
+        query = siralamaSutunu switch
+        {
+            0 => azalan ? query.OrderByDescending(f => f.FaturaNo) : query.OrderBy(f => f.FaturaNo),
+            2 => azalan ? query.OrderByDescending(f => f.Cari.Unvan) : query.OrderBy(f => f.Cari.Unvan),
+            4 => azalan ? query.OrderByDescending(f => f.Durum) : query.OrderBy(f => f.Durum),
+            _ => azalan ? query.OrderByDescending(f => f.Tarih) : query.OrderBy(f => f.Tarih)
+        };
+
+        var kayitlar = await query.Skip(start).Take(length).ToListAsync();
+        return (kayitlar, toplamKayit, filtrelenmisKayit);
+    }
+
+    public async Task<AlisFaturasi?> GetByIdDetayAsync(int id)
+    {
+        return await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+            .Include(f => f.Cari)
+            .Include(f => f.AlisSiparisi)
+            .Include(f => f.AlisIrsaliyesi)
+            .Include(f => f.Kalemler).ThenInclude(k => k.Malzeme)
+            .FirstOrDefaultAsync(f => f.Id == id);
+    }
+
+    public async Task<bool> AktifFaturaVarMiAsync(int alisIrsaliyesiId)
+    {
+        return await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+            .AnyAsync(f => f.AlisIrsaliyesiId == alisIrsaliyesiId && f.Durum != BelgeDurum.Iptal);
+    }
+
+    public async Task OnaylaAsync(int id)
+    {
+        var fatura = await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+            .Include(f => f.Kalemler)
+            .FirstOrDefaultAsync(f => f.Id == id)
+            ?? throw new InvalidOperationException("Alış faturası bulunamadı.");
+
+        if (fatura.Durum != BelgeDurum.Beklemede)
+            throw new InvalidOperationException("Sadece beklemede olan faturalar onaylanabilir.");
+
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+
+        var toplamTutar = fatura.Kalemler.Sum(KalemToplami);
+
+        var toplamFisSayisi = await _unitOfWork.Repository<CariFisi>().QueryTumu().CountAsync();
+        var cariFisi = new CariFisi
+        {
+            FisNo = $"CF-{toplamFisSayisi + 1:000000}",
+            CariId = fatura.CariId,
+            Tarih = fatura.Tarih,
+            FisTipi = FisTipi.Alacak,
+            Tutar = toplamTutar,
+            OdemeYontemi = OdemeYontemi.Havale,
+            Aciklama = $"Alış Faturası {fatura.FaturaNo}"
+        };
+
+        // Alacak fişi: tedarikçiye olan borcumuz arttığı için Cari.Bakiye azalır
+        // (CariFisiService'teki Borç/+ Alacak/- yön kuralıyla aynı).
+        cari.Bakiye -= toplamTutar;
+
+        await _unitOfWork.Repository<CariFisi>().AddAsync(cariFisi);
+
+        fatura.Durum = BelgeDurum.Onaylandi;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task IptalEtAsync(int id)
+    {
+        var fatura = await _unitOfWork.Repository<AlisFaturasi>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Alış faturası bulunamadı.");
+
+        if (fatura.Durum != BelgeDurum.Beklemede)
+            throw new InvalidOperationException("Sadece beklemede olan faturalar iptal edilebilir.");
+
+        fatura.Durum = BelgeDurum.Iptal;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private static decimal KalemToplami(AlisFaturasiKalemi k)
+    {
+        var araToplam = k.Miktar * k.BirimFiyat;
+        var iskontolu = araToplam * (1 - k.Iskonto / 100);
+        return iskontolu * (1 + k.KdvOrani / 100);
+    }
+}

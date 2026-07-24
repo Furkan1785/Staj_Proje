@@ -2,6 +2,7 @@ namespace SakaryaERP.Models;
 
 public class AlisFaturasi : BaseEntity
 {
+    public string FaturaNo { get; set; } = "";
     public int CariId { get; set; }
     public int? AlisSiparisiId { get; set; }
     public int? AlisIrsaliyesiId { get; set; }

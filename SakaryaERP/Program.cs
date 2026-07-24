@@ -44,6 +44,7 @@ builder.Services.AddScoped<IMalzemeService, MalzemeService>();
 builder.Services.AddScoped<IMalzemeHareketFisiService, MalzemeHareketFisiService>();
 builder.Services.AddScoped<IAlisSiparisiService, AlisSiparisiService>();
 builder.Services.AddScoped<IAlisIrsaliyesiService, AlisIrsaliyesiService>();
+builder.Services.AddScoped<IAlisFaturasiService, AlisFaturasiService>();
 
 builder.Services.AddControllersWithViews();
 

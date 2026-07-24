@@ -1,7 +1,7 @@
 @using SakaryaERP.Models
-@model AlisIrsaliyesiDetayViewModel
+@model AlisFaturasiDetayViewModel
 @{
-    ViewData["Title"] = "Alış İrsaliyesi Detayı";
+    ViewData["Title"] = "Alış Faturası Detayı";
 
     var durumSinifi = Model.Durum switch
     {
@@ -13,23 +13,20 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0">Alış İrsaliyesi <small class="text-muted">(@Model.IrsaliyeNo)</small></h3>
+    <h3 class="mb-0">Alış Faturası <small class="text-muted">(@Model.FaturaNo)</small></h3>
     <div class="d-flex gap-2">
         @if (Model.Durum == BelgeDurum.Beklemede)
         {
-            <form method="post" asp-action="Onayla" asp-route-id="@Model.Id" onsubmit="return confirm('Bu irsaliye onaylansın mı? Malzeme bakiyeleri güncellenecek.')">
+            <form method="post" asp-action="Onayla" asp-route-id="@Model.Id" onsubmit="return confirm('Bu fatura onaylansın mı? Cariye alacak hareketi eklenecek.')">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-outline-success">Onayla</button>
             </form>
-            <form method="post" asp-action="IptalEt" asp-route-id="@Model.Id" onsubmit="return confirm('Bu irsaliye iptal edilsin mi?')">
+            <form method="post" asp-action="IptalEt" asp-route-id="@Model.Id" onsubmit="return confirm('Bu fatura iptal edilsin mi?')">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-outline-danger">İptal Et</button>
             </form>
         }
-        @if (Model.Durum == BelgeDurum.Onaylandi)
-        {
-            <a asp-controller="AlisFaturasi" asp-action="Ekle" asp-route-irsaliyeId="@Model.Id" class="btn btn-outline-primary">Fatura Oluştur</a>
-        }
+        <a asp-action="Pdf" asp-route-id="@Model.Id" class="btn btn-outline-secondary" target="_blank">PDF</a>
         <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
     </div>
 </div>
@@ -45,7 +42,7 @@
 
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        İrsaliye Bilgileri
+        Fatura Bilgileri
         <span class="badge @durumSinifi">@Model.DurumText</span>
     </div>
     <div class="card-body">
@@ -54,10 +51,10 @@
             <dd class="col-sm-4">@Model.Tarih.ToString("dd.MM.yyyy")</dd>
             <dt class="col-sm-2">Tedarikçi</dt>
             <dd class="col-sm-4">@Model.CariUnvan</dd>
-            <dt class="col-sm-2">Şube</dt>
-            <dd class="col-sm-4">@Model.SubeAdi</dd>
             <dt class="col-sm-2">Sipariş No</dt>
             <dd class="col-sm-4">@(Model.SiparisNo ?? "-")</dd>
+            <dt class="col-sm-2">İrsaliye No</dt>
+            <dd class="col-sm-4">@(Model.IrsaliyeNo ?? "-")</dd>
             <dt class="col-sm-2">Açıklama</dt>
             <dd class="col-sm-10">@(Model.Aciklama ?? "-")</dd>
         </dl>
@@ -74,6 +71,10 @@
                     <th>Malzeme Adı</th>
                     <th>Birim</th>
                     <th class="text-end">Miktar</th>
+                    <th class="text-end">Birim Fiyat</th>
+                    <th class="text-end">İskonto %</th>
+                    <th class="text-end">KDV %</th>
+                    <th class="text-end">Satır Toplamı</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,9 +85,19 @@
                         <td>@k.MalzemeAdi</td>
                         <td>@k.Birim</td>
                         <td class="text-end">@k.Miktar.ToString("N2")</td>
+                        <td class="text-end">@k.BirimFiyat.ToString("N2")</td>
+                        <td class="text-end">@k.Iskonto.ToString("N2")</td>
+                        <td class="text-end">@k.KdvOrani.ToString("N2")</td>
+                        <td class="text-end">@k.SatirToplami.ToString("N2")</td>
                     </tr>
                 }
             </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="7" class="text-end">Genel Toplam</th>
+                    <th class="text-end">@Model.ToplamTutar.ToString("N2")</th>
+                </tr>
+            </tfoot>
         </table>
     </div>
 </div>
