@@ -1,0 +1,37 @@
+@model MusteriTalebiFormViewModel
+@{
+    ViewData["Title"] = "Yeni Müşteri Talebi";
+}
+
+<h3 class="mb-4">Yeni Müşteri Talebi</h3>
+
+<form asp-action="Ekle" method="post" class="p-4 border rounded bg-white">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label asp-for="Tarih" class="form-label"></label>
+            <input asp-for="Tarih" class="form-control" />
+        </div>
+        <div class="col-md-5">
+            <label asp-for="CariId" class="form-label"></label>
+            <select asp-for="CariId" class="form-select" asp-items="Model.MusteriListesi">
+                <option value="">Seçiniz</option>
+            </select>
+        </div>
+        <div class="col-md-12">
+            <label asp-for="Icerik" class="form-label"></label>
+            <textarea asp-for="Icerik" class="form-control" rows="4" placeholder="Müşterinin talep ettiği ürün/hizmet ile ilgili açıklama"></textarea>
+            <span asp-validation-for="Icerik" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

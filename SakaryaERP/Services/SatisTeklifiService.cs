@@ -1,0 +1,130 @@
+using Microsoft.EntityFrameworkCore;
+using SakaryaERP.Data;
+using SakaryaERP.Models;
+
+namespace SakaryaERP.Services;
+
+public class SatisTeklifiService : ISatisTeklifiService
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    public SatisTeklifiService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<SatisTeklifi> CreateAsync(SatisTeklifi teklif, List<SatisTeklifiKalemi> kalemler)
+    {
+        if (kalemler.Count == 0)
+            throw new InvalidOperationException("Teklifte en az bir kalem olmalıdır.");
+
+        if (kalemler.Any(k => k.Miktar <= 0))
+            throw new InvalidOperationException("Tüm kalemlerin miktarı sıfırdan büyük olmalıdır.");
+
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(teklif.CariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+        if (cari.CariTipi != CariTipi.Musteri && cari.CariTipi != CariTipi.HerIkisi)
+            throw new InvalidOperationException("Satış teklifi sadece müşteri olarak işaretli bir cariye açılabilir.");
+
+        var kalemMalzemeIdleri = kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+        var gecerliMalzemeSayisi = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .CountAsync(m => kalemMalzemeIdleri.Contains(m.Id));
+        if (gecerliMalzemeSayisi != kalemMalzemeIdleri.Count)
+            throw new InvalidOperationException("Kalemlerden biri geçersiz bir malzemeye ait.");
+
+        MusteriTalebi? talep = null;
+        if (teklif.MusteriTalebiId is not null)
+        {
+            talep = await _unitOfWork.Repository<MusteriTalebi>().GetByIdAsync(teklif.MusteriTalebiId.Value)
+                ?? throw new InvalidOperationException("Müşteri talebi bulunamadı.");
+            if (talep.Durum is not (TalepDurum.Yeni or TalepDurum.Isleniyor))
+                throw new InvalidOperationException("Sadece yeni veya işlemedeki bir talepten teklif oluşturulabilir.");
+        }
+
+        var toplamSayi = await _unitOfWork.Repository<SatisTeklifi>().QueryTumu().CountAsync();
+        teklif.TeklifNo = $"ST-{toplamSayi + 1:000000}";
+        teklif.Durum = BelgeDurum.Beklemede;
+        teklif.Kalemler = kalemler;
+
+        await _unitOfWork.Repository<SatisTeklifi>().AddAsync(teklif);
+
+        // Talep artık bir teklife dönüştüğü için işlemi tamamlanmış sayılır.
+        if (talep is not null)
+            talep.Durum = TalepDurum.Tamamlandi;
+
+        await _unitOfWork.SaveChangesAsync();
+        return teklif;
+    }
+
+    public async Task<(IEnumerable<SatisTeklifi> Kayitlar, int ToplamKayit, int FiltrelenmisKayit)> GetSayfaliListeAsync(
+        int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu)
+    {
+        var query = _unitOfWork.Repository<SatisTeklifi>().QueryTumu()
+            .Include(t => t.Cari)
+            .Include(t => t.MusteriTalebi)
+            .Include(t => t.Kalemler)
+            .Where(t => !t.IsDeleted);
+
+        var toplamKayit = await query.CountAsync();
+
+        if (!string.IsNullOrWhiteSpace(genelArama))
+        {
+            query = query.Where(t => EF.Functions.ILike(t.Cari.Unvan, $"%{genelArama}%"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(0)))
+            query = query.Where(t => EF.Functions.ILike(t.TeklifNo, $"%{sutunAramalari[0]}%"));
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(3)))
+            query = query.Where(t => EF.Functions.ILike(t.Cari.Unvan, $"%{sutunAramalari[3]}%"));
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(5))
+            && Enum.TryParse<BelgeDurum>(sutunAramalari[5], out var durumFiltre))
+            query = query.Where(t => t.Durum == durumFiltre);
+
+        var filtrelenmisKayit = await query.CountAsync();
+
+        var azalan = siralamaYonu == "desc";
+        query = siralamaSutunu switch
+        {
+            0 => azalan ? query.OrderByDescending(t => t.TeklifNo) : query.OrderBy(t => t.TeklifNo),
+            3 => azalan ? query.OrderByDescending(t => t.Cari.Unvan) : query.OrderBy(t => t.Cari.Unvan),
+            5 => azalan ? query.OrderByDescending(t => t.Durum) : query.OrderBy(t => t.Durum),
+            _ => azalan ? query.OrderByDescending(t => t.Tarih) : query.OrderBy(t => t.Tarih)
+        };
+
+        var kayitlar = await query.Skip(start).Take(length).ToListAsync();
+        return (kayitlar, toplamKayit, filtrelenmisKayit);
+    }
+
+    public async Task<SatisTeklifi?> GetByIdDetayAsync(int id)
+    {
+        return await _unitOfWork.Repository<SatisTeklifi>().QueryTumu()
+            .Include(t => t.Cari)
+            .Include(t => t.MusteriTalebi)
+            .Include(t => t.Kalemler).ThenInclude(k => k.Malzeme)
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
+    public async Task OnaylaAsync(int id)
+    {
+        var teklif = await _unitOfWork.Repository<SatisTeklifi>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Satış teklifi bulunamadı.");
+        if (teklif.Durum != BelgeDurum.Beklemede)
+            throw new InvalidOperationException("Sadece beklemede olan teklifler onaylanabilir.");
+
+        teklif.Durum = BelgeDurum.Onaylandi;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task IptalEtAsync(int id)
+    {
+        var teklif = await _unitOfWork.Repository<SatisTeklifi>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Satış teklifi bulunamadı.");
+        if (teklif.Durum != BelgeDurum.Beklemede)
+            throw new InvalidOperationException("Sadece beklemede olan teklifler iptal edilebilir.");
+
+        teklif.Durum = BelgeDurum.Iptal;
+        await _unitOfWork.SaveChangesAsync();
+    }
+}
