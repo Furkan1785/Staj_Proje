@@ -53,6 +53,7 @@ public class AlisSiparisiService : IAlisSiparisiService
             .Include(s => s.Cari)
             .Include(s => s.Sube)
             .Include(s => s.Kalemler)
+            .Include(s => s.AlisIrsaliyeleri).ThenInclude(i => i.Kalemler)
             .Where(s => !s.IsDeleted);
 
         var toplamKayit = await query.CountAsync();
@@ -62,11 +63,14 @@ public class AlisSiparisiService : IAlisSiparisiService
             query = query.Where(s => EF.Functions.ILike(s.Cari.Unvan, $"%{genelArama}%"));
         }
 
-        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(1)))
-            query = query.Where(s => EF.Functions.ILike(s.Cari.Unvan, $"%{sutunAramalari[1]}%"));
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(0)))
+            query = query.Where(s => EF.Functions.ILike(s.SiparisNo, $"%{sutunAramalari[0]}%"));
 
         if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(2)))
-            query = query.Where(s => EF.Functions.ILike(s.Sube.SubeAdi, $"%{sutunAramalari[2]}%"));
+            query = query.Where(s => EF.Functions.ILike(s.Cari.Unvan, $"%{sutunAramalari[2]}%"));
+
+        if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(3)))
+            query = query.Where(s => EF.Functions.ILike(s.Sube.SubeAdi, $"%{sutunAramalari[3]}%"));
 
         if (!string.IsNullOrWhiteSpace(sutunAramalari.ElementAtOrDefault(4))
             && Enum.TryParse<BelgeDurum>(sutunAramalari[4], out var durumFiltre))
@@ -77,13 +81,54 @@ public class AlisSiparisiService : IAlisSiparisiService
         var azalan = siralamaYonu == "desc";
         query = siralamaSutunu switch
         {
-            1 => azalan ? query.OrderByDescending(s => s.Cari.Unvan) : query.OrderBy(s => s.Cari.Unvan),
-            2 => azalan ? query.OrderByDescending(s => s.Sube.SubeAdi) : query.OrderBy(s => s.Sube.SubeAdi),
+            2 => azalan ? query.OrderByDescending(s => s.Cari.Unvan) : query.OrderBy(s => s.Cari.Unvan),
+            3 => azalan ? query.OrderByDescending(s => s.Sube.SubeAdi) : query.OrderBy(s => s.Sube.SubeAdi),
             4 => azalan ? query.OrderByDescending(s => s.Durum) : query.OrderBy(s => s.Durum),
             _ => azalan ? query.OrderByDescending(s => s.Tarih) : query.OrderBy(s => s.Tarih)
         };
 
         var kayitlar = await query.Skip(start).Take(length).ToListAsync();
         return (kayitlar, toplamKayit, filtrelenmisKayit);
+    }
+
+    public async Task<AlisSiparisi?> GetByIdDetayAsync(int id)
+    {
+        return await _unitOfWork.Repository<AlisSiparisi>().QueryTumu()
+            .Include(s => s.Cari)
+            .Include(s => s.Sube)
+            .Include(s => s.Kalemler).ThenInclude(k => k.Malzeme)
+            .Include(s => s.AlisIrsaliyeleri).ThenInclude(i => i.Kalemler)
+            .FirstOrDefaultAsync(s => s.Id == id);
+    }
+
+    public async Task OnaylaAsync(int id)
+    {
+        var siparis = await _unitOfWork.Repository<AlisSiparisi>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Alış siparişi bulunamadı.");
+        if (siparis.Durum != BelgeDurum.Beklemede)
+            throw new InvalidOperationException("Sadece beklemede olan siparişler onaylanabilir.");
+
+        siparis.Durum = BelgeDurum.Onaylandi;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task IptalEtAsync(int id)
+    {
+        var siparis = await _unitOfWork.Repository<AlisSiparisi>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Alış siparişi bulunamadı.");
+        if (siparis.Durum != BelgeDurum.Beklemede)
+            throw new InvalidOperationException("Sadece beklemede olan siparişler iptal edilebilir.");
+
+        siparis.Durum = BelgeDurum.Iptal;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public Dictionary<int, decimal> TeslimMiktarlariHesapla(AlisSiparisi siparis)
+    {
+        return siparis.AlisIrsaliyeleri
+            .Where(i => i.Durum == BelgeDurum.Onaylandi)
+            .SelectMany(i => i.Kalemler)
+            .GroupBy(k => k.MalzemeId)
+            .ToDictionary(g => g.Key, g => g.Sum(k => k.Miktar));
     }
 }

@@ -8,4 +8,11 @@ public interface IAlisSiparisiService
 
     Task<(IEnumerable<AlisSiparisi> Kayitlar, int ToplamKayit, int FiltrelenmisKayit)> GetSayfaliListeAsync(
         int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu);
+
+    Task<AlisSiparisi?> GetByIdDetayAsync(int id);
+    Task OnaylaAsync(int id);
+    Task IptalEtAsync(int id);
+
+    // Onaylanmış alış irsaliyesi kalemlerinden malzeme bazında teslim alınan toplam miktarı hesaplar.
+    Dictionary<int, decimal> TeslimMiktarlariHesapla(AlisSiparisi siparis);
 }

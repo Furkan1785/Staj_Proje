@@ -35,7 +35,7 @@ public class AlisSiparisiController : Controller
         var siralamaSutunu = int.Parse(form["order[0][column]"].FirstOrDefault() ?? "1");
         var siralamaYonu = form["order[0][dir]"].FirstOrDefault() ?? "desc";
 
-        var sutunAramalari = new string?[6];
+        var sutunAramalari = new string?[8];
         for (var i = 0; i < sutunAramalari.Length; i++)
             sutunAramalari[i] = form[$"columns[{i}][search][value]"].FirstOrDefault();
 
@@ -49,11 +49,85 @@ public class AlisSiparisiController : Controller
             Tarih = s.Tarih,
             CariUnvan = s.Cari.Unvan,
             SubeAdi = s.Sube.SubeAdi,
+            Durum = s.Durum.ToString(),
             DurumText = DurumMetni(s.Durum),
+            TeslimDurumu = TeslimDurumuMetni(s, _alisSiparisiService.TeslimMiktarlariHesapla(s)),
             ToplamTutar = s.Kalemler.Sum(KalemToplami)
         });
 
         return Json(new { draw, recordsTotal = toplamKayit, recordsFiltered = filtrelenmisKayit, data = veri });
+    }
+
+    public async Task<IActionResult> Detay(int id)
+    {
+        var siparis = await _alisSiparisiService.GetByIdDetayAsync(id);
+        if (siparis is null)
+            return NotFound();
+
+        var teslimMiktarlari = _alisSiparisiService.TeslimMiktarlariHesapla(siparis);
+
+        var vm = new AlisSiparisiDetayViewModel
+        {
+            Id = siparis.Id,
+            SiparisNo = siparis.SiparisNo,
+            Tarih = siparis.Tarih,
+            CariUnvan = siparis.Cari.Unvan,
+            SubeAdi = siparis.Sube.SubeAdi,
+            Aciklama = siparis.Aciklama,
+            Durum = siparis.Durum,
+            DurumText = DurumMetni(siparis.Durum),
+            Kalemler = siparis.Kalemler.Select(k =>
+            {
+                var teslimAlinan = Math.Min(teslimMiktarlari.GetValueOrDefault(k.MalzemeId), k.Miktar);
+                return new AlisSiparisiKalemDetayViewModel
+                {
+                    MalzemeKodu = k.Malzeme.MalzemeKodu,
+                    MalzemeAdi = k.Malzeme.MalzemeAdi,
+                    Birim = k.Malzeme.Birim,
+                    Miktar = k.Miktar,
+                    BirimFiyat = k.BirimFiyat,
+                    KdvOrani = k.KdvOrani,
+                    Iskonto = k.Iskonto,
+                    TeslimAlinanMiktar = teslimAlinan,
+                    KalanMiktar = k.Miktar - teslimAlinan,
+                    TeslimYuzdesi = k.Miktar == 0 ? 0 : Math.Round(teslimAlinan / k.Miktar * 100, 1)
+                };
+            }).ToList()
+        };
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Onayla(int id)
+    {
+        try
+        {
+            await _alisSiparisiService.OnaylaAsync(id);
+            TempData["Basari"] = "Alış siparişi onaylandı.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> IptalEt(int id)
+    {
+        try
+        {
+            await _alisSiparisiService.IptalEtAsync(id);
+            TempData["Basari"] = "Alış siparişi iptal edildi.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+        return RedirectToAction(nameof(Index));
     }
 
     public async Task<IActionResult> Ekle()
@@ -137,4 +211,19 @@ public class AlisSiparisiController : Controller
         BelgeDurum.Iptal => "İptal",
         _ => durum.ToString()
     };
+
+    private static string TeslimDurumuMetni(AlisSiparisi siparis, Dictionary<int, decimal> teslimMiktarlari)
+    {
+        if (siparis.Durum == BelgeDurum.Iptal)
+            return "-";
+
+        var siparisToplami = siparis.Kalemler.Sum(k => k.Miktar);
+        var teslimToplami = siparis.Kalemler.Sum(k => Math.Min(teslimMiktarlari.GetValueOrDefault(k.MalzemeId), k.Miktar));
+
+        if (teslimToplami <= 0)
+            return "Teslim Edilmedi";
+        if (teslimToplami < siparisToplami)
+            return "Kısmi Teslim Alındı";
+        return "Tamamen Teslim Alındı";
+    }
 }
