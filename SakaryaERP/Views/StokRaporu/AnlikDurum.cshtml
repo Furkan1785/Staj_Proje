@@ -1,0 +1,63 @@
+@model List<AnlikStokViewModel>
+@{
+    ViewData["Title"] = "Anlık Stok Durumu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Anlık Stok Durumu</h3>
+    <div class="d-flex align-items-center gap-3">
+        <span id="kayitSayaci" class="badge bg-secondary">0 kayıt</span>
+        <a asp-controller="Malzeme" asp-action="Excel" class="btn btn-outline-success">Excel'e Aktar</a>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table id="anlikStokTablosu" class="table table-striped table-bordered align-middle w-100 grid-sticky-header">
+        <thead>
+            <tr>
+                <th>Malzeme Kodu</th>
+                <th>Malzeme Adı</th>
+                <th>Kategori</th>
+                <th>Birim</th>
+                <th>Bakiye</th>
+                <th>Min Stok</th>
+                <th>Max Stok</th>
+                <th>Durum</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in Model)
+            {
+                <tr>
+                    <td>@m.MalzemeKodu</td>
+                    <td>@m.MalzemeAdi</td>
+                    <td>@(m.KategoriAdi ?? "-")</td>
+                    <td>@m.Birim</td>
+                    <td>@m.Bakiye.ToString("N2")</td>
+                    <td>@m.MinStokMiktari.ToString("N2")</td>
+                    <td>@m.MaxStokMiktari.ToString("N2")</td>
+                    <td><span class="badge @m.DurumSinifi">@m.DurumText</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.bootstrap5.min.css" />
+    <script src="~/lib/datatables/js/dataTables.min.js"></script>
+    <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            var tablo = new DataTable('#anlikStokTablosu', {
+                order: [[0, 'asc']],
+                language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' }
+            });
+
+            document.getElementById('kayitSayaci').textContent = tablo.rows().count() + ' kayıt';
+            tablo.on('draw', function () {
+                document.getElementById('kayitSayaci').textContent = tablo.rows({ search: 'applied' }).count() + ' kayıt';
+            });
+        });
+    </script>
+}

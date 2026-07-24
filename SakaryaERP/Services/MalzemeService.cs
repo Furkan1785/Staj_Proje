@@ -35,6 +35,7 @@ public class MalzemeService : IMalzemeService
 
     public async Task<IEnumerable<Malzeme>> GetKritikStokListesiAsync()
         => await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .Include(m => m.Kategori)
             .Where(m => !m.IsDeleted && m.Bakiye < m.MinStokMiktari)
             .OrderBy(m => m.MalzemeKodu)
             .ToListAsync();

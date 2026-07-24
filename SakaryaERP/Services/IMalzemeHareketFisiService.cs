@@ -10,4 +10,8 @@ public interface IMalzemeHareketFisiService
         int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu);
 
     Task OnaylaAsync(int id);
+
+    // Sadece onaylanmış fişlerin kalemleri — bekleyen bir fiş henüz bakiyeye
+    // yansımadığı için "hareket geçmişi" sayılmaz.
+    Task<List<MalzemeHareketFisiKalemi>> GetMalzemeGecmisiAsync(int malzemeId, DateTime? baslangic, DateTime? bitis);
 }

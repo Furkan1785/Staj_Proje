@@ -130,4 +130,19 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
         HareketTipi.Transfer => 0,
         _ => 0
     };
+
+    public async Task<List<MalzemeHareketFisiKalemi>> GetMalzemeGecmisiAsync(int malzemeId, DateTime? baslangic, DateTime? bitis)
+    {
+        var query = _unitOfWork.Repository<MalzemeHareketFisiKalemi>().QueryTumu()
+            .Include(k => k.MalzemeHareketFisi)
+            .ThenInclude(f => f.Sube)
+            .Where(k => k.MalzemeId == malzemeId && k.MalzemeHareketFisi.Durum == BelgeDurum.Onaylandi);
+
+        if (baslangic is not null)
+            query = query.Where(k => k.MalzemeHareketFisi.Tarih >= baslangic);
+        if (bitis is not null)
+            query = query.Where(k => k.MalzemeHareketFisi.Tarih <= bitis);
+
+        return await query.OrderBy(k => k.MalzemeHareketFisi.Tarih).ThenBy(k => k.Id).ToListAsync();
+    }
 }
