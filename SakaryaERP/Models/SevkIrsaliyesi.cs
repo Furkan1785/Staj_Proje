@@ -2,6 +2,7 @@ namespace SakaryaERP.Models;
 
 public class SevkIrsaliyesi : BaseEntity
 {
+    public string IrsaliyeNo { get; set; } = "";
     public int SatisSiparisiId { get; set; }
     public int SubeId { get; set; }
     public DateTime Tarih { get; set; }
