@@ -2,6 +2,7 @@ namespace SakaryaERP.Models;
 
 public class SatisSiparisi : BaseEntity
 {
+    public string SiparisNo { get; set; } = "";
     public int CariId { get; set; }
     public int? SatisTeklifiId { get; set; }
     public DateTime Tarih { get; set; }
