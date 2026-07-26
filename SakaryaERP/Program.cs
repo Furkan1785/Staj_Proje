@@ -49,6 +49,7 @@ builder.Services.AddScoped<IMusteriTalebiService, MusteriTalebiService>();
 builder.Services.AddScoped<ISatisTeklifiService, SatisTeklifiService>();
 builder.Services.AddScoped<ISatisSiparisiService, SatisSiparisiService>();
 builder.Services.AddScoped<ISevkIrsaliyesiService, SevkIrsaliyesiService>();
+builder.Services.AddScoped<ISatisFaturasiService, SatisFaturasiService>();
 
 builder.Services.AddControllersWithViews();
 

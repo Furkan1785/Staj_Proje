@@ -26,6 +26,10 @@
                 <button type="submit" class="btn btn-outline-danger">İptal Et</button>
             </form>
         }
+        @if (Model.Durum == BelgeDurum.Onaylandi)
+        {
+            <a asp-controller="SatisFaturasi" asp-action="Ekle" asp-route-irsaliyeId="@Model.Id" class="btn btn-outline-primary">Fatura Oluştur</a>
+        }
         <a asp-action="Pdf" asp-route-id="@Model.Id" class="btn btn-outline-secondary" target="_blank">PDF</a>
         <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
     </div>

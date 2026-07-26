@@ -2,10 +2,12 @@ namespace SakaryaERP.Models;
 
 public class SatisFaturasi : BaseEntity
 {
+    public string FaturaNo { get; set; } = "";
     public int CariId { get; set; }
     public int? SevkIrsaliyesiId { get; set; }
     public int? SatisSiparisiId { get; set; }
     public DateTime Tarih { get; set; }
+    public DateTime? VadeTarihi { get; set; }
     public BelgeDurum Durum { get; set; } = BelgeDurum.Beklemede;
     public string? Aciklama { get; set; }
 
