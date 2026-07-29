@@ -54,7 +54,19 @@ public enum CekSenetDurum
     TahsilEdildi
 }
 
-public enum HesapTipi { Aktif, Pasif, Gelir, Gider, Ozkaynak }
+public enum HesapTipi
+{
+    [Display(Name = "Aktif")]
+    Aktif,
+    [Display(Name = "Pasif")]
+    Pasif,
+    [Display(Name = "Gelir")]
+    Gelir,
+    [Display(Name = "Gider")]
+    Gider,
+    [Display(Name = "Özkaynak")]
+    Ozkaynak
+}
 
 public enum HareketTipi
 {

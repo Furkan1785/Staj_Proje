@@ -142,6 +142,8 @@ public class AlisFaturasiService : IAlisFaturasiService
             ?? throw new InvalidOperationException("Cari bulunamadı.");
 
         var toplamTutar = fatura.Kalemler.Sum(KalemToplami);
+        var netTutar = fatura.Kalemler.Sum(k => k.Miktar * k.BirimFiyat * (1 - k.Iskonto / 100m));
+        var kdvTutari = toplamTutar - netTutar;
 
         var toplamFisSayisi = await _unitOfWork.Repository<CariFisi>().QueryTumu().CountAsync();
         var cariFisi = new CariFisi
@@ -160,9 +162,38 @@ public class AlisFaturasiService : IAlisFaturasiService
         cari.Bakiye -= toplamTutar;
 
         await _unitOfWork.Repository<CariFisi>().AddAsync(cariFisi);
+        await _unitOfWork.Repository<MuhasebeFisi>().AddAsync(
+            await YevmiyeKaydiOlusturAsync(fatura, netTutar, kdvTutari, toplamTutar));
 
         fatura.Durum = BelgeDurum.Onaylandi;
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    // Alış faturası onayında basit yevmiye kaydı: 153 Ticari Mallar ve 191 İndirilecek KDV
+    // borçlanır, 320 Satıcılar alacaklanır.
+    private async Task<MuhasebeFisi> YevmiyeKaydiOlusturAsync(AlisFaturasi fatura, decimal netTutar, decimal kdvTutari, decimal toplamTutar)
+    {
+        var hesaplar = await _unitOfWork.Repository<HesapPlani>().QueryTumu()
+            .Where(h => h.HesapKodu == "153" || h.HesapKodu == "191" || h.HesapKodu == "320")
+            .ToDictionaryAsync(h => h.HesapKodu);
+
+        var aciklama = $"Alış Faturası {fatura.FaturaNo}";
+        var kalemler = new List<MuhasebeFisiKalemi>
+        {
+            new() { HesapPlaniId = hesaplar["153"].Id, Borc = netTutar, Alacak = 0, Aciklama = aciklama },
+            new() { HesapPlaniId = hesaplar["320"].Id, Borc = 0, Alacak = toplamTutar, Aciklama = aciklama }
+        };
+        if (kdvTutari > 0)
+            kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["191"].Id, Borc = kdvTutari, Alacak = 0, Aciklama = aciklama });
+
+        var toplamFisSayisi = await _unitOfWork.Repository<MuhasebeFisi>().QueryTumu().CountAsync();
+        return new MuhasebeFisi
+        {
+            FisNo = $"MF-{toplamFisSayisi + 1:000000}",
+            Tarih = fatura.Tarih,
+            AlisFaturasiId = fatura.Id,
+            Kalemler = kalemler
+        };
     }
 
     public async Task IptalEtAsync(int id)

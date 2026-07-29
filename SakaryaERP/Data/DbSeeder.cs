@@ -11,6 +11,35 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(IServiceProvider services)
     {
+        // Hesap planı kendi bağımsız kontrolüyle seed edilir; böylece Cari zaten dolu olan
+        // (Gün 26 öncesinden kalma) bir dev veritabanında da uygulama yeniden başlatıldığında eklenir.
+        var hesapPlaniService = services.GetRequiredService<IHesapPlaniService>();
+        if (!(await hesapPlaniService.GetAllAsync()).Any())
+        {
+            var donenVarliklar = await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "1", HesapAdi = "Dönen Varlıklar", HesapTipi = HesapTipi.Aktif });
+            var kvYabanciKaynaklar = await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "3", HesapAdi = "Kısa Vadeli Yabancı Kaynaklar", HesapTipi = HesapTipi.Pasif });
+            var ozkaynaklar = await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "5", HesapAdi = "Özkaynaklar", HesapTipi = HesapTipi.Ozkaynak });
+            var gelirTablosu = await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "6", HesapAdi = "Gelir Tablosu Hesapları", HesapTipi = HesapTipi.Gelir });
+
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "100", HesapAdi = "Kasa", HesapTipi = HesapTipi.Aktif, ParentId = donenVarliklar.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "102", HesapAdi = "Bankalar", HesapTipi = HesapTipi.Aktif, ParentId = donenVarliklar.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "120", HesapAdi = "Alıcılar", HesapTipi = HesapTipi.Aktif, ParentId = donenVarliklar.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "153", HesapAdi = "Ticari Mallar", HesapTipi = HesapTipi.Aktif, ParentId = donenVarliklar.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "191", HesapAdi = "İndirilecek KDV", HesapTipi = HesapTipi.Aktif, ParentId = donenVarliklar.Id });
+
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "320", HesapAdi = "Satıcılar", HesapTipi = HesapTipi.Pasif, ParentId = kvYabanciKaynaklar.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "360", HesapAdi = "Ödenecek Vergi ve Fonlar", HesapTipi = HesapTipi.Pasif, ParentId = kvYabanciKaynaklar.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "391", HesapAdi = "Hesaplanan KDV", HesapTipi = HesapTipi.Pasif, ParentId = kvYabanciKaynaklar.Id });
+
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "500", HesapAdi = "Sermaye", HesapTipi = HesapTipi.Ozkaynak, ParentId = ozkaynaklar.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "570", HesapAdi = "Geçmiş Yıllar Karları", HesapTipi = HesapTipi.Ozkaynak, ParentId = ozkaynaklar.Id });
+
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "600", HesapAdi = "Yurtiçi Satışlar", HesapTipi = HesapTipi.Gelir, ParentId = gelirTablosu.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "621", HesapAdi = "Satılan Ticari Mallar Maliyeti", HesapTipi = HesapTipi.Gider, ParentId = gelirTablosu.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "631", HesapAdi = "Pazarlama Satış ve Dağıtım Giderleri", HesapTipi = HesapTipi.Gider, ParentId = gelirTablosu.Id });
+            await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "632", HesapAdi = "Genel Yönetim Giderleri", HesapTipi = HesapTipi.Gider, ParentId = gelirTablosu.Id });
+        }
+
         var cariService = services.GetRequiredService<ICariService>();
         if ((await cariService.GetAllAsync()).Any())
             return;

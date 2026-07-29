@@ -1,0 +1,53 @@
+@model List<HesapPlaniListItemViewModel>
+@{
+    ViewData["Title"] = "Hesap Planı";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Hesap Planı</h3>
+    <span class="badge bg-secondary">@Model.Count kayıt</span>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle w-100 grid-sticky-header">
+        <thead>
+            <tr>
+                <th>Hesap Kodu</th>
+                <th>Hesap Adı</th>
+                <th>Hesap Tipi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var h in Model)
+            {
+                <tr>
+                    <td>@h.HesapKodu</td>
+                    <td>
+                        @{
+                            var girintiSinifi = h.Seviye switch
+                            {
+                                0 => "ps-0",
+                                1 => "ps-4",
+                                _ => "ps-5"
+                            };
+                        }
+                        <span class="@girintiSinifi">@(h.Seviye > 0 ? "— " : "")@h.HesapAdi</span>
+                    </td>
+                    <td>
+                        @{
+                            var rozetSinifi = h.HesapTipi switch
+                            {
+                                "Aktif" => "bg-primary",
+                                "Pasif" => "bg-warning text-dark",
+                                "Gelir" => "bg-success",
+                                "Gider" => "bg-danger",
+                                _ => "bg-info text-dark"
+                            };
+                        }
+                        <span class="badge @rozetSinifi">@h.HesapTipi</span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
