@@ -23,6 +23,7 @@ public class SevkIrsaliyesiService : ISevkIrsaliyesiService
 
         var siparis = await _unitOfWork.Repository<SatisSiparisi>().QueryTumu()
             .Include(s => s.Kalemler)
+            .Include(s => s.SevkIrsaliyeleri).ThenInclude(i => i.Kalemler)
             .FirstOrDefaultAsync(s => s.Id == irsaliye.SatisSiparisiId)
             ?? throw new InvalidOperationException("Satış siparişi bulunamadı.");
 
@@ -34,14 +35,31 @@ public class SevkIrsaliyesiService : ISevkIrsaliyesiService
             throw new InvalidOperationException("Şube bulunamadı.");
 
         var kalemMalzemeIdleri = kalemler.Select(k => k.MalzemeId).Distinct().ToList();
-        var gecerliMalzemeSayisi = await _unitOfWork.Repository<Malzeme>().QueryTumu()
-            .CountAsync(m => kalemMalzemeIdleri.Contains(m.Id));
-        if (gecerliMalzemeSayisi != kalemMalzemeIdleri.Count)
+        var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .Where(m => kalemMalzemeIdleri.Contains(m.Id))
+            .ToDictionaryAsync(m => m.Id);
+        if (malzemeler.Count != kalemMalzemeIdleri.Count)
             throw new InvalidOperationException("Kalemlerden biri geçersiz bir malzemeye ait.");
 
-        var siparisMalzemeIdleri = siparis.Kalemler.Select(k => k.MalzemeId).ToHashSet();
-        if (kalemler.Any(k => !siparisMalzemeIdleri.Contains(k.MalzemeId)))
+        var siparisKalemMiktarlari = siparis.Kalemler.ToDictionary(k => k.MalzemeId, k => k.Miktar);
+        if (kalemler.Any(k => !siparisKalemMiktarlari.ContainsKey(k.MalzemeId)))
             throw new InvalidOperationException("Sevk irsaliyesi kalemleri seçilen siparişte olmayan bir malzeme içeremez.");
+
+        // Kısmi sevkiyat: aynı siparişten daha önce (iptal hariç) sevk edilen miktarlar düşülüp
+        // kalan sevk edilebilir miktar bulunur — aksi halde sipariş miktarının üzerinde sevkiyat mümkün olurdu.
+        var sevkEdilenMiktarlar = siparis.SevkIrsaliyeleri
+            .Where(i => i.Durum != BelgeDurum.Iptal)
+            .SelectMany(i => i.Kalemler)
+            .GroupBy(k => k.MalzemeId)
+            .ToDictionary(g => g.Key, g => g.Sum(k => k.Miktar));
+
+        foreach (var kalem in kalemler)
+        {
+            var kalanMiktar = siparisKalemMiktarlari[kalem.MalzemeId] - sevkEdilenMiktarlar.GetValueOrDefault(kalem.MalzemeId);
+            if (kalem.Miktar > kalanMiktar)
+                throw new InvalidOperationException(
+                    $"{malzemeler[kalem.MalzemeId].MalzemeKodu} için sevk edilebilecek miktar sipariş miktarını aşıyor (kalan: {kalanMiktar}).");
+        }
 
         var toplamSayi = await _unitOfWork.Repository<SevkIrsaliyesi>().QueryTumu().CountAsync();
         irsaliye.IrsaliyeNo = $"SI-{toplamSayi + 1:000000}";

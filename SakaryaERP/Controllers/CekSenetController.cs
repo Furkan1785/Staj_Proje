@@ -243,7 +243,9 @@ public class CekSenetController : Controller
     private async Task DoldurListeler(CekSenetFormViewModel vm)
     {
         var cariler = await _cariService.GetAllAsync();
-        vm.CariListesi = cariler.Select(c => new SelectListItem($"{c.CariKodu} - {c.Unvan}", c.Id.ToString()));
+        vm.CariListesi = cariler
+            .Where(c => c.CariTipi is CariTipi.Musteri or CariTipi.HerIkisi)
+            .Select(c => new SelectListItem($"{c.CariKodu} - {c.Unvan}", c.Id.ToString()));
     }
 
     private static string BelgeTipiMetni(BelgeTipi tipi) => tipi switch

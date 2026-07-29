@@ -17,14 +17,167 @@ html {
   min-height: 100%;
 }
 
-body {
-  margin-bottom: 60px;
-}
-
 /* HarmonyERP grid stili: tüm liste ekranlarında ortak sticky header */
 .grid-sticky-header thead th {
   position: sticky;
   top: 0;
   z-index: 2;
   background-color: #fff;
+}
+
+/* --- Sol sidebar navigasyonu --- */
+:root {
+  --sidebar-width: 250px;
+  --sidebar-bg: #182534;
+  --sidebar-bg-hover: #22334a;
+  --sidebar-text: #aab8c7;
+  --sidebar-text-muted: rgba(255, 255, 255, 0.35);
+  --sidebar-accent: #2a78d6;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  background-color: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  overflow-y: auto;
+  z-index: 1030;
+  transition: transform 0.2s ease-in-out;
+}
+
+.app-sidebar-brand {
+  padding: 1.1rem 1.25rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.app-sidebar-brand a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.app-sidebar-nav {
+  flex: 1 1 auto;
+  padding: 0.5rem 0 1rem;
+}
+
+.app-sidebar .nav-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sidebar-text-muted);
+  padding: 1rem 1.25rem 0.35rem;
+}
+
+.app-sidebar .nav-link {
+  color: var(--sidebar-text);
+  padding: 0.45rem 1.25rem;
+  border-left: 3px solid transparent;
+  font-size: 0.925rem;
+  border-radius: 0;
+}
+
+.app-sidebar .nav-link:hover {
+  background-color: var(--sidebar-bg-hover);
+  color: #fff;
+}
+
+.app-sidebar .nav-link.active {
+  background-color: var(--sidebar-bg-hover);
+  color: #fff;
+  border-left-color: var(--sidebar-accent);
+  font-weight: 500;
+}
+
+.app-sidebar-user {
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--sidebar-text);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.app-content {
+  margin-left: var(--sidebar-width);
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-topbar {
+  background: #fff;
+  border-bottom: 1px solid #e1e0d9;
+  padding: 0.65rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+}
+
+.app-topbar-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.sidebar-toggle {
+  display: none;
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1025;
+}
+
+.app-main {
+  flex: 1 1 auto;
+  padding: 1.5rem;
+  width: 100%;
+}
+
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .app-sidebar.show {
+    transform: translateX(0);
+  }
+
+  .app-content {
+    margin-left: 0;
+  }
+
+  .sidebar-toggle {
+    display: inline-flex;
+  }
+
+  body.sidebar-open .sidebar-backdrop {
+    display: block;
+  }
 }

@@ -12,3 +12,22 @@ function sutunFiltreleriBagla(tabloElemanId, dataTable) {
         eleman.addEventListener('change', function () { dataTable.column(sutunIndex).search(this.value).draw(); });
     });
 }
+
+// Dar ekranlarda sol sidebar'ı aç/kapat (bkz. site.css .app-sidebar / body.sidebar-open kuralları).
+document.addEventListener('DOMContentLoaded', function () {
+    var toggle = document.getElementById('sidebarToggle');
+    var sidebar = document.getElementById('appSidebar');
+    var backdrop = document.getElementById('sidebarBackdrop');
+    if (!toggle || !sidebar || !backdrop) return;
+
+    function sidebarKapat() {
+        sidebar.classList.remove('show');
+        document.body.classList.remove('sidebar-open');
+    }
+
+    toggle.addEventListener('click', function () {
+        sidebar.classList.toggle('show');
+        document.body.classList.toggle('sidebar-open');
+    });
+    backdrop.addEventListener('click', sidebarKapat);
+});

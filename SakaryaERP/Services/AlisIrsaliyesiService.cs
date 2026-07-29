@@ -31,24 +31,42 @@ public class AlisIrsaliyesiService : IAlisIrsaliyesiService
             throw new InvalidOperationException("Şube bulunamadı.");
 
         var kalemMalzemeIdleri = kalemler.Select(k => k.MalzemeId).Distinct().ToList();
-        var gecerliMalzemeSayisi = await _unitOfWork.Repository<Malzeme>().QueryTumu()
-            .CountAsync(m => kalemMalzemeIdleri.Contains(m.Id));
-        if (gecerliMalzemeSayisi != kalemMalzemeIdleri.Count)
+        var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .Where(m => kalemMalzemeIdleri.Contains(m.Id))
+            .ToDictionaryAsync(m => m.Id);
+        if (malzemeler.Count != kalemMalzemeIdleri.Count)
             throw new InvalidOperationException("Kalemlerden biri geçersiz bir malzemeye ait.");
 
         if (irsaliye.AlisSiparisiId is not null)
         {
             var siparis = await _unitOfWork.Repository<AlisSiparisi>().QueryTumu()
                 .Include(s => s.Kalemler)
+                .Include(s => s.AlisIrsaliyeleri).ThenInclude(i => i.Kalemler)
                 .FirstOrDefaultAsync(s => s.Id == irsaliye.AlisSiparisiId)
                 ?? throw new InvalidOperationException("Alış siparişi bulunamadı.");
 
             if (siparis.Durum != BelgeDurum.Onaylandi)
                 throw new InvalidOperationException("İrsaliye sadece onaylanmış bir siparişten oluşturulabilir.");
 
-            var siparisMalzemeIdleri = siparis.Kalemler.Select(k => k.MalzemeId).ToHashSet();
-            if (kalemler.Any(k => !siparisMalzemeIdleri.Contains(k.MalzemeId)))
+            var siparisKalemMiktarlari = siparis.Kalemler.ToDictionary(k => k.MalzemeId, k => k.Miktar);
+            if (kalemler.Any(k => !siparisKalemMiktarlari.ContainsKey(k.MalzemeId)))
                 throw new InvalidOperationException("İrsaliye kalemleri seçilen siparişte olmayan bir malzeme içeremez.");
+
+            // Kısmi teslimat: aynı siparişten daha önce (iptal hariç) teslim alınan miktarlar düşülüp
+            // kalan teslim alınabilir miktar bulunur — aksi halde sipariş miktarının üzerinde teslimat mümkün olurdu.
+            var teslimAlinanMiktarlar = siparis.AlisIrsaliyeleri
+                .Where(i => i.Durum != BelgeDurum.Iptal)
+                .SelectMany(i => i.Kalemler)
+                .GroupBy(k => k.MalzemeId)
+                .ToDictionary(g => g.Key, g => g.Sum(k => k.Miktar));
+
+            foreach (var kalem in kalemler)
+            {
+                var kalanMiktar = siparisKalemMiktarlari[kalem.MalzemeId] - teslimAlinanMiktarlar.GetValueOrDefault(kalem.MalzemeId);
+                if (kalem.Miktar > kalanMiktar)
+                    throw new InvalidOperationException(
+                        $"{malzemeler[kalem.MalzemeId].MalzemeKodu} için teslim alınabilecek miktar sipariş miktarını aşıyor (kalan: {kalanMiktar}).");
+            }
         }
 
         var toplamSayi = await _unitOfWork.Repository<AlisIrsaliyesi>().QueryTumu().CountAsync();

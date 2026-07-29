@@ -3,14 +3,18 @@
     ViewData["Title"] = "Hata";
 }
 
-<h1 class="text-danger">Bir hata oluştu.</h1>
-<h2 class="text-danger">İsteğiniz işlenirken beklenmeyen bir hata meydana geldi.</h2>
-
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>İstek No:</strong> <code>@Model.RequestId</code>
-    </p>
-}
-
-<p>Lütfen tekrar deneyin. Sorun devam ederse sistem yöneticinizle iletişime geçin.</p>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="p-4 border rounded bg-white mt-4 text-center">
+            <div class="display-4 text-danger mb-2">!</div>
+            <h3 class="mb-3">Bir Hata Oluştu</h3>
+            <p class="text-muted">İsteğiniz işlenirken beklenmeyen bir hata meydana geldi. Lütfen tekrar deneyin;
+                sorun devam ederse sistem yöneticinizle iletişime geçin.</p>
+            @if (Model.ShowRequestId)
+            {
+                <p class="text-muted small">İstek No: <code>@Model.RequestId</code></p>
+            }
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary">Anasayfaya dön</a>
+        </div>
+    </div>
+</div>

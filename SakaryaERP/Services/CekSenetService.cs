@@ -23,8 +23,10 @@ public class CekSenetService : ICekSenetService
 
     public async Task<CekSenet> CreateAsync(CekSenet cekSenet)
     {
-        if (!await _unitOfWork.Repository<Cari>().QueryTumu().AnyAsync(c => c.Id == cekSenet.CariId))
-            throw new InvalidOperationException("Cari bulunamadı.");
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(cekSenet.CariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+        if (cari.CariTipi != CariTipi.Musteri && cari.CariTipi != CariTipi.HerIkisi)
+            throw new InvalidOperationException("Çek/Senet sadece müşteri olarak işaretli bir cariye kayıt edilebilir.");
 
         cekSenet.Durum = CekSenetDurum.Portfoyde;
         await _unitOfWork.Repository<CekSenet>().AddAsync(cekSenet);
