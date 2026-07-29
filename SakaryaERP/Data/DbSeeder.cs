@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -11,6 +13,32 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(IServiceProvider services)
     {
+        // Rol ve demo kullanıcılar kendi bağımsız kontrolüyle seed edilir (aynı gerekçeyle:
+        // Cari zaten dolu olan bir dev veritabanında bile giriş test edilebilsin).
+        var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
+        if (!await roleManager.Roles.AnyAsync())
+        {
+            await roleManager.CreateAsync(new AppRole { Name = "Admin", Aciklama = "Tüm modüllere erişim" });
+            await roleManager.CreateAsync(new AppRole { Name = "Muhasebe", Aciklama = "Finans ve muhasebe modülleri" });
+            await roleManager.CreateAsync(new AppRole { Name = "Satis", Aciklama = "Satış modülleri" });
+        }
+
+        var userManager = services.GetRequiredService<UserManager<AppUser>>();
+        if (!await userManager.Users.AnyAsync())
+        {
+            var admin = new AppUser { UserName = "admin@sakaryaerp.com", Email = "admin@sakaryaerp.com", AdSoyad = "Sistem Yöneticisi", EmailConfirmed = true };
+            await userManager.CreateAsync(admin, "Admin123!");
+            await userManager.AddToRoleAsync(admin, "Admin");
+
+            var muhasebeci = new AppUser { UserName = "muhasebe@sakaryaerp.com", Email = "muhasebe@sakaryaerp.com", AdSoyad = "Muhasebe Kullanıcısı", EmailConfirmed = true };
+            await userManager.CreateAsync(muhasebeci, "Muhasebe123!");
+            await userManager.AddToRoleAsync(muhasebeci, "Muhasebe");
+
+            var satisci = new AppUser { UserName = "satis@sakaryaerp.com", Email = "satis@sakaryaerp.com", AdSoyad = "Satış Kullanıcısı", EmailConfirmed = true };
+            await userManager.CreateAsync(satisci, "Satis123!");
+            await userManager.AddToRoleAsync(satisci, "Satis");
+        }
+
         // Hesap planı kendi bağımsız kontrolüyle seed edilir; böylece Cari zaten dolu olan
         // (Gün 26 öncesinden kalma) bir dev veritabanında da uygulama yeniden başlatıldığında eklenir.
         var hesapPlaniService = services.GetRequiredService<IHesapPlaniService>();

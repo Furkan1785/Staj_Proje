@@ -18,68 +18,103 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    @{
+                        var finansGorunur = User.IsInRole("Admin") || User.IsInRole("Muhasebe");
+                        var satisGorunur = User.IsInRole("Admin") || User.IsInRole("Satis");
+                    }
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Anasayfa</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finans</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Cari" asp-action="Index">Cariler</a></li>
-                                <li><a class="dropdown-item" asp-controller="CariFisi" asp-action="Index">Cari Fişleri</a></li>
-                                <li><a class="dropdown-item" asp-controller="Cari" asp-action="Ekstre">Cari Ekstresi</a></li>
-                                <li><a class="dropdown-item" asp-controller="BankaHesabi" asp-action="Index">Banka Hesapları</a></li>
-                                <li><a class="dropdown-item" asp-controller="KasaHesabi" asp-action="Index">Kasa Hesapları</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="CekSenet" asp-action="Index">Çek/Senet</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Malzeme</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Malzeme" asp-action="Index">Malzeme Kartları</a></li>
-                                <li><a class="dropdown-item" asp-controller="MalzemeHareketFisi" asp-action="Index">Hareket Fişleri</a></li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li><a class="dropdown-item" asp-controller="StokRaporu" asp-action="AnlikDurum">Anlık Stok Durumu</a></li>
-                                <li><a class="dropdown-item" asp-controller="StokRaporu" asp-action="KritikStok">Kritik Stok Listesi</a></li>
-                                <li><a class="dropdown-item" asp-controller="StokRaporu" asp-action="MalzemeGecmisi">Malzeme Hareket Geçmişi</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Satınalma</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="AlisSiparisi" asp-action="Index">Alış Siparişleri</a></li>
-                                <li><a class="dropdown-item" asp-controller="AlisIrsaliyesi" asp-action="Index">Alış İrsaliyeleri</a></li>
-                                <li><a class="dropdown-item" asp-controller="AlisFaturasi" asp-action="Index">Alış Faturaları</a></li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li><a class="dropdown-item" asp-controller="SatinalmaRaporu" asp-action="Ozet">Satınalma Özet Raporu</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Satış</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="MusteriTalebi" asp-action="Index">Müşteri Talepleri</a></li>
-                                <li><a class="dropdown-item" asp-controller="SatisTeklifi" asp-action="Index">Satış Teklifleri</a></li>
-                                <li><a class="dropdown-item" asp-controller="SatisSiparisi" asp-action="Index">Satış Siparişleri</a></li>
-                                <li><a class="dropdown-item" asp-controller="SevkIrsaliyesi" asp-action="Index">Sevk İrsaliyeleri</a></li>
-                                <li><a class="dropdown-item" asp-controller="SatisFaturasi" asp-action="Index">Satış Faturaları</a></li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li><a class="dropdown-item" asp-controller="SatisRaporu" asp-action="Ozet">Satış Özet Raporu</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Muhasebe</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="HesapPlani" asp-action="Index">Hesap Planı</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Sube" asp-action="Index">Şubeler</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Gizlilik</a>
-                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Anasayfa</a>
+                            </li>
+                            if (finansGorunur)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Finans</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-controller="Cari" asp-action="Index">Cariler</a></li>
+                                        <li><a class="dropdown-item" asp-controller="CariFisi" asp-action="Index">Cari Fişleri</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Cari" asp-action="Ekstre">Cari Ekstresi</a></li>
+                                        <li><a class="dropdown-item" asp-controller="BankaHesabi" asp-action="Index">Banka Hesapları</a></li>
+                                        <li><a class="dropdown-item" asp-controller="KasaHesabi" asp-action="Index">Kasa Hesapları</a></li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="CekSenet" asp-action="Index">Çek/Senet</a>
+                                </li>
+                            }
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Malzeme</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="Malzeme" asp-action="Index">Malzeme Kartları</a></li>
+                                    <li><a class="dropdown-item" asp-controller="MalzemeHareketFisi" asp-action="Index">Hareket Fişleri</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><a class="dropdown-item" asp-controller="StokRaporu" asp-action="AnlikDurum">Anlık Stok Durumu</a></li>
+                                    <li><a class="dropdown-item" asp-controller="StokRaporu" asp-action="KritikStok">Kritik Stok Listesi</a></li>
+                                    <li><a class="dropdown-item" asp-controller="StokRaporu" asp-action="MalzemeGecmisi">Malzeme Hareket Geçmişi</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Satınalma</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-controller="AlisSiparisi" asp-action="Index">Alış Siparişleri</a></li>
+                                    <li><a class="dropdown-item" asp-controller="AlisIrsaliyesi" asp-action="Index">Alış İrsaliyeleri</a></li>
+                                    <li><a class="dropdown-item" asp-controller="AlisFaturasi" asp-action="Index">Alış Faturaları</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><a class="dropdown-item" asp-controller="SatinalmaRaporu" asp-action="Ozet">Satınalma Özet Raporu</a></li>
+                                </ul>
+                            </li>
+                            if (satisGorunur)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Satış</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-controller="MusteriTalebi" asp-action="Index">Müşteri Talepleri</a></li>
+                                        <li><a class="dropdown-item" asp-controller="SatisTeklifi" asp-action="Index">Satış Teklifleri</a></li>
+                                        <li><a class="dropdown-item" asp-controller="SatisSiparisi" asp-action="Index">Satış Siparişleri</a></li>
+                                        <li><a class="dropdown-item" asp-controller="SevkIrsaliyesi" asp-action="Index">Sevk İrsaliyeleri</a></li>
+                                        <li><a class="dropdown-item" asp-controller="SatisFaturasi" asp-action="Index">Satış Faturaları</a></li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li><a class="dropdown-item" asp-controller="SatisRaporu" asp-action="Ozet">Satış Özet Raporu</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            if (finansGorunur)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Muhasebe</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-controller="HesapPlani" asp-action="Index">Hesap Planı</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Sube" asp-action="Index">Şubeler</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Gizlilik</a>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item d-flex align-items-center me-2">
+                                <span class="text-muted">@User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Çıkış Yap</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Giriş Yap</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

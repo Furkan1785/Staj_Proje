@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuestPDF.Fluent;
@@ -9,6 +10,7 @@ using SakaryaERP.ViewModels;
 
 namespace SakaryaERP.Controllers;
 
+[Authorize(Roles = "Admin,Satis")]
 public class SevkIrsaliyesiController : Controller
 {
     private readonly ISevkIrsaliyesiService _sevkIrsaliyesiService;

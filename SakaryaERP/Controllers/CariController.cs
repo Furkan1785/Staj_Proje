@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuestPDF.Fluent;
@@ -10,6 +11,7 @@ using SakaryaERP.ViewModels;
 
 namespace SakaryaERP.Controllers;
 
+[Authorize(Roles = "Admin,Muhasebe")]
 public class CariController : Controller
 {
     private readonly ICariService _cariService;

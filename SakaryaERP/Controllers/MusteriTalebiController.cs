@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SakaryaERP.Models;
@@ -6,6 +7,7 @@ using SakaryaERP.ViewModels;
 
 namespace SakaryaERP.Controllers;
 
+[Authorize(Roles = "Admin,Satis")]
 public class MusteriTalebiController : Controller
 {
     private readonly IMusteriTalebiService _musteriTalebiService;

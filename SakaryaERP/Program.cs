@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using SakaryaERP.Data;
@@ -20,6 +22,7 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
     options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
+    options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
@@ -51,8 +54,17 @@ builder.Services.AddScoped<ISatisSiparisiService, SatisSiparisiService>();
 builder.Services.AddScoped<ISevkIrsaliyesiService, SevkIrsaliyesiService>();
 builder.Services.AddScoped<ISatisFaturasiService, SatisFaturasiService>();
 builder.Services.AddScoped<IHesapPlaniService, HesapPlaniService>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Tüm controller/action'lar varsayılan olarak girişli kullanıcı gerektirir;
+    // anonim erişim gereken (Login, ForgotPassword vb.) yerler [AllowAnonymous] ile işaretlenir.
+    var girisliKullaniciPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    options.Filters.Add(new AuthorizeFilter(girisliKullaniciPolicy));
+});
 
 var app = builder.Build();
 
