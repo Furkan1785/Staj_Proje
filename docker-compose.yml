@@ -21,14 +21,32 @@ services:
       context: ./SakaryaERP
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-sakaryaerp};Username=${POSTGRES_USER:-sakaryaerp};Password=${POSTGRES_PASSWORD}"
+      Smtp__Host: "${SMTP_HOST:-}"
+      Smtp__Port: "${SMTP_PORT:-587}"
+      Smtp__From: "${SMTP_FROM:-noreply@sakaryaerp.com}"
+      Smtp__User: "${SMTP_USER:-}"
+      Smtp__Password: "${SMTP_PASSWORD:-}"
     depends_on:
       db:
         condition: service_healthy
+
+  # Domain + Let's Encrypt eklenene kadar sadece 80 dinler (bkz. appsettings.json
+  # EnableHttpsRedirection: false). Domain temin edilince 443 + certbot eklenip
+  # web'in EnableHttpsRedirection'ı true yapılacak.
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
 
 volumes:
   postgres_data:

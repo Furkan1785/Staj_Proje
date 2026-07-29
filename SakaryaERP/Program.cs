@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -69,15 +70,44 @@ builder.Services.AddControllersWithViews(options =>
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+// Roller ve hesap planı her ortamda gerekli; Development/Production ayrımı yapılmaz.
+using (var scope = app.Services.CreateScope())
+{
+    await DbSeeder.SeedFoundationAsync(scope.ServiceProvider);
+}
+
+// `dotnet SakaryaERP.dll --seed-demo` ile elle tetiklenir (Gün 29: Oracle Cloud'a ilk
+// deploy sonrası tek seferlik demo veri yüklemesi). Web sunucusunu başlatmadan seed edip çıkar.
+if (args.Contains("--seed-demo"))
+{
+    using var scope = app.Services.CreateScope();
+    await DemoSeeder.SeedAsync(scope.ServiceProvider);
+    return;
+}
+
+// nginx SSL/domain kurulana kadar sadece HTTP üzerinden proxy yapıyor; zorla https
+// yönlendirmesi bu ortamda sonsuz redirect'e yol açar. Domain + Let's Encrypt
+// eklendiğinde appsettings'te EnableHttpsRedirection true yapılıp nginx 443 dinlemeli.
+var httpsYonlendirmeAktif = builder.Configuration.GetValue<bool>("EnableHttpsRedirection");
+
+if (!app.Environment.IsDevelopment() && httpsYonlendirmeAktif)
 {
     app.UseHsts();
 }
 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
-app.UseHttpsRedirection();
+if (httpsYonlendirmeAktif)
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
@@ -90,7 +120,7 @@ app.MapControllerRoute(
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
-    await DbSeeder.SeedAsync(scope.ServiceProvider);
+    await DbSeeder.SeedDevKolayligiAsync(scope.ServiceProvider);
 }
 
 app.Run();

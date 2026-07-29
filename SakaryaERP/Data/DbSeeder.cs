@@ -7,14 +7,15 @@ using SakaryaERP.Services;
 namespace SakaryaERP.Data;
 
 // Sadece local development kolaylığı içindir (Program.cs'te yalnızca
-// IsDevelopment() iken çağrılır). Gün 29'daki gerçek/kapsamlı demo seed
-// (5-10 cari, 20-30 malzeme, örnek belgeler) bundan ayrı ve daha büyük olacak.
+// IsDevelopment() iken SeedDevKolayligiAsync çağrılır). Gün 29'daki gerçek/kapsamlı
+// demo seed (5-10 cari, 20-30 malzeme, örnek belgeler) DemoSeeder'da, ayrı ve daha büyük.
 public static class DbSeeder
 {
-    public static async Task SeedAsync(IServiceProvider services)
+    // Roller ve hesap planı her ortamda gereklidir (roller olmadan login, hesap planı
+    // olmadan fatura onayında otomatik yevmiye kaydı çalışmaz) — bu yüzden Program.cs'te
+    // Development/Production ayrımı yapılmadan, her başlangıçta çağrılır.
+    public static async Task SeedFoundationAsync(IServiceProvider services)
     {
-        // Rol ve demo kullanıcılar kendi bağımsız kontrolüyle seed edilir (aynı gerekçeyle:
-        // Cari zaten dolu olan bir dev veritabanında bile giriş test edilebilsin).
         var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
         if (!await roleManager.Roles.AnyAsync())
         {
@@ -39,8 +40,6 @@ public static class DbSeeder
             await userManager.AddToRoleAsync(satisci, "Satis");
         }
 
-        // Hesap planı kendi bağımsız kontrolüyle seed edilir; böylece Cari zaten dolu olan
-        // (Gün 26 öncesinden kalma) bir dev veritabanında da uygulama yeniden başlatıldığında eklenir.
         var hesapPlaniService = services.GetRequiredService<IHesapPlaniService>();
         if (!(await hesapPlaniService.GetAllAsync()).Any())
         {
@@ -67,7 +66,10 @@ public static class DbSeeder
             await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "631", HesapAdi = "Pazarlama Satış ve Dağıtım Giderleri", HesapTipi = HesapTipi.Gider, ParentId = gelirTablosu.Id });
             await hesapPlaniService.CreateAsync(new HesapPlani { HesapKodu = "632", HesapAdi = "Genel Yönetim Giderleri", HesapTipi = HesapTipi.Gider, ParentId = gelirTablosu.Id });
         }
+    }
 
+    public static async Task SeedDevKolayligiAsync(IServiceProvider services)
+    {
         var cariService = services.GetRequiredService<ICariService>();
         if ((await cariService.GetAllAsync()).Any())
             return;
