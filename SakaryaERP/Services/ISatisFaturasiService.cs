@@ -13,6 +13,9 @@ public interface ISatisFaturasiService
     Task<bool> AktifFaturaVarMiIrsaliyeIcinAsync(int sevkIrsaliyesiId);
     Task<bool> AktifFaturaVarMiSiparisIcinAsync(int satisSiparisiId);
 
+    // Satış raporları için: onaylanmış tüm faturalar (Cari + Kalemler.Malzeme ile).
+    Task<List<SatisFaturasi>> GetOnaylanmisListeAsync();
+
     // Onaylandığında: irsaliyeden gelmiyorsa stok düşülür (negatif stok kontrolüyle),
     // her durumda cariye borç hareketi (CariFisi) eklenir — tek transaction.
     Task OnaylaAsync(int id);

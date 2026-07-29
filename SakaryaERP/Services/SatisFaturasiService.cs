@@ -143,6 +143,15 @@ public class SatisFaturasiService : ISatisFaturasiService
             .AnyAsync(f => f.SatisSiparisiId == satisSiparisiId && f.SevkIrsaliyesiId == null && f.Durum != BelgeDurum.Iptal);
     }
 
+    public async Task<List<SatisFaturasi>> GetOnaylanmisListeAsync()
+    {
+        return await _unitOfWork.Repository<SatisFaturasi>().QueryTumu()
+            .Include(f => f.Cari)
+            .Include(f => f.Kalemler).ThenInclude(k => k.Malzeme)
+            .Where(f => !f.IsDeleted && f.Durum == BelgeDurum.Onaylandi)
+            .ToListAsync();
+    }
+
     public async Task OnaylaAsync(int id)
     {
         var fatura = await _unitOfWork.Repository<SatisFaturasi>().QueryTumu()
