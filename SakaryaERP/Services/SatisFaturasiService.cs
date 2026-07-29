@@ -147,7 +147,7 @@ public class SatisFaturasiService : ISatisFaturasiService
     {
         return await _unitOfWork.Repository<SatisFaturasi>().QueryTumu()
             .Include(f => f.Cari)
-            .Include(f => f.Kalemler).ThenInclude(k => k.Malzeme)
+            .Include(f => f.Kalemler).ThenInclude(k => k.Malzeme).ThenInclude(m => m.Kategori)
             .Where(f => !f.IsDeleted && f.Durum == BelgeDurum.Onaylandi)
             .ToListAsync();
     }

@@ -55,6 +55,7 @@ builder.Services.AddScoped<ISevkIrsaliyesiService, SevkIrsaliyesiService>();
 builder.Services.AddScoped<ISatisFaturasiService, SatisFaturasiService>();
 builder.Services.AddScoped<IHesapPlaniService, HesapPlaniService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 builder.Services.AddControllersWithViews(options =>
 {

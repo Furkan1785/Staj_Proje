@@ -1,0 +1,218 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h3 class="mb-4">Dashboard</h3>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Toplam Satış</div>
+                <div class="fs-2 fw-semibold">₺ @Model.GenelSatisToplamiTRY.ToString("N2")</div>
+                <div class="text-muted">≈ $ @Model.GenelSatisToplamiUSD.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Toplam Satınalma</div>
+                <div class="fs-2 fw-semibold">₺ @Model.GenelSatinalmaToplamiTRY.ToString("N2")</div>
+                <div class="text-muted">≈ $ @Model.GenelSatinalmaToplamiUSD.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">Kategori Bazlı Satış</div>
+            <div class="card-body">
+                @if (Model.KategoriToplamlari.Count == 0)
+                {
+                    <div class="alert alert-info mb-0">Henüz onaylanmış bir satış faturası bulunmuyor.</div>
+                }
+                else
+                {
+                    <canvas id="kategoriGrafik" height="240"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">Aylık Satış Trendi (@Model.OncekiYil - @Model.BuYil)</div>
+            <div class="card-body">
+                @if (Model.AylikTrend.All(a => a.OncekiYilToplam == 0 && a.BuYilToplam == 0))
+                {
+                    <div class="alert alert-info mb-0">Henüz onaylanmış bir satış faturası bulunmuyor.</div>
+                }
+                else
+                {
+                    <canvas id="aylikTrendGrafik" height="180"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">En Çok Satış Yapılan Müşteriler</div>
+            <div class="card-body">
+                @if (Model.EnCokSatisYapilanMusteriler.Count == 0)
+                {
+                    <div class="alert alert-info mb-0">Henüz onaylanmış bir satış faturası bulunmuyor.</div>
+                }
+                else
+                {
+                    <canvas id="musteriGrafik" height="220"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">En Çok Satılan Malzemeler</div>
+            <div class="card-body">
+                @if (Model.EnCokSatilanMalzemeler.Count == 0)
+                {
+                    <div class="alert alert-info mb-0">Henüz onaylanmış bir satış faturası bulunmuyor.</div>
+                }
+                else
+                {
+                    <canvas id="malzemeGrafik" height="220"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Kritik Stok Uyarı Listesi</span>
+                <a asp-controller="StokRaporu" asp-action="KritikStok" class="btn btn-sm btn-outline-secondary">Tümünü Gör</a>
+            </div>
+            <div class="table-responsive">
+                @if (Model.KritikStokListesi.Count == 0)
+                {
+                    <div class="alert alert-success mb-0">Kritik stokta malzeme bulunmuyor.</div>
+                }
+                else
+                {
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Malzeme Kodu</th>
+                                <th>Malzeme Adı</th>
+                                <th>Kategori</th>
+                                <th class="text-end">Bakiye</th>
+                                <th class="text-end">Min. Stok</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in Model.KritikStokListesi)
+                            {
+                                <tr>
+                                    <td>@m.MalzemeKodu</td>
+                                    <td>@m.MalzemeAdi</td>
+                                    <td>@(m.KategoriAdi ?? "-")</td>
+                                    <td class="text-end">@m.Bakiye.ToString("N2") @m.Birim</td>
+                                    <td class="text-end">@m.MinStokMiktari.ToString("N2")</td>
+                                    <td><span class="badge @m.DurumSinifi">@m.DurumText</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script>
+        var kategoriEtiketler = @Json.Serialize(Model.KategoriToplamlari.Select(k => k.KategoriAdi));
+        var kategoriTutarlar = @Json.Serialize(Model.KategoriToplamlari.Select(k => k.ToplamTutar));
+
+        var aylikEtiketler = @Json.Serialize(Model.AylikTrend.Select(a => a.AyAdi));
+        var aylikOncekiYil = @Json.Serialize(Model.AylikTrend.Select(a => a.OncekiYilToplam));
+        var aylikBuYil = @Json.Serialize(Model.AylikTrend.Select(a => a.BuYilToplam));
+
+        var musteriEtiketler = @Json.Serialize(Model.EnCokSatisYapilanMusteriler.Select(t => t.CariUnvan));
+        var musteriTutarlar = @Json.Serialize(Model.EnCokSatisYapilanMusteriler.Select(t => t.ToplamTutar));
+        var malzemeEtiketler = @Json.Serialize(Model.EnCokSatilanMalzemeler.Select(t => t.MalzemeAdi));
+        var malzemeTutarlar = @Json.Serialize(Model.EnCokSatilanMalzemeler.Select(t => t.ToplamTutar));
+
+        var mavi = '#2a78d6';
+        var turuncu = '#eb6834';
+        var kategorik = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
+        var izgaraRengi = '#e1e0d9';
+        var eksenRengi = '#898781';
+        var metinRengi = '#52514e';
+
+        function barGrafikOlustur(elemanId, etiketler, tutarlar) {
+            if (etiketler.length === 0) return;
+            new Chart(document.getElementById(elemanId), {
+                type: 'bar',
+                data: {
+                    labels: etiketler,
+                    datasets: [{ label: 'Toplam Tutar', data: tutarlar, backgroundColor: mavi, borderRadius: 4 }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: eksenRengi }, grid: { display: false } },
+                        y: { ticks: { color: eksenRengi }, grid: { color: izgaraRengi } }
+                    }
+                }
+            });
+        }
+
+        barGrafikOlustur('musteriGrafik', musteriEtiketler, musteriTutarlar);
+        barGrafikOlustur('malzemeGrafik', malzemeEtiketler, malzemeTutarlar);
+
+        if (kategoriEtiketler.length > 0) {
+            new Chart(document.getElementById('kategoriGrafik'), {
+                type: 'doughnut',
+                data: {
+                    labels: kategoriEtiketler,
+                    datasets: [{ data: kategoriTutarlar, backgroundColor: kategorik.slice(0, kategoriEtiketler.length) }]
+                },
+                options: {
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: metinRengi } }
+                    }
+                }
+            });
+        }
+
+        if (aylikEtiketler.length > 0) {
+            new Chart(document.getElementById('aylikTrendGrafik'), {
+                type: 'line',
+                data: {
+                    labels: aylikEtiketler,
+                    datasets: [
+                        { label: '@Model.OncekiYil', data: aylikOncekiYil, borderColor: mavi, backgroundColor: mavi, tension: 0.25, pointRadius: 3, borderWidth: 2 },
+                        { label: '@Model.BuYil', data: aylikBuYil, borderColor: turuncu, backgroundColor: turuncu, tension: 0.25, pointRadius: 3, borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    plugins: { legend: { display: true, labels: { color: metinRengi } } },
+                    scales: {
+                        x: { ticks: { color: eksenRengi }, grid: { display: false } },
+                        y: { ticks: { color: eksenRengi }, grid: { color: izgaraRengi } }
+                    }
+                }
+            });
+        }
+    </script>
+}
