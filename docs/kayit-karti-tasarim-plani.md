@@ -1,5 +1,15 @@
 # Kayıt Ekranları Tasarım Planı — Tüm Modüller
 
+> **Durum:** Bölüm 6'daki 7 madde de uygulandı. Uygulama sırasında netleşen
+> iki küçük kapsam ayarlaması: (1) Belge zinciri, planda tarif edilen tam
+> 5 adımlı zincir yerine sadece **bir üst seviye linki** olarak kuruldu —
+> alt seviyeler zaten mevcut "Siparişe Dönüştür" gibi aksiyon butonlarıyla
+> karşılanıyordu, çok seviyeli zincir mevcut servis Include yapısını
+> derinden değiştirmeyi gerektirirdi. (2) Malzeme Kartı formunda kimlik
+> paneli, Detay'daki gibi salt-okunur değil, gerçek input alanlarından
+> oluşuyor (referans ekranla birebir aynı: sol panel zorunlu/kimlik
+> alanlarını, sağ sekmeler geri kalanını tutuyor).
+
 ## 1. Amaç
 
 Paylaşılan HarmonyERP "Malzeme Kartı" ekran görüntüsündeki profesyonellik seviyesini
