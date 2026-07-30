@@ -88,6 +88,15 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
         return (kayitlar, toplamKayit, filtrelenmisKayit);
     }
 
+    public async Task<MalzemeHareketFisi?> GetByIdDetayAsync(int id)
+    {
+        return await _unitOfWork.Repository<MalzemeHareketFisi>().QueryTumu()
+            .Include(f => f.Sube)
+            .Include(f => f.Kalemler)
+            .ThenInclude(k => k.Malzeme)
+            .FirstOrDefaultAsync(f => f.Id == id && !f.IsDeleted);
+    }
+
     // Transfer, aynı şirket içinde şubeler arası taşımayı temsil eder — Malzeme'nin
     // tek (şubeye bölünmemiş) Bakiye alanını etkilemez, sadece Giriş/Çıkış/Fire etkiler.
     public async Task OnaylaAsync(int id)

@@ -1,0 +1,82 @@
+@using SakaryaERP.Models
+@model MalzemeHareketFisiDetayViewModel
+@{
+    ViewData["Title"] = "Malzeme Hareket Fişi Detayı";
+
+    var durumSinifi = Model.Durum switch
+    {
+        BelgeDurum.Beklemede => "bg-warning text-dark",
+        BelgeDurum.Onaylandi => "bg-success",
+        BelgeDurum.Iptal => "bg-secondary",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Malzeme Hareket Fişi <small class="text-muted">(@Model.FisNo)</small></h3>
+    <div class="d-flex gap-2">
+        @if (Model.Durum == BelgeDurum.Beklemede)
+        {
+            <form method="post" asp-action="Onayla" asp-route-id="@Model.Id" asp-route-returnToDetay="true" onsubmit="return confirm('Bu fiş onaylansın mı? Malzeme bakiyeleri güncellenecek.')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-success">Onayla</button>
+            </form>
+        }
+        <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+    </div>
+</div>
+
+@if (TempData["Basari"] != null)
+{
+    <div class="alert alert-success">@TempData["Basari"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger">@TempData["Hata"]</div>
+}
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        Fiş Bilgileri
+        <span class="badge @durumSinifi">@Model.DurumText</span>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-2">Tarih</dt>
+            <dd class="col-sm-4">@Model.Tarih.ToString("dd.MM.yyyy")</dd>
+            <dt class="col-sm-2">Hareket Tipi</dt>
+            <dd class="col-sm-4">@Model.HareketTipiText</dd>
+            <dt class="col-sm-2">Şube</dt>
+            <dd class="col-sm-4">@Model.SubeAdi</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Kalemler</div>
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Malzeme Kodu</th>
+                    <th>Malzeme Adı</th>
+                    <th>Birim</th>
+                    <th class="text-end">Miktar</th>
+                    <th>Açıklama</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var k in Model.Kalemler)
+                {
+                    <tr>
+                        <td>@k.MalzemeKodu</td>
+                        <td>@k.MalzemeAdi</td>
+                        <td>@k.Birim</td>
+                        <td class="text-end">@k.Miktar.ToString("N2")</td>
+                        <td>@(k.Aciklama ?? "-")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -104,9 +104,35 @@ public class MalzemeHareketFisiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Detay(int id)
+    {
+        var fis = await _malzemeHareketFisiService.GetByIdDetayAsync(id);
+        if (fis is null) return NotFound();
+
+        return View(new MalzemeHareketFisiDetayViewModel
+        {
+            Id = fis.Id,
+            FisNo = fis.FisNo,
+            Tarih = fis.Tarih,
+            HareketTipi = fis.HareketTipi,
+            HareketTipiText = HareketTipiMetni(fis.HareketTipi),
+            SubeAdi = fis.Sube.SubeAdi,
+            Durum = fis.Durum,
+            DurumText = DurumMetni(fis.Durum),
+            Kalemler = fis.Kalemler.Select(k => new MalzemeHareketFisiKalemDetayViewModel
+            {
+                MalzemeKodu = k.Malzeme.MalzemeKodu,
+                MalzemeAdi = k.Malzeme.MalzemeAdi,
+                Birim = k.Malzeme.Birim,
+                Miktar = k.Miktar,
+                Aciklama = k.Aciklama
+            }).ToList()
+        });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Onayla(int id)
+    public async Task<IActionResult> Onayla(int id, bool returnToDetay = false)
     {
         try
         {
@@ -117,7 +143,7 @@ public class MalzemeHareketFisiController : Controller
         {
             TempData["Hata"] = ex.Message;
         }
-        return RedirectToAction(nameof(Index));
+        return returnToDetay ? RedirectToAction(nameof(Detay), new { id }) : RedirectToAction(nameof(Index));
     }
 
     private async Task DoldurListeler(MalzemeHareketFisiFormViewModel vm)

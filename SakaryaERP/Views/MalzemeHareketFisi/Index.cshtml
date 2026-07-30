@@ -93,11 +93,16 @@
                         orderable: false,
                         searchable: false,
                         render: function (id, type, row) {
-                            if (row.durum !== 'Beklemede') return '';
-                            return '<form method="post" action="/MalzemeHareketFisi/Onayla" class="d-inline" onsubmit="return confirm(\'Bu fiş onaylansın mı? Malzeme bakiyeleri güncellenecek.\')">' +
-                                '<input type="hidden" name="__RequestVerificationToken" value="' + csrfToken + '" />' +
-                                '<input type="hidden" name="id" value="' + id + '" />' +
-                                '<button type="submit" class="btn btn-sm btn-outline-success">Onayla</button></form>';
+                            var html = '<div class="d-flex flex-wrap gap-1">';
+                            html += '<a href="/MalzemeHareketFisi/Detay/' + id + '" class="btn btn-sm btn-outline-secondary">Detay</a>';
+                            if (row.durum === 'Beklemede') {
+                                html += '<form method="post" action="/MalzemeHareketFisi/Onayla" class="d-inline" onsubmit="return confirm(\'Bu fiş onaylansın mı? Malzeme bakiyeleri güncellenecek.\')">' +
+                                    '<input type="hidden" name="__RequestVerificationToken" value="' + csrfToken + '" />' +
+                                    '<input type="hidden" name="id" value="' + id + '" />' +
+                                    '<button type="submit" class="btn btn-sm btn-outline-success">Onayla</button></form>';
+                            }
+                            html += '</div>';
+                            return html;
                         }
                     }
                 ]

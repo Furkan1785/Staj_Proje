@@ -9,6 +9,8 @@ public interface IMalzemeHareketFisiService
     Task<(IEnumerable<MalzemeHareketFisi> Kayitlar, int ToplamKayit, int FiltrelenmisKayit)> GetSayfaliListeAsync(
         int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu);
 
+    Task<MalzemeHareketFisi?> GetByIdDetayAsync(int id);
+
     Task OnaylaAsync(int id);
 
     // Sadece onaylanmış fişlerin kalemleri — bekleyen bir fiş henüz bakiyeye
