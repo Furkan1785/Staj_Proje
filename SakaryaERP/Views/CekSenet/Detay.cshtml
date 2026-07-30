@@ -1,0 +1,191 @@
+@model CekSenetDetayViewModel
+@{
+    ViewData["Title"] = "Çek/Senet Detayı";
+
+    var durumSinifi = Model.Durum switch
+    {
+        CekSenetDurum.Portfoyde => "bg-primary",
+        CekSenetDurum.Tahsilde => "bg-warning text-dark",
+        CekSenetDurum.Ciro => "bg-info text-dark",
+        CekSenetDurum.Karsiliksiz => "bg-danger",
+        CekSenetDurum.TahsilEdildi => "bg-success",
+        _ => "bg-secondary"
+    };
+
+    string? vadeSinifi = null;
+    string? vadeMetni = null;
+    if (Model.Durum is CekSenetDurum.Portfoyde or CekSenetDurum.Tahsilde)
+    {
+        var bugun = DateTime.Today;
+        var vade = Model.VadeTarihi.Date;
+        if (vade < bugun) { vadeSinifi = "bg-danger"; vadeMetni = "Vadesi Geçmiş"; }
+        else if (vade == bugun) { vadeSinifi = "bg-warning text-dark"; vadeMetni = "Vadesi Bugün"; }
+        else { vadeSinifi = "bg-success"; vadeMetni = "Vadesi İleri Tarihte"; }
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">@Model.BelgeTipiText <small class="text-muted">(@Model.BelgeNo)</small></h3>
+    <div class="d-flex gap-2">
+        <a asp-action="Duzenle" asp-route-id="@Model.Id" class="btn btn-outline-primary">Düzenle</a>
+        <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+    </div>
+</div>
+
+@if (TempData["Basari"] != null)
+{
+    <div class="alert alert-success">@TempData["Basari"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger">@TempData["Hata"]</div>
+}
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card position-sticky" style="top: 1rem;">
+            <div class="card-body text-center">
+                <div class="text-muted small">Belge No</div>
+                <div class="fs-5 fw-semibold mb-2">@Model.BelgeNo</div>
+                <div class="text-muted small">Belge Tipi</div>
+                <div class="fw-semibold mb-3">@Model.BelgeTipiText</div>
+                <span class="badge @durumSinifi">@Model.DurumText</span>
+                @if (vadeMetni is not null)
+                {
+                    <span class="badge @vadeSinifi">@vadeMetni</span>
+                }
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Tutar</span>
+                    <span class="fw-semibold">@Model.Tutar.ToString("N2")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Vade Tarihi</span>
+                    <span>@Model.VadeTarihi.ToString("dd.MM.yyyy")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Cari</span>
+                    <span>@Model.CariUnvan</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">Belge Bilgileri</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Banka Adı</dt>
+                    <dd class="col-sm-9">@(Model.BankaAdi ?? "-")</dd>
+                    <dt class="col-sm-3">Şube Adı</dt>
+                    <dd class="col-sm-9">@(Model.SubeAdi ?? "-")</dd>
+                    <dt class="col-sm-3">Ciro Bilgisi</dt>
+                    <dd class="col-sm-9">@(Model.CiroBilgisi ?? "-")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">İşlemler</div>
+            <div class="card-body d-flex flex-wrap gap-2">
+                @if (Model.Durum == CekSenetDurum.Portfoyde)
+                {
+                    <form method="post" asp-action="TahsileVer" asp-route-id="@Model.Id" asp-route-returnToDetay="true" onsubmit="return confirm('Bu belge tahsile verilsin mi?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-success">Tahsile Ver</button>
+                    </form>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ciroModal">Ciro Et</button>
+                }
+                else if (Model.Durum == CekSenetDurum.Tahsilde)
+                {
+                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#tahsilEdildiModal">Tahsil Edildi</button>
+                    <form method="post" asp-action="Karsiliksiz" asp-route-id="@Model.Id" asp-route-returnToDetay="true" onsubmit="return confirm('Bu belge karşılıksız olarak işaretlensin mi? Bu işlem geri alınamaz.')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger">Karşılıksız</button>
+                    </form>
+                }
+                else
+                {
+                    <span class="text-muted">Bu durumdaki bir belge için aksiyon bulunmuyor.</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ciroModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" asp-action="CiroEt" asp-route-returnToDetay="true" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ciro Et</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <label class="form-label">Ciro Bilgisi</label>
+                <textarea name="ciroBilgisi" class="form-control" rows="2" required placeholder="Kime/hangi cariye ciro edildiği"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="tahsilEdildiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" asp-action="TahsilEdildi" asp-route-returnToDetay="true" id="tahsilEdildiForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tahsil Edildi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="bankaHesabiId" id="tahsilEdildiBankaHesabiId" />
+                <input type="hidden" name="kasaHesabiId" id="tahsilEdildiKasaHesabiId" />
+                <label class="form-label">Tahsilatın Yapıldığı Hesap</label>
+                <select id="tahsilEdildiHesapSecimi" class="form-select" required>
+                    <option value="">Seçiniz</option>
+                    @if (Model.BankaHesabiListesi.Any())
+                    {
+                        <optgroup label="Banka Hesapları">
+                            @foreach (var b in Model.BankaHesabiListesi)
+                            {
+                                <option value="banka-@b.Value">@b.Text</option>
+                            }
+                        </optgroup>
+                    }
+                    @if (Model.KasaHesabiListesi.Any())
+                    {
+                        <optgroup label="Kasa Hesapları">
+                            @foreach (var k in Model.KasaHesabiListesi)
+                            {
+                                <option value="kasa-@k.Value">@k.Text</option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var tahsilEdildiSelect = document.getElementById('tahsilEdildiHesapSecimi');
+            tahsilEdildiSelect.addEventListener('change', function () {
+                var parcalar = this.value.split('-');
+                document.getElementById('tahsilEdildiBankaHesabiId').value = parcalar[0] === 'banka' ? parcalar[1] : '';
+                document.getElementById('tahsilEdildiKasaHesabiId').value = parcalar[0] === 'kasa' ? parcalar[1] : '';
+            });
+        });
+    </script>
+}

@@ -118,6 +118,37 @@ public class CekSenetController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Detay(int id)
+    {
+        var cekSenet = await _cekSenetService.GetByIdAsync(id);
+        if (cekSenet is null)
+            return NotFound();
+
+        var cari = await _cariService.GetByIdAsync(cekSenet.CariId);
+        var bankaHesaplari = await _bankaHesabiService.GetAllAsync();
+        var kasaHesaplari = await _kasaHesabiService.GetAllAsync();
+
+        return View(new CekSenetDetayViewModel
+        {
+            Id = cekSenet.Id,
+            BelgeTipi = cekSenet.BelgeTipi,
+            BelgeTipiText = BelgeTipiMetni(cekSenet.BelgeTipi),
+            BelgeNo = cekSenet.BelgeNo,
+            CariUnvan = cari?.Unvan ?? "-",
+            CiroBilgisi = cekSenet.CiroBilgisi,
+            VadeTarihi = cekSenet.VadeTarihi,
+            Tutar = cekSenet.Tutar,
+            BankaAdi = cekSenet.BankaAdi,
+            SubeAdi = cekSenet.SubeAdi,
+            Durum = cekSenet.Durum,
+            DurumText = DurumMetni(cekSenet.Durum),
+            BankaHesabiListesi = bankaHesaplari.Where(b => !b.IsDeleted)
+                .Select(b => new SelectListItem($"{b.HesapAdi} ({b.BankaAdi})", b.Id.ToString())),
+            KasaHesabiListesi = kasaHesaplari.Where(k => !k.IsDeleted)
+                .Select(k => new SelectListItem(k.KasaAdi, k.Id.ToString()))
+        });
+    }
+
     public async Task<IActionResult> Duzenle(int id)
     {
         var cekSenet = await _cekSenetService.GetByIdAsync(id);
@@ -178,7 +209,7 @@ public class CekSenetController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> TahsileVer(int id)
+    public async Task<IActionResult> TahsileVer(int id, bool returnToDetay = false)
     {
         try
         {
@@ -189,12 +220,12 @@ public class CekSenetController : Controller
         {
             TempData["Hata"] = ex.Message;
         }
-        return RedirectToAction(nameof(Index));
+        return returnToDetay ? RedirectToAction(nameof(Detay), new { id }) : RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CiroEt(int id, string ciroBilgisi)
+    public async Task<IActionResult> CiroEt(int id, string ciroBilgisi, bool returnToDetay = false)
     {
         try
         {
@@ -205,12 +236,12 @@ public class CekSenetController : Controller
         {
             TempData["Hata"] = ex.Message;
         }
-        return RedirectToAction(nameof(Index));
+        return returnToDetay ? RedirectToAction(nameof(Detay), new { id }) : RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> TahsilEdildi(int id, int? bankaHesabiId, int? kasaHesabiId)
+    public async Task<IActionResult> TahsilEdildi(int id, int? bankaHesabiId, int? kasaHesabiId, bool returnToDetay = false)
     {
         try
         {
@@ -221,12 +252,12 @@ public class CekSenetController : Controller
         {
             TempData["Hata"] = ex.Message;
         }
-        return RedirectToAction(nameof(Index));
+        return returnToDetay ? RedirectToAction(nameof(Detay), new { id }) : RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Karsiliksiz(int id)
+    public async Task<IActionResult> Karsiliksiz(int id, bool returnToDetay = false)
     {
         try
         {
@@ -237,7 +268,7 @@ public class CekSenetController : Controller
         {
             TempData["Hata"] = ex.Message;
         }
-        return RedirectToAction(nameof(Index));
+        return returnToDetay ? RedirectToAction(nameof(Detay), new { id }) : RedirectToAction(nameof(Index));
     }
 
     private async Task DoldurListeler(CekSenetFormViewModel vm)

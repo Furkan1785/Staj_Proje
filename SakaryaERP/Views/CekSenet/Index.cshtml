@@ -182,6 +182,7 @@
                         searchable: false,
                         render: function (id, type, row) {
                             var html = '<div class="d-flex flex-wrap gap-1">';
+                            html += '<a href="/CekSenet/Detay/' + id + '" class="btn btn-sm btn-outline-secondary">Detay</a>';
                             html += '<a href="/CekSenet/Duzenle/' + id + '" class="btn btn-sm btn-outline-primary">Düzenle</a>';
                             if (row.durum === 'Portfoyde') {
                                 html += aksiyonFormuOlustur('TahsileVer', id, 'btn-outline-success', 'Tahsile Ver', 'Bu belge tahsile verilsin mi?');
