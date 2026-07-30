@@ -99,12 +99,13 @@
                         orderable: false,
                         searchable: false,
                         render: function (data, type, row) {
+                            var detay = '<a href="/Cari/Detay/' + row.id + '" class="btn btn-sm btn-outline-secondary me-1">Detay</a>';
                             var duzenle = '<a href="/Cari/Duzenle/' + row.id + '" class="btn btn-sm btn-outline-primary me-1">Düzenle</a>';
                             var ekstre = '<a href="/Cari/Ekstre?cariId=' + row.id + '" class="btn btn-sm btn-outline-secondary me-1">Ekstre</a>';
                             var url = row.isDeleted ? '/Cari/AktifEt/' + row.id : '/Cari/PasifYap/' + row.id;
                             var sinif = row.isDeleted ? 'btn-outline-success' : 'btn-outline-danger';
                             var metin = row.isDeleted ? 'Aktif Et' : 'Pasif Yap';
-                            return duzenle + ekstre +
+                            return detay + duzenle + ekstre +
                                 '<form method="post" action="' + url + '" class="d-inline">' + antiforgeryTokenHtml +
                                 '<button type="submit" class="btn btn-sm ' + sinif + '">' + metin + '</button></form>';
                         }

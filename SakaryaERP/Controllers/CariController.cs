@@ -90,6 +90,43 @@ public class CariController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Detay(int id)
+    {
+        var cari = await _cariService.GetByIdAsync(id);
+        if (cari is null) return NotFound();
+
+        var baslangic = DateTime.Today.AddMonths(-3);
+        var bitis = DateTime.Today;
+        var (_, _, satirlar) = await _cariFisiService.GetEkstreAsync(id, baslangic, bitis);
+
+        var sonHareketler = satirlar.TakeLast(10).Select(s => new CariEkstreSatiriViewModel
+        {
+            Tarih = s.Fis.Tarih,
+            FisNo = s.Fis.FisNo,
+            FisTipiText = FisTipiMetni(s.Fis.FisTipi),
+            Aciklama = s.Fis.Aciklama,
+            Borc = s.Fis.FisTipi == FisTipi.Borc ? s.Fis.Tutar : 0,
+            Alacak = s.Fis.FisTipi != FisTipi.Borc ? s.Fis.Tutar : 0,
+            KumulatifBakiye = s.KumulatifBakiye
+        }).ToList();
+
+        return View(new CariDetayViewModel
+        {
+            Id = cari.Id,
+            CariKodu = cari.CariKodu,
+            Unvan = cari.Unvan,
+            CariTipiText = CariTipiMetni(cari.CariTipi),
+            VergiNo = cari.VergiNo,
+            Adres = cari.Adres,
+            Telefon = cari.Telefon,
+            EMail = cari.EMail,
+            Bakiye = cari.Bakiye,
+            KrediLimiti = cari.KrediLimiti,
+            IsDeleted = cari.IsDeleted,
+            SonHareketler = sonHareketler
+        });
+    }
+
     public async Task<IActionResult> Duzenle(int id)
     {
         var cari = await _cariService.GetByIdAsync(id);

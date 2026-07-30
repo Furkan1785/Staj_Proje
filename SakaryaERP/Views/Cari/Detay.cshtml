@@ -1,0 +1,138 @@
+@model CariDetayViewModel
+@{
+    ViewData["Title"] = "Cari Detayı";
+
+    var limitAsimi = Model.Bakiye > 0 && Model.KrediLimiti > 0 && Model.Bakiye > Model.KrediLimiti;
+    var durumSinifi = Model.IsDeleted ? "bg-secondary" : "bg-success";
+    var durumMetni = Model.IsDeleted ? "Pasif" : "Aktif";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">@Model.Unvan <small class="text-muted">(@Model.CariKodu)</small></h3>
+    <div class="d-flex gap-2">
+        <a asp-action="Duzenle" asp-route-id="@Model.Id" class="btn btn-outline-primary">Düzenle</a>
+        <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card position-sticky" style="top: 1rem;">
+            <div class="card-body text-center">
+                <div class="text-muted small">Cari Kodu</div>
+                <div class="fs-5 fw-semibold mb-2">@Model.CariKodu</div>
+                <div class="text-muted small">Unvan</div>
+                <div class="fw-semibold mb-3">@Model.Unvan</div>
+                <span class="badge @durumSinifi">@durumMetni</span>
+                @if (limitAsimi)
+                {
+                    <span class="badge bg-danger">Kredi Limiti Aşıldı</span>
+                }
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Bakiye</span>
+                    <span class="fw-semibold">@Model.Bakiye.ToString("N2")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Kredi Limiti</span>
+                    <span>@Model.KrediLimiti.ToString("N2")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Cari Tipi</span>
+                    <span>@Model.CariTipiText</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs card-header-tabs px-2 pt-2" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#sekme-genel" type="button" role="tab">Genel</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-iletisim" type="button" role="tab">İletişim</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-hareketler" type="button" role="tab">Hareketler</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body tab-content">
+                <div class="tab-pane fade show active" id="sekme-genel" role="tabpanel">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Cari Tipi</dt>
+                        <dd class="col-sm-9">@Model.CariTipiText</dd>
+                        <dt class="col-sm-3">Vergi No</dt>
+                        <dd class="col-sm-9">@(Model.VergiNo ?? "-")</dd>
+                        <dt class="col-sm-3">Bakiye</dt>
+                        <dd class="col-sm-9">@Model.Bakiye.ToString("N2")</dd>
+                        <dt class="col-sm-3">Kredi Limiti</dt>
+                        <dd class="col-sm-9">@Model.KrediLimiti.ToString("N2")</dd>
+                    </dl>
+                </div>
+
+                <div class="tab-pane fade" id="sekme-iletisim" role="tabpanel">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Telefon</dt>
+                        <dd class="col-sm-9">@(Model.Telefon ?? "-")</dd>
+                        <dt class="col-sm-3">E-Posta</dt>
+                        <dd class="col-sm-9">@(Model.EMail ?? "-")</dd>
+                        <dt class="col-sm-3">Adres</dt>
+                        <dd class="col-sm-9">@(Model.Adres ?? "-")</dd>
+                    </dl>
+                </div>
+
+                <div class="tab-pane fade" id="sekme-hareketler" role="tabpanel">
+                    @if (Model.SonHareketler.Count == 0)
+                    {
+                        <p class="text-muted text-center mb-0">Son 3 ayda bu cariye ait bir hareket bulunamadı.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle mb-2">
+                                <thead>
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Fiş No</th>
+                                        <th>Fiş Tipi</th>
+                                        <th class="text-end">Borç</th>
+                                        <th class="text-end">Alacak</th>
+                                        <th class="text-end">Bakiye</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var h in Model.SonHareketler)
+                                    {
+                                        <tr>
+                                            <td>@h.Tarih.ToString("dd.MM.yyyy")</td>
+                                            <td>@h.FisNo</td>
+                                            <td>@h.FisTipiText</td>
+                                            <td class="text-end">@(h.Borc > 0 ? h.Borc.ToString("N2") : "-")</td>
+                                            <td class="text-end">@(h.Alacak > 0 ? h.Alacak.ToString("N2") : "-")</td>
+                                            <td class="text-end">@h.KumulatifBakiye.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    <a asp-action="Ekstre" asp-route-cariId="@Model.Id" class="small">
+                        Tam ekstreyi gör (tarih aralığı seçerek) &raquo;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body d-flex gap-2">
+                <a asp-controller="CariFisi" asp-action="Ekle" class="btn btn-sm btn-outline-secondary">Cari Fişi Oluştur</a>
+                <a asp-action="EkstreExcel" asp-route-cariId="@Model.Id" asp-route-baslangic="@DateTime.Today.AddMonths(-3).ToString("yyyy-MM-dd")" asp-route-bitis="@DateTime.Today.ToString("yyyy-MM-dd")" class="btn btn-sm btn-outline-secondary">Ekstreyi Excel'e Aktar</a>
+            </div>
+        </div>
+    </div>
+</div>
