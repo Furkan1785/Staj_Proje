@@ -166,6 +166,7 @@ public class AlisIrsaliyesiController : Controller
             Aciklama = irsaliye.Aciklama,
             Durum = irsaliye.Durum,
             DurumText = DurumMetni(irsaliye.Durum),
+            Zincir = BelgeZinciriOlustur(irsaliye),
             Kalemler = irsaliye.Kalemler.Select(k => new AlisIrsaliyesiKalemDetayViewModel
             {
                 MalzemeKodu = k.Malzeme.MalzemeKodu,
@@ -233,4 +234,20 @@ public class AlisIrsaliyesiController : Controller
         BelgeDurum.Iptal => "İptal",
         _ => durum.ToString()
     };
+
+    private List<BelgeZinciriAdimi> BelgeZinciriOlustur(AlisIrsaliyesi irsaliye)
+    {
+        var zincir = new List<BelgeZinciriAdimi>();
+        if (irsaliye.AlisSiparisi is not null)
+        {
+            zincir.Add(new BelgeZinciriAdimi
+            {
+                Etiket = "Sipariş",
+                Metin = irsaliye.AlisSiparisi.SiparisNo,
+                Href = Url.Action("Detay", "AlisSiparisi", new { id = irsaliye.AlisSiparisiId })
+            });
+        }
+        zincir.Add(new BelgeZinciriAdimi { Etiket = "İrsaliye", Metin = irsaliye.IrsaliyeNo, Aktif = true });
+        return zincir;
+    }
 }

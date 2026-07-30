@@ -14,6 +14,7 @@ public class SevkIrsaliyesiDetayViewModel
     public string? AracSofor { get; set; }
     public BelgeDurum Durum { get; set; }
     public string DurumText { get; set; } = "";
+    public List<BelgeZinciriAdimi> Zincir { get; set; } = [];
     public List<SevkIrsaliyesiKalemDetayViewModel> Kalemler { get; set; } = [];
 }
 

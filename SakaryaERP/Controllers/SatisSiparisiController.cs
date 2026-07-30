@@ -161,6 +161,7 @@ public class SatisSiparisiController : Controller
             Aciklama = siparis.Aciklama,
             Durum = siparis.Durum,
             DurumText = DurumMetni(siparis.Durum),
+            Zincir = BelgeZinciriOlustur(siparis),
             Kalemler = siparis.Kalemler.Select(k =>
             {
                 var sevkEdilen = Math.Min(sevkMiktarlari.GetValueOrDefault(k.MalzemeId), k.Miktar);
@@ -255,5 +256,21 @@ public class SatisSiparisiController : Controller
         if (sevkToplami < siparisToplami)
             return "Kısmi Sevkiyat";
         return "Tamamen Sevk Edildi";
+    }
+
+    private List<BelgeZinciriAdimi> BelgeZinciriOlustur(SatisSiparisi siparis)
+    {
+        var zincir = new List<BelgeZinciriAdimi>();
+        if (siparis.SatisTeklifi is not null)
+        {
+            zincir.Add(new BelgeZinciriAdimi
+            {
+                Etiket = "Teklif",
+                Metin = siparis.SatisTeklifi.TeklifNo,
+                Href = Url.Action("Detay", "SatisTeklifi", new { id = siparis.SatisTeklifiId })
+            });
+        }
+        zincir.Add(new BelgeZinciriAdimi { Etiket = "Sipariş", Metin = siparis.SiparisNo, Aktif = true });
+        return zincir;
     }
 }

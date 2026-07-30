@@ -1,0 +1,23 @@
+@model List<SakaryaERP.ViewModels.BelgeZinciriAdimi>
+@if (Model.Count > 1)
+{
+    <nav class="mb-3" aria-label="Belge akışı">
+        <ol class="breadcrumb bg-light px-3 py-2 rounded mb-0">
+            @foreach (var adim in Model)
+            {
+                @if (adim.Aktif)
+                {
+                    <li class="breadcrumb-item active fw-semibold" aria-current="page">@adim.Etiket: @adim.Metin</li>
+                }
+                else if (adim.Href is not null)
+                {
+                    <li class="breadcrumb-item"><a href="@adim.Href">@adim.Etiket: @adim.Metin</a></li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item text-muted">@adim.Etiket: @adim.Metin</li>
+                }
+            }
+        </ol>
+    </nav>
+}

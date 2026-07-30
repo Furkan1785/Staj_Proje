@@ -13,6 +13,7 @@ public class SatisTeklifiDetayViewModel
     public string? Aciklama { get; set; }
     public BelgeDurum Durum { get; set; }
     public string DurumText { get; set; } = "";
+    public List<BelgeZinciriAdimi> Zincir { get; set; } = [];
     public List<SatisTeklifiKalemDetayViewModel> Kalemler { get; set; } = [];
 
     public decimal ToplamTutar => Kalemler.Sum(k => k.SatirToplami);

@@ -13,6 +13,7 @@ public class AlisIrsaliyesiDetayViewModel
     public string? Aciklama { get; set; }
     public BelgeDurum Durum { get; set; }
     public string DurumText { get; set; } = "";
+    public List<BelgeZinciriAdimi> Zincir { get; set; } = [];
     public List<AlisIrsaliyesiKalemDetayViewModel> Kalemler { get; set; } = [];
 }
 

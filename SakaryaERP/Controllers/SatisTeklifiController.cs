@@ -259,6 +259,7 @@ public class SatisTeklifiController : Controller
             Aciklama = teklif.Aciklama,
             Durum = teklif.Durum,
             DurumText = DurumMetni(teklif.Durum),
+            Zincir = BelgeZinciriOlustur(teklif),
             Kalemler = teklif.Kalemler.Select(k => new SatisTeklifiKalemDetayViewModel
             {
                 MalzemeKodu = k.Malzeme.MalzemeKodu,
@@ -304,4 +305,16 @@ public class SatisTeklifiController : Controller
         BelgeDurum.Iptal => "İptal",
         _ => durum.ToString()
     };
+
+    private static List<BelgeZinciriAdimi> BelgeZinciriOlustur(SatisTeklifi teklif)
+    {
+        var zincir = new List<BelgeZinciriAdimi>();
+        if (teklif.MusteriTalebi is not null)
+        {
+            // Müşteri Talebi'nin henüz bir Detay ekranı yok, bu yüzden tıklanabilir değil.
+            zincir.Add(new BelgeZinciriAdimi { Etiket = "Talep", Metin = teklif.MusteriTalebi.TalepNo });
+        }
+        zincir.Add(new BelgeZinciriAdimi { Etiket = "Teklif", Metin = teklif.TeklifNo, Aktif = true });
+        return zincir;
+    }
 }

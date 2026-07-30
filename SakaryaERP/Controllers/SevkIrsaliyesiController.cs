@@ -264,6 +264,16 @@ public class SevkIrsaliyesiController : Controller
             AracSofor = irsaliye.AracSofor,
             Durum = irsaliye.Durum,
             DurumText = DurumMetni(irsaliye.Durum),
+            Zincir =
+            [
+                new BelgeZinciriAdimi
+                {
+                    Etiket = "Sipariş",
+                    Metin = irsaliye.SatisSiparisi.SiparisNo,
+                    Href = Url.Action("Detay", "SatisSiparisi", new { id = irsaliye.SatisSiparisiId })
+                },
+                new BelgeZinciriAdimi { Etiket = "Sevk İrsaliyesi", Metin = irsaliye.IrsaliyeNo, Aktif = true }
+            ],
             Kalemler = irsaliye.Kalemler.Select(k => new SevkIrsaliyesiKalemDetayViewModel
             {
                 MalzemeKodu = k.Malzeme.MalzemeKodu,

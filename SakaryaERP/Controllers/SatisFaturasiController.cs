@@ -348,6 +348,7 @@ public class SatisFaturasiController : Controller
             Aciklama = fatura.Aciklama,
             Durum = fatura.Durum,
             DurumText = DurumMetni(fatura.Durum),
+            Zincir = BelgeZinciriOlustur(fatura),
             Kalemler = fatura.Kalemler.Select(k => new SatisFaturasiKalemDetayViewModel
             {
                 MalzemeKodu = k.Malzeme.MalzemeKodu,
@@ -393,4 +394,29 @@ public class SatisFaturasiController : Controller
         BelgeDurum.Iptal => "İptal",
         _ => durum.ToString()
     };
+
+    private List<BelgeZinciriAdimi> BelgeZinciriOlustur(SatisFaturasi fatura)
+    {
+        var zincir = new List<BelgeZinciriAdimi>();
+        if (fatura.SatisSiparisi is not null)
+        {
+            zincir.Add(new BelgeZinciriAdimi
+            {
+                Etiket = "Sipariş",
+                Metin = fatura.SatisSiparisi.SiparisNo,
+                Href = Url.Action("Detay", "SatisSiparisi", new { id = fatura.SatisSiparisiId })
+            });
+        }
+        if (fatura.SevkIrsaliyesi is not null)
+        {
+            zincir.Add(new BelgeZinciriAdimi
+            {
+                Etiket = "Sevk İrsaliyesi",
+                Metin = fatura.SevkIrsaliyesi.IrsaliyeNo,
+                Href = Url.Action("Detay", "SevkIrsaliyesi", new { id = fatura.SevkIrsaliyesiId })
+            });
+        }
+        zincir.Add(new BelgeZinciriAdimi { Etiket = "Fatura", Metin = fatura.FaturaNo, Aktif = true });
+        return zincir;
+    }
 }
