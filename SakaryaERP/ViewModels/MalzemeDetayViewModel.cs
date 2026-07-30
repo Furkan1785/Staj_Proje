@@ -20,4 +20,5 @@ public class MalzemeDetayViewModel
     public decimal MaxStokMiktari { get; set; }
     public string? RafNo { get; set; }
     public decimal Bakiye { get; set; }
+    public List<MalzemeGecmisiSatiriViewModel> SonHareketler { get; set; } = [];
 }

@@ -18,13 +18,18 @@ public class MalzemeController : Controller
 
     private readonly IMalzemeService _malzemeService;
     private readonly IMalzemeKategoriService _malzemeKategoriService;
+    private readonly IMalzemeHareketFisiService _malzemeHareketFisiService;
     private readonly ILogger<MalzemeController> _logger;
 
     public MalzemeController(
-        IMalzemeService malzemeService, IMalzemeKategoriService malzemeKategoriService, ILogger<MalzemeController> logger)
+        IMalzemeService malzemeService,
+        IMalzemeKategoriService malzemeKategoriService,
+        IMalzemeHareketFisiService malzemeHareketFisiService,
+        ILogger<MalzemeController> logger)
     {
         _malzemeService = malzemeService;
         _malzemeKategoriService = malzemeKategoriService;
+        _malzemeHareketFisiService = malzemeHareketFisiService;
         _logger = logger;
     }
 
@@ -178,6 +183,8 @@ public class MalzemeController : Controller
         var malzeme = await _malzemeService.GetByIdAsync(id);
         if (malzeme is null) return NotFound();
 
+        var sonHareketler = await _malzemeHareketFisiService.GetMalzemeGecmisiAsync(id, null, null);
+
         return View(new MalzemeDetayViewModel
         {
             Id = malzeme.Id,
@@ -197,7 +204,20 @@ public class MalzemeController : Controller
             MinStokMiktari = malzeme.MinStokMiktari,
             MaxStokMiktari = malzeme.MaxStokMiktari,
             RafNo = malzeme.RafNo,
-            Bakiye = malzeme.Bakiye
+            Bakiye = malzeme.Bakiye,
+            SonHareketler = sonHareketler
+                .OrderByDescending(k => k.MalzemeHareketFisi.Tarih)
+                .Take(5)
+                .Select(k => new MalzemeGecmisiSatiriViewModel
+                {
+                    Tarih = k.MalzemeHareketFisi.Tarih,
+                    FisNo = k.MalzemeHareketFisi.FisNo,
+                    HareketTipiText = HareketTipiMetni(k.MalzemeHareketFisi.HareketTipi),
+                    SubeAdi = k.MalzemeHareketFisi.Sube.SubeAdi,
+                    Giris = k.MalzemeHareketFisi.HareketTipi == HareketTipi.Giris ? k.Miktar : 0,
+                    Cikis = k.MalzemeHareketFisi.HareketTipi is HareketTipi.Cikis or HareketTipi.Fire ? k.Miktar : 0,
+                    Aciklama = k.Aciklama
+                }).ToList()
         });
     }
 
@@ -401,6 +421,15 @@ public class MalzemeController : Controller
         StokTipi.Hammadde => "Hammadde",
         StokTipi.YariMamul => "Yarı Mamul",
         StokTipi.Mamul => "Mamul",
+        _ => tip.ToString()
+    };
+
+    private static string HareketTipiMetni(HareketTipi tip) => tip switch
+    {
+        HareketTipi.Giris => "Giriş",
+        HareketTipi.Cikis => "Çıkış",
+        HareketTipi.Transfer => "Transfer",
+        HareketTipi.Fire => "Fire",
         _ => tip.ToString()
     };
 }

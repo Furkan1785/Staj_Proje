@@ -2,96 +2,133 @@
 
 <input type="hidden" asp-for="Id" />
 
-<div class="row g-3">
+<div class="row g-4">
     <div class="col-md-3">
-        <label asp-for="MalzemeKodu" class="form-label"></label>
-        <input asp-for="MalzemeKodu" class="form-control" />
-        <span asp-validation-for="MalzemeKodu" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="Barkod" class="form-label"></label>
-        <input asp-for="Barkod" class="form-control" />
-        <span asp-validation-for="Barkod" class="text-danger"></span>
-    </div>
-    <div class="col-md-6">
-        <label asp-for="MalzemeAdi" class="form-label"></label>
-        <input asp-for="MalzemeAdi" class="form-control" />
-        <span asp-validation-for="MalzemeAdi" class="text-danger"></span>
+        <div class="card">
+            <div class="card-header">Kimlik Bilgileri</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label asp-for="MalzemeKodu" class="form-label"></label>
+                    <input asp-for="MalzemeKodu" class="form-control" />
+                    <span asp-validation-for="MalzemeKodu" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Barkod" class="form-label"></label>
+                    <input asp-for="Barkod" class="form-control" />
+                    <span asp-validation-for="Barkod" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="MalzemeAdi" class="form-label"></label>
+                    <input asp-for="MalzemeAdi" class="form-control" />
+                    <span asp-validation-for="MalzemeAdi" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Birim" class="form-label"></label>
+                    <input asp-for="Birim" class="form-control" placeholder="ör. Adet, Metre, Kg" />
+                    <span asp-validation-for="Birim" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="StokTipi" class="form-label"></label>
+                    <select asp-for="StokTipi" class="form-select" asp-items="Html.GetEnumSelectList<StokTipi>()"></select>
+                    <span asp-validation-for="StokTipi" class="text-danger"></span>
+                </div>
+                <div class="mb-0">
+                    <label asp-for="TeminTuru" class="form-label"></label>
+                    <select asp-for="TeminTuru" class="form-select" asp-items="Html.GetEnumSelectList<TeminTuru>()"></select>
+                    <span asp-validation-for="TeminTuru" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="col-md-3">
-        <label asp-for="Marka" class="form-label"></label>
-        <input asp-for="Marka" class="form-control" />
-        <span asp-validation-for="Marka" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="Kalite" class="form-label"></label>
-        <input asp-for="Kalite" class="form-control" />
-        <span asp-validation-for="Kalite" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="Tip" class="form-label"></label>
-        <input asp-for="Tip" class="form-control" />
-        <span asp-validation-for="Tip" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="Birim" class="form-label"></label>
-        <input asp-for="Birim" class="form-control" placeholder="ör. Adet, Metre, Kg" />
-        <span asp-validation-for="Birim" class="text-danger"></span>
-    </div>
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs card-header-tabs px-2 pt-2" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#form-sekme-genel" type="button" role="tab">Genel</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#form-sekme-kategori-fiyat" type="button" role="tab">Kategori ve Fiyat</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#form-sekme-depo-stok" type="button" role="tab">Depo / Stok</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body tab-content">
+                <div class="tab-pane fade show active" id="form-sekme-genel" role="tabpanel">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Marka" class="form-label"></label>
+                            <input asp-for="Marka" class="form-control" />
+                            <span asp-validation-for="Marka" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Kalite" class="form-label"></label>
+                            <input asp-for="Kalite" class="form-control" />
+                            <span asp-validation-for="Kalite" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Tip" class="form-label"></label>
+                            <input asp-for="Tip" class="form-control" />
+                            <span asp-validation-for="Tip" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="col-md-4">
-        <label asp-for="KategoriId" class="form-label"></label>
-        <select asp-for="KategoriId" class="form-select" asp-items="Model.KategoriListesi">
-            <option value="">Kategorisiz</option>
-        </select>
-        <span asp-validation-for="KategoriId" class="text-danger"></span>
-    </div>
-    <div class="col-md-4">
-        <label asp-for="TeminTuru" class="form-label"></label>
-        <select asp-for="TeminTuru" class="form-select" asp-items="Html.GetEnumSelectList<TeminTuru>()"></select>
-        <span asp-validation-for="TeminTuru" class="text-danger"></span>
-    </div>
-    <div class="col-md-4">
-        <label asp-for="StokTipi" class="form-label"></label>
-        <select asp-for="StokTipi" class="form-select" asp-items="Html.GetEnumSelectList<StokTipi>()"></select>
-        <span asp-validation-for="StokTipi" class="text-danger"></span>
-    </div>
+                <div class="tab-pane fade" id="form-sekme-kategori-fiyat" role="tabpanel">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="KategoriId" class="form-label"></label>
+                            <select asp-for="KategoriId" class="form-select" asp-items="Model.KategoriListesi">
+                                <option value="">Kategorisiz</option>
+                            </select>
+                            <span asp-validation-for="KategoriId" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="AlisFiyati" class="form-label"></label>
+                            <input asp-for="AlisFiyati" class="form-control" />
+                            <span asp-validation-for="AlisFiyati" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="SatisFiyati" class="form-label"></label>
+                            <input asp-for="SatisFiyati" class="form-control" />
+                            <span asp-validation-for="SatisFiyati" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label asp-for="KdvOrani" class="form-label"></label>
+                            <input asp-for="KdvOrani" class="form-control" />
+                            <span asp-validation-for="KdvOrani" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="col-md-3">
-        <label asp-for="AlisFiyati" class="form-label"></label>
-        <input asp-for="AlisFiyati" class="form-control" />
-        <span asp-validation-for="AlisFiyati" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="SatisFiyati" class="form-label"></label>
-        <input asp-for="SatisFiyati" class="form-control" />
-        <span asp-validation-for="SatisFiyati" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="KdvOrani" class="form-label"></label>
-        <input asp-for="KdvOrani" class="form-control" />
-        <span asp-validation-for="KdvOrani" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="RafNo" class="form-label"></label>
-        <input asp-for="RafNo" class="form-control" />
-        <span asp-validation-for="RafNo" class="text-danger"></span>
-    </div>
+                <div class="tab-pane fade" id="form-sekme-depo-stok" role="tabpanel">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="MinStokMiktari" class="form-label"></label>
+                            <input asp-for="MinStokMiktari" class="form-control" />
+                            <span asp-validation-for="MinStokMiktari" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="MaxStokMiktari" class="form-label"></label>
+                            <input asp-for="MaxStokMiktari" class="form-control" />
+                            <span asp-validation-for="MaxStokMiktari" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="RafNo" class="form-label"></label>
+                            <input asp-for="RafNo" class="form-control" />
+                            <span asp-validation-for="RafNo" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="col-md-3">
-        <label asp-for="MinStokMiktari" class="form-label"></label>
-        <input asp-for="MinStokMiktari" class="form-control" />
-        <span asp-validation-for="MinStokMiktari" class="text-danger"></span>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+            <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+        </div>
     </div>
-    <div class="col-md-3">
-        <label asp-for="MaxStokMiktari" class="form-label"></label>
-        <input asp-for="MaxStokMiktari" class="form-control" />
-        <span asp-validation-for="MaxStokMiktari" class="text-danger"></span>
-    </div>
-</div>
-
-<div class="mt-4">
-    <button type="submit" class="btn btn-primary">Kaydet</button>
-    <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
 </div>

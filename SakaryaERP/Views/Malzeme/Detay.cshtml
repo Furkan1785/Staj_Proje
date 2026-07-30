@@ -30,71 +30,139 @@
 </div>
 
 <div class="row g-4">
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header">Malzeme Bilgileri</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Barkod</dt>
-                    <dd class="col-sm-8">@(Model.Barkod ?? "-")</dd>
-                    <dt class="col-sm-4">Marka</dt>
-                    <dd class="col-sm-8">@(Model.Marka ?? "-")</dd>
-                    <dt class="col-sm-4">Kalite</dt>
-                    <dd class="col-sm-8">@(Model.Kalite ?? "-")</dd>
-                    <dt class="col-sm-4">Tip</dt>
-                    <dd class="col-sm-8">@(Model.Tip ?? "-")</dd>
-                    <dt class="col-sm-4">Birim</dt>
-                    <dd class="col-sm-8">@Model.Birim</dd>
-                    <dt class="col-sm-4">Kategori</dt>
-                    <dd class="col-sm-8">@(Model.KategoriAdi ?? "-")</dd>
-                    <dt class="col-sm-4">Temin Türü</dt>
-                    <dd class="col-sm-8">@Model.TeminTuruText</dd>
-                    <dt class="col-sm-4">Stok Tipi</dt>
-                    <dd class="col-sm-8">@Model.StokTipiText</dd>
-                    <dt class="col-sm-4">Raf No</dt>
-                    <dd class="col-sm-8">@(Model.RafNo ?? "-")</dd>
-                </dl>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">Fiyat Bilgileri</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-5">Alış Fiyatı</dt>
-                    <dd class="col-sm-7">@Model.AlisFiyati.ToString("N2")</dd>
-                    <dt class="col-sm-5">Satış Fiyatı</dt>
-                    <dd class="col-sm-7">@Model.SatisFiyati.ToString("N2")</dd>
-                    <dt class="col-sm-5">KDV Oranı</dt>
-                    <dd class="col-sm-7">%@Model.KdvOrani.ToString("N0")</dd>
-                </dl>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                Stok Bilgisi
+    <div class="col-md-3">
+        <div class="card position-sticky" style="top: 1rem;">
+            <div class="card-body text-center">
+                <div class="text-muted small">Malzeme Kodu</div>
+                <div class="fs-5 fw-semibold mb-2">@Model.MalzemeKodu</div>
+                <div class="text-muted small">Malzeme Adı</div>
+                <div class="fw-semibold mb-3">@Model.MalzemeAdi</div>
                 <span class="badge @stokDurumSinifi">@stokDurumMetni</span>
             </div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-5">Bakiye</dt>
-                    <dd class="col-sm-7">@Model.Bakiye.ToString("N2") @Model.Birim</dd>
-                    <dt class="col-sm-5">Min Stok Miktarı</dt>
-                    <dd class="col-sm-7">@Model.MinStokMiktari.ToString("N2") @Model.Birim</dd>
-                    <dt class="col-sm-5">Max Stok Miktarı</dt>
-                    <dd class="col-sm-7">@Model.MaxStokMiktari.ToString("N2") @Model.Birim</dd>
-                </dl>
-            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Bakiye</span>
+                    <span class="fw-semibold">@Model.Bakiye.ToString("N2") @Model.Birim</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Stok Tipi</span>
+                    <span>@Model.StokTipiText</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Barkod</span>
+                    <span>@(Model.Barkod ?? "-")</span>
+                </li>
+            </ul>
         </div>
     </div>
-</div>
 
-<div class="card mt-4">
-    <div class="card-header">Son İşlemler</div>
-    <div class="card-body text-center text-muted">
-        Bu malzemeye ait henüz bir stok hareketi kaydedilmedi.
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs card-header-tabs px-2 pt-2" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#sekme-genel" type="button" role="tab">Genel</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-kategori-fiyat" type="button" role="tab">Kategori ve Fiyat</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-depo-stok" type="button" role="tab">Depo / Stok</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-hareket-gecmisi" type="button" role="tab">Hareket Geçmişi</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body tab-content">
+                <div class="tab-pane fade show active" id="sekme-genel" role="tabpanel">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Marka</dt>
+                        <dd class="col-sm-9">@(Model.Marka ?? "-")</dd>
+                        <dt class="col-sm-3">Kalite</dt>
+                        <dd class="col-sm-9">@(Model.Kalite ?? "-")</dd>
+                        <dt class="col-sm-3">Tip</dt>
+                        <dd class="col-sm-9">@(Model.Tip ?? "-")</dd>
+                        <dt class="col-sm-3">Birim</dt>
+                        <dd class="col-sm-9">@Model.Birim</dd>
+                    </dl>
+                </div>
+
+                <div class="tab-pane fade" id="sekme-kategori-fiyat" role="tabpanel">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Kategori</dt>
+                        <dd class="col-sm-9">@(Model.KategoriAdi ?? "-")</dd>
+                        <dt class="col-sm-3">Temin Türü</dt>
+                        <dd class="col-sm-9">@Model.TeminTuruText</dd>
+                        <dt class="col-sm-3">Alış Fiyatı</dt>
+                        <dd class="col-sm-9">@Model.AlisFiyati.ToString("N2")</dd>
+                        <dt class="col-sm-3">Satış Fiyatı</dt>
+                        <dd class="col-sm-9">@Model.SatisFiyati.ToString("N2")</dd>
+                        <dt class="col-sm-3">KDV Oranı</dt>
+                        <dd class="col-sm-9">%@Model.KdvOrani.ToString("N0")</dd>
+                    </dl>
+                </div>
+
+                <div class="tab-pane fade" id="sekme-depo-stok" role="tabpanel">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Bakiye</dt>
+                        <dd class="col-sm-9">@Model.Bakiye.ToString("N2") @Model.Birim</dd>
+                        <dt class="col-sm-3">Min Stok Miktarı</dt>
+                        <dd class="col-sm-9">@Model.MinStokMiktari.ToString("N2") @Model.Birim</dd>
+                        <dt class="col-sm-3">Max Stok Miktarı</dt>
+                        <dd class="col-sm-9">@Model.MaxStokMiktari.ToString("N2") @Model.Birim</dd>
+                        <dt class="col-sm-3">Raf No</dt>
+                        <dd class="col-sm-9">@(Model.RafNo ?? "-")</dd>
+                    </dl>
+                </div>
+
+                <div class="tab-pane fade" id="sekme-hareket-gecmisi" role="tabpanel">
+                    @if (Model.SonHareketler.Count == 0)
+                    {
+                        <p class="text-muted text-center mb-0">Bu malzemeye ait henüz bir stok hareketi kaydedilmedi.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle mb-2">
+                                <thead>
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Fiş No</th>
+                                        <th>Hareket Tipi</th>
+                                        <th>Şube</th>
+                                        <th class="text-end">Giriş</th>
+                                        <th class="text-end">Çıkış</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var h in Model.SonHareketler)
+                                    {
+                                        <tr>
+                                            <td>@h.Tarih.ToString("dd.MM.yyyy")</td>
+                                            <td>@h.FisNo</td>
+                                            <td>@h.HareketTipiText</td>
+                                            <td>@h.SubeAdi</td>
+                                            <td class="text-end">@(h.Giris > 0 ? h.Giris.ToString("N2") : "-")</td>
+                                            <td class="text-end">@(h.Cikis > 0 ? h.Cikis.ToString("N2") : "-")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <a asp-controller="StokRaporu" asp-action="MalzemeGecmisi" asp-route-malzemeId="@Model.Id" class="small">
+                            Tüm hareket geçmişini gör &raquo;
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body d-flex gap-2">
+                <a asp-controller="MalzemeHareketFisi" asp-action="Ekle" class="btn btn-sm btn-outline-secondary">Stok Hareketi Oluştur</a>
+                <a asp-action="Excel" class="btn btn-sm btn-outline-secondary">Excel'e Aktar</a>
+            </div>
+        </div>
     </div>
 </div>
