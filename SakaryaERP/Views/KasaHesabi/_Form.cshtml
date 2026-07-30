@@ -2,20 +2,25 @@
 
 <input type="hidden" asp-for="Id" />
 
-<div class="row g-3">
-    <div class="col-md-6">
-        <label asp-for="KasaAdi" class="form-label"></label>
-        <input asp-for="KasaAdi" class="form-control" />
-        <span asp-validation-for="KasaAdi" class="text-danger"></span>
-    </div>
-    <div class="col-md-6">
-        <label asp-for="ParaBirimi" class="form-label"></label>
-        <select asp-for="ParaBirimi" class="form-select">
-            <option value="TRY">TRY</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-        </select>
-        <span asp-validation-for="ParaBirimi" class="text-danger"></span>
+<div class="card">
+    <div class="card-header">Hesap Bilgileri</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="KasaAdi" class="form-label"></label>
+                <input asp-for="KasaAdi" class="form-control" />
+                <span asp-validation-for="KasaAdi" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="ParaBirimi" class="form-label"></label>
+                <select asp-for="ParaBirimi" class="form-select">
+                    <option value="TRY">TRY</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                </select>
+                <span asp-validation-for="ParaBirimi" class="text-danger"></span>
+            </div>
+        </div>
     </div>
 </div>
 

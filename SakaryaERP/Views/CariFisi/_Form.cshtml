@@ -1,53 +1,58 @@
 @model CariFisiFormViewModel
 
-<div class="row g-3">
-    <div class="col-md-6">
-        <label asp-for="CariId" class="form-label"></label>
-        <select asp-for="CariId" class="form-select" asp-items="Model.CariListesi">
-            <option value="">Seçiniz</option>
-        </select>
-        <span asp-validation-for="CariId" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="Tarih" class="form-label"></label>
-        <input asp-for="Tarih" class="form-control" />
-        <span asp-validation-for="Tarih" class="text-danger"></span>
-    </div>
-    <div class="col-md-3">
-        <label asp-for="Tutar" class="form-label"></label>
-        <input asp-for="Tutar" class="form-control" />
-        <span asp-validation-for="Tutar" class="text-danger"></span>
-    </div>
+<div class="card">
+    <div class="card-header">Fiş Bilgileri</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="CariId" class="form-label"></label>
+                <select asp-for="CariId" class="form-select" asp-items="Model.CariListesi">
+                    <option value="">Seçiniz</option>
+                </select>
+                <span asp-validation-for="CariId" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Tarih" class="form-label"></label>
+                <input asp-for="Tarih" class="form-control" />
+                <span asp-validation-for="Tarih" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Tutar" class="form-label"></label>
+                <input asp-for="Tutar" class="form-control" />
+                <span asp-validation-for="Tutar" class="text-danger"></span>
+            </div>
 
-    <div class="col-md-4">
-        <label asp-for="FisTipi" class="form-label"></label>
-        <select asp-for="FisTipi" id="fisTipiSecimi" class="form-select" asp-items="Html.GetEnumSelectList<FisTipi>()"></select>
-        <span asp-validation-for="FisTipi" class="text-danger"></span>
-    </div>
-    <div class="col-md-4" id="odemeYontemiAlani">
-        <label asp-for="OdemeYontemi" class="form-label"></label>
-        <select asp-for="OdemeYontemi" id="odemeYontemiSecimi" class="form-select" asp-items="Html.GetEnumSelectList<OdemeYontemi>()"></select>
-        <span asp-validation-for="OdemeYontemi" class="text-danger"></span>
-    </div>
-    <div class="col-md-4" id="kasaHesabiAlani">
-        <label asp-for="KasaHesabiId" class="form-label"></label>
-        <select asp-for="KasaHesabiId" class="form-select" asp-items="Model.KasaHesabiListesi">
-            <option value="">Seçiniz</option>
-        </select>
-        <span asp-validation-for="KasaHesabiId" class="text-danger"></span>
-    </div>
-    <div class="col-md-4" id="bankaHesabiAlani">
-        <label asp-for="BankaHesabiId" class="form-label"></label>
-        <select asp-for="BankaHesabiId" class="form-select" asp-items="Model.BankaHesabiListesi">
-            <option value="">Seçiniz</option>
-        </select>
-        <span asp-validation-for="BankaHesabiId" class="text-danger"></span>
-    </div>
+            <div class="col-md-4">
+                <label asp-for="FisTipi" class="form-label"></label>
+                <select asp-for="FisTipi" id="fisTipiSecimi" class="form-select" asp-items="Html.GetEnumSelectList<FisTipi>()"></select>
+                <span asp-validation-for="FisTipi" class="text-danger"></span>
+            </div>
+            <div class="col-md-4" id="odemeYontemiAlani">
+                <label asp-for="OdemeYontemi" class="form-label"></label>
+                <select asp-for="OdemeYontemi" id="odemeYontemiSecimi" class="form-select" asp-items="Html.GetEnumSelectList<OdemeYontemi>()"></select>
+                <span asp-validation-for="OdemeYontemi" class="text-danger"></span>
+            </div>
+            <div class="col-md-4" id="kasaHesabiAlani">
+                <label asp-for="KasaHesabiId" class="form-label"></label>
+                <select asp-for="KasaHesabiId" class="form-select" asp-items="Model.KasaHesabiListesi">
+                    <option value="">Seçiniz</option>
+                </select>
+                <span asp-validation-for="KasaHesabiId" class="text-danger"></span>
+            </div>
+            <div class="col-md-4" id="bankaHesabiAlani">
+                <label asp-for="BankaHesabiId" class="form-label"></label>
+                <select asp-for="BankaHesabiId" class="form-select" asp-items="Model.BankaHesabiListesi">
+                    <option value="">Seçiniz</option>
+                </select>
+                <span asp-validation-for="BankaHesabiId" class="text-danger"></span>
+            </div>
 
-    <div class="col-md-8">
-        <label asp-for="Aciklama" class="form-label"></label>
-        <textarea asp-for="Aciklama" class="form-control" rows="2"></textarea>
-        <span asp-validation-for="Aciklama" class="text-danger"></span>
+            <div class="col-md-8">
+                <label asp-for="Aciklama" class="form-label"></label>
+                <textarea asp-for="Aciklama" class="form-control" rows="2"></textarea>
+                <span asp-validation-for="Aciklama" class="text-danger"></span>
+            </div>
+        </div>
     </div>
 </div>
 
