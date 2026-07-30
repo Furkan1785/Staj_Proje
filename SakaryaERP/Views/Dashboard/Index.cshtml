@@ -7,20 +7,36 @@
 
 <div class="row g-4">
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Toplam Satış</div>
-                <div class="fs-2 fw-semibold">₺ @Model.GenelSatisToplamiTRY.ToString("N2")</div>
-                <div class="text-muted">≈ $ @Model.GenelSatisToplamiUSD.ToString("N2")</div>
+        <div class="card h-100 stat-tile-group">
+            <div class="card-header">Toplam Satış</div>
+            <div class="card-body" style="--stat-tile-accent: #2a78d6;">
+                <div class="stat-tile-row">
+                    <div class="stat-tile">
+                        <div class="stat-tile-label">TRY</div>
+                        <div class="stat-tile-value">₺ @Model.GenelSatisToplamiTRY.ToString("N0")</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-tile-label">USD</div>
+                        <div class="stat-tile-value">$ @Model.GenelSatisToplamiUSD.ToString("N0")</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Toplam Satınalma</div>
-                <div class="fs-2 fw-semibold">₺ @Model.GenelSatinalmaToplamiTRY.ToString("N2")</div>
-                <div class="text-muted">≈ $ @Model.GenelSatinalmaToplamiUSD.ToString("N2")</div>
+        <div class="card h-100 stat-tile-group">
+            <div class="card-header">Toplam Satınalma</div>
+            <div class="card-body" style="--stat-tile-accent: #4a3aa7;">
+                <div class="stat-tile-row">
+                    <div class="stat-tile">
+                        <div class="stat-tile-label">TRY</div>
+                        <div class="stat-tile-value">₺ @Model.GenelSatinalmaToplamiTRY.ToString("N0")</div>
+                    </div>
+                    <div class="stat-tile">
+                        <div class="stat-tile-label">USD</div>
+                        <div class="stat-tile-value">$ @Model.GenelSatinalmaToplamiUSD.ToString("N0")</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -37,7 +53,7 @@
                 }
                 else
                 {
-                    <canvas id="kategoriGrafik" height="240"></canvas>
+                    <canvas id="kategoriGrafik" height="260"></canvas>
                 }
             </div>
         </div>
@@ -158,6 +174,22 @@
         var izgaraRengi = '#e1e0d9';
         var eksenRengi = '#898781';
         var metinRengi = '#52514e';
+        var yuzeyRengi = '#fff';
+
+        function paraFormatla(deger) {
+            return Number(deger).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Kategorik renklerin üstüne yazılan etiket, zemin rengine göre siyah/beyaz seçilir
+        // (dataviz kuralı: metin veri rengini giymez, dolgu üstündeki etiket zeminin
+        // parlaklığına göre okunur renk alır).
+        function metinRenginiSec(hexRenk) {
+            var r = parseInt(hexRenk.slice(1, 3), 16);
+            var g = parseInt(hexRenk.slice(3, 5), 16);
+            var b = parseInt(hexRenk.slice(5, 7), 16);
+            var parlaklik = (r * 299 + g * 587 + b * 114) / 1000;
+            return parlaklik > 150 ? '#0b0b0b' : '#ffffff';
+        }
 
         function barGrafikOlustur(elemanId, etiketler, tutarlar) {
             if (etiketler.length === 0) return;
@@ -165,10 +197,13 @@
                 type: 'bar',
                 data: {
                     labels: etiketler,
-                    datasets: [{ label: 'Toplam Tutar', data: tutarlar, backgroundColor: mavi, borderRadius: 4 }]
+                    datasets: [{ label: 'Toplam Tutar', data: tutarlar, backgroundColor: mavi, borderRadius: 4, maxBarThickness: 24 }]
                 },
                 options: {
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function (ctx) { return paraFormatla(ctx.parsed.y ?? ctx.parsed.x) + ' ₺'; } } }
+                    },
                     scales: {
                         x: { ticks: { color: eksenRengi }, grid: { display: false } },
                         y: { ticks: { color: eksenRengi }, grid: { color: izgaraRengi } }
@@ -181,17 +216,67 @@
         barGrafikOlustur('malzemeGrafik', malzemeEtiketler, malzemeTutarlar);
 
         if (kategoriEtiketler.length > 0) {
+            var kategoriToplam = kategoriTutarlar.reduce(function (a, b) { return a + b; }, 0);
+            var dilimEtiketleriEklentisi = {
+                id: 'dilimEtiketleri',
+                afterDatasetsDraw: function (chart) {
+                    var ctx = chart.ctx;
+                    var meta = chart.getDatasetMeta(0);
+                    ctx.save();
+                    ctx.font = '600 12px system-ui, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    meta.data.forEach(function (dilim, i) {
+                        var pay = kategoriTutarlar[i] / kategoriToplam;
+                        if (pay < 0.03) return; // çok küçük dilimde etiket sığmaz, legend yeterli
+                        var pozisyon = dilim.tooltipPosition();
+                        ctx.fillStyle = metinRenginiSec(kategorik[i % kategorik.length]);
+                        ctx.fillText('%' + Math.round(pay * 100), pozisyon.x, pozisyon.y);
+                    });
+                    ctx.restore();
+                }
+            };
+
+            var toplamMerkezEklentisi = {
+                id: 'toplamMerkezi',
+                afterDraw: function (chart) {
+                    var ctx = chart.ctx;
+                    var x = (chart.chartArea.left + chart.chartArea.right) / 2;
+                    var y = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.font = '600 11px system-ui, sans-serif';
+                    ctx.fillStyle = eksenRengi;
+                    ctx.fillText('Toplam', x, y - 10);
+                    ctx.font = '700 15px system-ui, sans-serif';
+                    ctx.fillStyle = metinRengi;
+                    ctx.fillText('₺' + Math.round(kategoriToplam).toLocaleString('tr-TR'), x, y + 10);
+                    ctx.restore();
+                }
+            };
+
             new Chart(document.getElementById('kategoriGrafik'), {
                 type: 'doughnut',
                 data: {
                     labels: kategoriEtiketler,
-                    datasets: [{ data: kategoriTutarlar, backgroundColor: kategorik.slice(0, kategoriEtiketler.length) }]
+                    datasets: [{ data: kategoriTutarlar, backgroundColor: kategorik.slice(0, kategoriEtiketler.length), borderColor: yuzeyRengi, borderWidth: 2 }]
                 },
                 options: {
+                    cutout: '62%',
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: metinRengi } }
+                        legend: { position: 'right', labels: { color: metinRengi, boxWidth: 14, padding: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) {
+                                    var pay = ctx.parsed / kategoriToplam;
+                                    return ctx.label + ': ' + paraFormatla(ctx.parsed) + ' ₺ (%' + (pay * 100).toFixed(1) + ')';
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                plugins: [dilimEtiketleriEklentisi, toplamMerkezEklentisi]
             });
         }
 
@@ -201,12 +286,15 @@
                 data: {
                     labels: aylikEtiketler,
                     datasets: [
-                        { label: '@Model.OncekiYil', data: aylikOncekiYil, borderColor: mavi, backgroundColor: mavi, tension: 0.25, pointRadius: 3, borderWidth: 2 },
-                        { label: '@Model.BuYil', data: aylikBuYil, borderColor: turuncu, backgroundColor: turuncu, tension: 0.25, pointRadius: 3, borderWidth: 2 }
+                        { label: '@Model.OncekiYil', data: aylikOncekiYil, borderColor: mavi, backgroundColor: mavi, tension: 0.25, pointRadius: 4, pointBorderWidth: 2, pointBorderColor: yuzeyRengi, borderWidth: 2 },
+                        { label: '@Model.BuYil', data: aylikBuYil, borderColor: turuncu, backgroundColor: turuncu, tension: 0.25, pointRadius: 4, pointBorderWidth: 2, pointBorderColor: yuzeyRengi, borderWidth: 2 }
                     ]
                 },
                 options: {
-                    plugins: { legend: { display: true, labels: { color: metinRengi } } },
+                    plugins: {
+                        legend: { display: true, labels: { color: metinRengi } },
+                        tooltip: { callbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + paraFormatla(ctx.parsed.y) + ' ₺'; } } }
+                    },
                     scales: {
                         x: { ticks: { color: eksenRengi }, grid: { display: false } },
                         y: { ticks: { color: eksenRengi }, grid: { color: izgaraRengi } }
