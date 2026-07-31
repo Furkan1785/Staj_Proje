@@ -64,6 +64,7 @@
                         }
                     </td>
                     <td>
+                        <a asp-action="Detay" asp-route-id="@h.Id" class="btn btn-sm btn-outline-secondary me-1">Detay</a>
                         <a asp-action="Duzenle" asp-route-id="@h.Id" class="btn btn-sm btn-outline-primary me-1">Düzenle</a>
                         @if (h.IsDeleted)
                         {

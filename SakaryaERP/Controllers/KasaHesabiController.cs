@@ -50,6 +50,21 @@ public class KasaHesabiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Detay(int id)
+    {
+        var hesap = await _kasaHesabiService.GetByIdAsync(id);
+        if (hesap is null) return NotFound();
+
+        return View(new KasaHesabiListItemViewModel
+        {
+            Id = hesap.Id,
+            KasaAdi = hesap.KasaAdi,
+            Bakiye = hesap.Bakiye,
+            ParaBirimi = hesap.ParaBirimi,
+            IsDeleted = hesap.IsDeleted
+        });
+    }
+
     public async Task<IActionResult> Duzenle(int id)
     {
         var hesap = await _kasaHesabiService.GetByIdAsync(id);

@@ -54,6 +54,23 @@ public class BankaHesabiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Detay(int id)
+    {
+        var hesap = await _bankaHesabiService.GetByIdAsync(id);
+        if (hesap is null) return NotFound();
+
+        return View(new BankaHesabiListItemViewModel
+        {
+            Id = hesap.Id,
+            HesapAdi = hesap.HesapAdi,
+            BankaAdi = hesap.BankaAdi,
+            IBAN = hesap.IBAN,
+            Bakiye = hesap.Bakiye,
+            ParaBirimi = hesap.ParaBirimi,
+            IsDeleted = hesap.IsDeleted
+        });
+    }
+
     public async Task<IActionResult> Duzenle(int id)
     {
         var hesap = await _bankaHesabiService.GetByIdAsync(id);
