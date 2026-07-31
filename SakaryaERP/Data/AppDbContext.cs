@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -8,7 +9,14 @@ namespace SakaryaERP.Data;
 
 public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+
+    public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor? httpContextAccessor = null) : base(options)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public DbSet<AuditLog> AuditLoglari { get; set; }
 
     public DbSet<Sube> Subeler { get; set; }
     public DbSet<Cari> Cariler { get; set; }
@@ -219,10 +227,10 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var entries = ChangeTracker.Entries<BaseEntity>();
         var now = DateTime.UtcNow;
+        DenetimKayitlariOlustur(now);
 
-        foreach (var entry in entries)
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
         {
             if (entry.State == EntityState.Added)
             {
@@ -236,5 +244,34 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         }
 
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    // Sadece güncellenen (Modified) kayıtları denetliyor — yeni oluşturulan
+    // kayıtların "geçmişi" BaseEntity.CreatedAt/CreatedBy ile zaten karşılanıyor,
+    // asıl değer taşıyan "kim neyi ne zamandan neye değiştirdi" sorusu bu.
+    private void DenetimKayitlariOlustur(DateTime zaman)
+    {
+        var kullaniciAdi = _httpContextAccessor?.HttpContext?.User?.Identity?.Name;
+        var denetimKayitlari = new List<AuditLog>();
+
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>().Where(e => e.State == EntityState.Modified))
+        {
+            foreach (var alan in entry.Properties.Where(p => p.IsModified && !Equals(p.OriginalValue, p.CurrentValue)))
+            {
+                denetimKayitlari.Add(new AuditLog
+                {
+                    Tarih = zaman,
+                    EntityAdi = entry.Entity.GetType().Name,
+                    EntityId = entry.Entity.Id,
+                    AlanAdi = alan.Metadata.Name,
+                    EskiDeger = alan.OriginalValue?.ToString(),
+                    YeniDeger = alan.CurrentValue?.ToString(),
+                    KullaniciAdi = kullaniciAdi
+                });
+            }
+        }
+
+        if (denetimKayitlari.Count > 0)
+            AuditLoglari.AddRange(denetimKayitlari);
     }
 }

@@ -31,3 +31,31 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     backdrop.addEventListener('click', sidebarKapat);
 });
+
+// "Kaydet" butonu içeren formlarda değişiklik yapılıp kaydetmeden sayfadan
+// ayrılmaya çalışılırsa tarayıcı uyarısı gösterir. Hedef sadece Ekle/Düzenle
+// ekranları ve küçük modaller (submit metni "Kaydet") — Login, arama/filtre
+// kutuları ve tek hareketli Onayla/İptal formları bu kapsama girmiyor.
+(function () {
+    var kirliFormlar = new Set();
+
+    function kaydetButonuVarMi(form) {
+        return Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"]'))
+            .some(function (btn) { return (btn.textContent || btn.value || '').trim() === 'Kaydet'; });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('form').forEach(function (form) {
+            if (!kaydetButonuVarMi(form)) return;
+            form.addEventListener('input', function () { kirliFormlar.add(form); });
+            form.addEventListener('change', function () { kirliFormlar.add(form); });
+            form.addEventListener('submit', function () { kirliFormlar.delete(form); });
+        });
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+        if (kirliFormlar.size === 0) return;
+        e.preventDefault();
+        e.returnValue = '';
+    });
+})();

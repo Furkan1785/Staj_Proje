@@ -2,25 +2,42 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using SakaryaERP.Data;
 using SakaryaERP.Data.Repositories;
+using SakaryaERP.HealthChecks;
 using SakaryaERP.Middleware;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 QuestPDF.Settings.License = LicenseType.Community;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(new CompactJsonFormatter(), "logs/sakaryaerp-.json",
+        rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
+    .CreateLogger();
 
+var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
+
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<AppUser, AppRole>(options =>
 {
     options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 6;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.User.RequireUniqueEmail = true;
@@ -57,6 +74,9 @@ builder.Services.AddScoped<ISatisFaturasiService, SatisFaturasiService>();
 builder.Services.AddScoped<IHesapPlaniService, HesapPlaniService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+builder.Services.AddHealthChecks()
+    .AddCheck<VeritabaniHealthCheck>("veritabani");
 
 builder.Services.AddControllersWithViews(options =>
 {
@@ -113,6 +133,20 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json; charset=utf-8";
+        var sonuc = new
+        {
+            durum = report.Status.ToString(),
+            kontroller = report.Entries.Select(e => new { ad = e.Key, durum = e.Value.Status.ToString(), aciklama = e.Value.Description })
+        };
+        await context.Response.WriteAsJsonAsync(sonuc);
+    }
+});
 
 app.MapControllerRoute(
     name: "default",

@@ -160,6 +160,18 @@ html {
   width: 100%;
 }
 
+/* Zorunlu alan işareti: asp-for'un ürettiği data-val-required attribute'u
+   (jquery unobtrusive validation için zaten var olan) referans alınarak,
+   hemen ardından gelen input/select/textarea zorunluysa etikete kırmızı *
+   ekleniyor. Checkbox hariç — non-nullable bool alanlar da data-val-required
+   alıyor ama bir onay kutusunu "zorunlu" gibi işaretlemek yanıltıcı olur. */
+.form-label:has(+ input[data-val-required]:not([type="checkbox"]))::after,
+.form-label:has(+ select[data-val-required])::after,
+.form-label:has(+ textarea[data-val-required])::after {
+  content: " *";
+  color: #dc3545;
+}
+
 /* --- Dashboard istatistik kartları --- */
 .stat-tile-group .card-header {
   background-color: var(--sidebar-bg);
