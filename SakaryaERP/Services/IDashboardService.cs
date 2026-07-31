@@ -4,5 +4,5 @@ namespace SakaryaERP.Services;
 
 public interface IDashboardService
 {
-    Task<DashboardViewModel> GetDashboardAsync();
+    Task<DashboardViewModel> GetDashboardAsync(DashboardAralik aralik, IReadOnlyCollection<int> kategoriIdler);
 }

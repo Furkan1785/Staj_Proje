@@ -123,7 +123,7 @@ public class AlisFaturasiService : IAlisFaturasiService
     {
         return await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
             .Include(f => f.Cari)
-            .Include(f => f.Kalemler)
+            .Include(f => f.Kalemler).ThenInclude(k => k.Malzeme).ThenInclude(m => m.Kategori)
             .Where(f => !f.IsDeleted && f.Durum == BelgeDurum.Onaylandi)
             .ToListAsync();
     }

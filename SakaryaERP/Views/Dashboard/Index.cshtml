@@ -1,172 +1,245 @@
 @model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    var satisGorunumu = Model.SeciliTur == DashboardGorunumTuru.Satis;
+
+    var kategoriBazliVeri = satisGorunumu ? Model.KategoriBazliSatis : Model.KategoriBazliAlis;
+    var aylikTrendVeri = satisGorunumu ? Model.AylikSatisTrendi : Model.AylikAlisTrendi;
+    var topBirinciVeri = satisGorunumu ? Model.EnCokSatisYapilanMusteriler : Model.EnCokAlisYapilanTedarikciler;
+    var topIkinciVeri = satisGorunumu ? Model.EnCokSatilanMalzemeler : Model.EnCokAlinanMalzemeler;
+
+    var kategoriBaslik = satisGorunumu ? "Kategori Bazlı Satış" : "Kategori Bazlı Alış";
+    var trendBaslik = satisGorunumu ? "Aylık Satış Trendi" : "Aylık Alış Trendi";
+    var topBirinciBaslik = satisGorunumu ? "En Çok Satış Yapılan Müşteriler" : "En Çok Alış Yapılan Tedarikçiler";
+    var topIkinciBaslik = satisGorunumu ? "En Çok Satılan Malzemeler" : "En Çok Alınan Malzemeler";
 }
 
-<h3 class="mb-4">Dashboard</h3>
+<form method="get" id="dashboardFiltreForm">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h3 class="mb-0">Dashboard</h3>
+        <div class="d-flex align-items-center gap-2">
+            <label for="turSecimi" class="form-label small text-muted mb-0">Dashboard</label>
+            <select name="tur" id="turSecimi" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="Satis" selected="@(satisGorunumu)">Satış Dashboard</option>
+                <option value="Satinalma" selected="@(!satisGorunumu)">Satınalma Dashboard</option>
+            </select>
+        </div>
+    </div>
 
-<div class="row g-4">
-    <div class="col-md-6">
-        <div class="card h-100 stat-tile-group">
-            <div class="card-header">Toplam Satış</div>
-            <div class="card-body" style="--stat-tile-accent: #2a78d6;">
-                <div class="stat-tile-row">
-                    <div class="stat-tile">
-                        <div class="stat-tile-label">TRY</div>
-                        <div class="stat-tile-value">₺ @Model.GenelSatisToplamiTRY.ToString("N0")</div>
+    <div class="row g-4">
+        <div class="col-lg-9 order-2 order-lg-1">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100 stat-tile-group">
+                        <div class="card-header">Toplam Satış</div>
+                        <div class="card-body" style="--stat-tile-accent: #2a78d6;">
+                            <div class="stat-tile-row">
+                                <div class="stat-tile">
+                                    <div class="stat-tile-label">TRY</div>
+                                    <div class="stat-tile-value">₺ @Model.GenelSatisToplamiTRY.ToString("N0")</div>
+                                </div>
+                                <div class="stat-tile">
+                                    <div class="stat-tile-label">USD</div>
+                                    <div class="stat-tile-value">$ @Model.GenelSatisToplamiUSD.ToString("N0")</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-tile">
-                        <div class="stat-tile-label">USD</div>
-                        <div class="stat-tile-value">$ @Model.GenelSatisToplamiUSD.ToString("N0")</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 stat-tile-group">
+                        <div class="card-header">Toplam Satınalma</div>
+                        <div class="card-body" style="--stat-tile-accent: #4a3aa7;">
+                            <div class="stat-tile-row">
+                                <div class="stat-tile">
+                                    <div class="stat-tile-label">TRY</div>
+                                    <div class="stat-tile-value">₺ @Model.GenelSatinalmaToplamiTRY.ToString("N0")</div>
+                                </div>
+                                <div class="stat-tile">
+                                    <div class="stat-tile-label">USD</div>
+                                    <div class="stat-tile-value">$ @Model.GenelSatinalmaToplamiUSD.ToString("N0")</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card h-100 stat-tile-group">
-            <div class="card-header">Toplam Satınalma</div>
-            <div class="card-body" style="--stat-tile-accent: #4a3aa7;">
-                <div class="stat-tile-row">
-                    <div class="stat-tile">
-                        <div class="stat-tile-label">TRY</div>
-                        <div class="stat-tile-value">₺ @Model.GenelSatinalmaToplamiTRY.ToString("N0")</div>
-                    </div>
-                    <div class="stat-tile">
-                        <div class="stat-tile-label">USD</div>
-                        <div class="stat-tile-value">$ @Model.GenelSatinalmaToplamiUSD.ToString("N0")</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row g-4 mt-1">
-    <div class="col-lg-5">
-        <div class="card h-100">
-            <div class="card-header">Kategori Bazlı Satış</div>
-            <div class="card-body">
-                @if (Model.KategoriToplamlari.Count == 0)
-                {
-                    <div class="alert alert-info mb-0">Henüz onaylanmış bir satış faturası bulunmuyor.</div>
-                }
-                else
-                {
-                    <canvas id="kategoriGrafik" height="260"></canvas>
-                }
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-7">
-        <div class="card h-100">
-            <div class="card-header">Aylık Satış Trendi (@Model.OncekiYil - @Model.BuYil)</div>
-            <div class="card-body">
-                @if (Model.AylikTrend.All(a => a.OncekiYilToplam == 0 && a.BuYilToplam == 0))
-                {
-                    <div class="alert alert-info mb-0">Henüz onaylanmış bir satış faturası bulunmuyor.</div>
-                }
-                else
-                {
-                    <canvas id="aylikTrendGrafik" height="180"></canvas>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4 mt-1">
-    <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header">En Çok Satış Yapılan Müşteriler</div>
-            <div class="card-body">
-                @if (Model.EnCokSatisYapilanMusteriler.Count == 0)
-                {
-                    <div class="alert alert-info mb-0">Henüz onaylanmış bir satış faturası bulunmuyor.</div>
-                }
-                else
-                {
-                    <canvas id="musteriGrafik" height="220"></canvas>
-                }
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="card h-100">
-            <div class="card-header">En Çok Satılan Malzemeler</div>
-            <div class="card-body">
-                @if (Model.EnCokSatilanMalzemeler.Count == 0)
-                {
-                    <div class="alert alert-info mb-0">Henüz onaylanmış bir satış faturası bulunmuyor.</div>
-                }
-                else
-                {
-                    <canvas id="malzemeGrafik" height="220"></canvas>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4 mt-1 mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Kritik Stok Uyarı Listesi</span>
-                <a asp-controller="StokRaporu" asp-action="KritikStok" class="btn btn-sm btn-outline-secondary">Tümünü Gör</a>
-            </div>
-            <div class="table-responsive">
-                @if (Model.KritikStokListesi.Count == 0)
-                {
-                    <div class="alert alert-success mb-0">Kritik stokta malzeme bulunmuyor.</div>
-                }
-                else
-                {
-                    <table class="table table-striped align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Malzeme Kodu</th>
-                                <th>Malzeme Adı</th>
-                                <th>Kategori</th>
-                                <th class="text-end">Bakiye</th>
-                                <th class="text-end">Min. Stok</th>
-                                <th>Durum</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var m in Model.KritikStokListesi)
+            <div class="row g-4 mt-1">
+                <div class="col-lg-5">
+                    <div class="card h-100">
+                        <div class="card-header">@kategoriBaslik</div>
+                        <div class="card-body">
+                            @if (kategoriBazliVeri.Count == 0)
                             {
-                                <tr>
-                                    <td>@m.MalzemeKodu</td>
-                                    <td>@m.MalzemeAdi</td>
-                                    <td>@(m.KategoriAdi ?? "-")</td>
-                                    <td class="text-end">@m.Bakiye.ToString("N2") @m.Birim</td>
-                                    <td class="text-end">@m.MinStokMiktari.ToString("N2")</td>
-                                    <td><span class="badge @m.DurumSinifi">@m.DurumText</span></td>
-                                </tr>
+                                <div class="alert alert-info mb-0">Seçili filtrelerle eşleşen onaylanmış bir belge bulunmuyor.</div>
                             }
-                        </tbody>
-                    </table>
-                }
+                            else
+                            {
+                                <canvas id="kategoriGrafik" height="260"></canvas>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-header">@trendBaslik (@Model.OncekiYil - @Model.BuYil)</div>
+                        <div class="card-body">
+                            @if (aylikTrendVeri.All(a => a.OncekiYilToplam == 0 && a.BuYilToplam == 0))
+                            {
+                                <div class="alert alert-info mb-0">Seçili filtrelerle eşleşen onaylanmış bir belge bulunmuyor.</div>
+                            }
+                            else
+                            {
+                                <canvas id="aylikTrendGrafik" height="180"></canvas>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-1">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">@topBirinciBaslik</div>
+                        <div class="card-body">
+                            @if (topBirinciVeri.Count == 0)
+                            {
+                                <div class="alert alert-info mb-0">Seçili filtrelerle eşleşen onaylanmış bir belge bulunmuyor.</div>
+                            }
+                            else
+                            {
+                                <canvas id="musteriGrafik" height="220"></canvas>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">@topIkinciBaslik</div>
+                        <div class="card-body">
+                            @if (topIkinciVeri.Count == 0)
+                            {
+                                <div class="alert alert-info mb-0">Seçili filtrelerle eşleşen onaylanmış bir belge bulunmuyor.</div>
+                            }
+                            else
+                            {
+                                <canvas id="malzemeGrafik" height="220"></canvas>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-1 mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Kritik Stok Uyarı Listesi</span>
+                            <a asp-controller="StokRaporu" asp-action="KritikStok" class="btn btn-sm btn-outline-secondary">Tümünü Gör</a>
+                        </div>
+                        <div class="table-responsive">
+                            @if (Model.KritikStokListesi.Count == 0)
+                            {
+                                <div class="alert alert-success mb-0">Kritik stokta malzeme bulunmuyor.</div>
+                            }
+                            else
+                            {
+                                <table class="table table-striped align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Malzeme Kodu</th>
+                                            <th>Malzeme Adı</th>
+                                            <th>Kategori</th>
+                                            <th class="text-end">Bakiye</th>
+                                            <th class="text-end">Min. Stok</th>
+                                            <th>Durum</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var m in Model.KritikStokListesi)
+                                        {
+                                            <tr>
+                                                <td>@m.MalzemeKodu</td>
+                                                <td>@m.MalzemeAdi</td>
+                                                <td>@(m.KategoriAdi ?? "-")</td>
+                                                <td class="text-end">@m.Bakiye.ToString("N2") @m.Birim</td>
+                                                <td class="text-end">@m.MinStokMiktari.ToString("N2")</td>
+                                                <td><span class="badge @m.DurumSinifi">@m.DurumText</span></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 order-1 order-lg-2">
+            <div class="card position-sticky" style="top: 1rem;">
+                <div class="card-header">Tarih Aralığı Seç</div>
+                <div class="card-body">
+                    <select name="aralik" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="TumZamanlar" selected="@(Model.SeciliAralik == DashboardAralik.TumZamanlar)">Tüm Zamanlar</option>
+                        <option value="BuAy" selected="@(Model.SeciliAralik == DashboardAralik.BuAy)">Bu Ay</option>
+                        <option value="BuYil" selected="@(Model.SeciliAralik == DashboardAralik.BuYil)">Bu Yıl</option>
+                    </select>
+                    <p class="text-muted small mt-2 mb-0">Aylık trend grafiği her zaman @Model.OncekiYil-@Model.BuYil karşılaştırmasını gösterir, bu filtreden etkilenmez.</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">Malzeme Kategorileri</div>
+                <div class="card-body" style="max-height: 340px; overflow-y: auto;">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="kategoriHepsi" checked="@(Model.SeciliKategoriIdler.Count == 0)">
+                        <label class="form-check-label fw-semibold" for="kategoriHepsi">Hepsi</label>
+                    </div>
+                    <hr class="my-2" />
+                    @foreach (var k in Model.KategoriFiltreListesi)
+                    {
+                        <div class="form-check" style="margin-left: @(k.Seviye * 1)rem;">
+                            <input class="form-check-input kategori-checkbox" type="checkbox" name="kategoriId" value="@k.Id" id="kategori-@k.Id"
+                                   checked="@(Model.SeciliKategoriIdler.Contains(k.Id))" />
+                            <label class="form-check-label" for="kategori-@k.Id">@k.KategoriAdi</label>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Uygula</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     <script src="~/lib/chartjs/chart.umd.min.js"></script>
     <script>
-        var kategoriEtiketler = @Json.Serialize(Model.KategoriToplamlari.Select(k => k.KategoriAdi));
-        var kategoriTutarlar = @Json.Serialize(Model.KategoriToplamlari.Select(k => k.ToplamTutar));
+        document.getElementById('kategoriHepsi').addEventListener('change', function () {
+            if (this.checked) {
+                document.querySelectorAll('.kategori-checkbox').forEach(function (cb) { cb.checked = false; });
+            }
+        });
+        document.querySelectorAll('.kategori-checkbox').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                if (this.checked) document.getElementById('kategoriHepsi').checked = false;
+            });
+        });
 
-        var aylikEtiketler = @Json.Serialize(Model.AylikTrend.Select(a => a.AyAdi));
-        var aylikOncekiYil = @Json.Serialize(Model.AylikTrend.Select(a => a.OncekiYilToplam));
-        var aylikBuYil = @Json.Serialize(Model.AylikTrend.Select(a => a.BuYilToplam));
+        var kategoriEtiketler = @Json.Serialize(kategoriBazliVeri.Select(k => k.KategoriAdi));
+        var kategoriTutarlar = @Json.Serialize(kategoriBazliVeri.Select(k => k.ToplamTutar));
 
-        var musteriEtiketler = @Json.Serialize(Model.EnCokSatisYapilanMusteriler.Select(t => t.CariUnvan));
-        var musteriTutarlar = @Json.Serialize(Model.EnCokSatisYapilanMusteriler.Select(t => t.ToplamTutar));
-        var malzemeEtiketler = @Json.Serialize(Model.EnCokSatilanMalzemeler.Select(t => t.MalzemeAdi));
-        var malzemeTutarlar = @Json.Serialize(Model.EnCokSatilanMalzemeler.Select(t => t.ToplamTutar));
+        var aylikEtiketler = @Json.Serialize(aylikTrendVeri.Select(a => a.AyAdi));
+        var aylikOncekiYil = @Json.Serialize(aylikTrendVeri.Select(a => a.OncekiYilToplam));
+        var aylikBuYil = @Json.Serialize(aylikTrendVeri.Select(a => a.BuYilToplam));
+
+        var topBirinciEtiketler = @Json.Serialize(topBirinciVeri.Select(t => t.CariUnvan));
+        var topBirinciTutarlar = @Json.Serialize(topBirinciVeri.Select(t => t.ToplamTutar));
+        var topIkinciEtiketler = @Json.Serialize(topIkinciVeri.Select(t => t.MalzemeAdi));
+        var topIkinciTutarlar = @Json.Serialize(topIkinciVeri.Select(t => t.ToplamTutar));
 
         var mavi = '#2a78d6';
         var turuncu = '#eb6834';
@@ -212,8 +285,8 @@
             });
         }
 
-        barGrafikOlustur('musteriGrafik', musteriEtiketler, musteriTutarlar);
-        barGrafikOlustur('malzemeGrafik', malzemeEtiketler, malzemeTutarlar);
+        barGrafikOlustur('musteriGrafik', topBirinciEtiketler, topBirinciTutarlar);
+        barGrafikOlustur('malzemeGrafik', topIkinciEtiketler, topIkinciTutarlar);
 
         if (kategoriEtiketler.length > 0) {
             var kategoriToplam = kategoriTutarlar.reduce(function (a, b) { return a + b; }, 0);

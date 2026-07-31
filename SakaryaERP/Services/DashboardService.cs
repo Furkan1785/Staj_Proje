@@ -23,33 +23,48 @@ public class DashboardService : IDashboardService
         _malzemeService = malzemeService;
     }
 
-    public async Task<DashboardViewModel> GetDashboardAsync()
+    public async Task<DashboardViewModel> GetDashboardAsync(DashboardAralik aralik, IReadOnlyCollection<int> kategoriIdler)
     {
         var satisFaturalari = await _satisFaturasiService.GetOnaylanmisListeAsync();
         var alisFaturalari = await _alisFaturasiService.GetOnaylanmisListeAsync();
         var kritikStok = await _malzemeService.GetKritikStokListesiAsync();
 
-        var genelSatisToplami = satisFaturalari.Sum(f => f.Kalemler.Sum(KalemToplami));
-        var genelSatinalmaToplami = alisFaturalari.Sum(f => f.Kalemler.Sum(KalemToplami));
+        var (tarihBaslangic, tarihBitis) = AralikTarihleri(aralik);
+        var kategoriFiltreAktif = kategoriIdler.Count > 0;
 
+        bool KategoriEslesir(int? kategoriId) =>
+            !kategoriFiltreAktif || (kategoriId is not null && kategoriIdler.Contains(kategoriId.Value));
+        bool TarihEslesir(DateTime tarih) =>
+            (tarihBaslangic is null || tarih >= tarihBaslangic) && (tarihBitis is null || tarih <= tarihBitis);
+
+        var satisKalemleri = satisFaturalari
+            .Where(f => TarihEslesir(f.Tarih))
+            .SelectMany(f => f.Kalemler.Where(k => KategoriEslesir(k.Malzeme.KategoriId)).Select(k => (Fatura: f, Kalem: k)))
+            .ToList();
+
+        var alisKalemleri = alisFaturalari
+            .Where(f => TarihEslesir(f.Tarih))
+            .SelectMany(f => f.Kalemler.Where(k => KategoriEslesir(k.Malzeme.KategoriId)).Select(k => (Fatura: f, Kalem: k)))
+            .ToList();
+
+        // Aylık trend her zaman iki tam yılı (önceki/bu yıl) karşılaştırır; seçili tarih
+        // aralığı burada uygulanmaz (aksi halde "Bu Ay" seçiliyken grafik neredeyse boş
+        // görünürdü), ama kategori filtresi uygulanır.
         var buYil = DateTime.Today.Year;
         var oncekiYil = buYil - 1;
         var turkce = new CultureInfo("tr-TR");
 
-        var kategoriToplamlari = satisFaturalari
-            .SelectMany(f => f.Kalemler)
-            .GroupBy(k => k.Malzeme.Kategori?.KategoriAdi ?? "Kategorisiz")
-            .Select(g => new KategoriToplamViewModel { KategoriAdi = g.Key, ToplamTutar = g.Sum(KalemToplami) })
-            .OrderByDescending(k => k.ToplamTutar)
+        var satisKalemleriKategoriFiltreli = satisFaturalari
+            .SelectMany(f => f.Kalemler.Where(k => KategoriEslesir(k.Malzeme.KategoriId)).Select(k => (Fatura: f, Kalem: k)))
+            .ToList();
+        var alisKalemleriKategoriFiltreli = alisFaturalari
+            .SelectMany(f => f.Kalemler.Where(k => KategoriEslesir(k.Malzeme.KategoriId)).Select(k => (Fatura: f, Kalem: k)))
             .ToList();
 
-        if (kategoriToplamlari.Count > MaxKategoriDilimi)
-        {
-            var ilkSekiz = kategoriToplamlari.Take(MaxKategoriDilimi - 1).ToList();
-            var digerToplami = kategoriToplamlari.Skip(MaxKategoriDilimi - 1).Sum(k => k.ToplamTutar);
-            ilkSekiz.Add(new KategoriToplamViewModel { KategoriAdi = "Diğer", ToplamTutar = digerToplami });
-            kategoriToplamlari = ilkSekiz;
-        }
+        var genelSatisToplami = satisKalemleri.Sum(x => KalemToplami(x.Kalem));
+        var genelSatinalmaToplami = alisKalemleri.Sum(x => KalemToplami(x.Kalem));
+
+        var kritikStokFiltreli = kritikStok.Where(m => KategoriEslesir(m.KategoriId)).ToList();
 
         return new DashboardViewModel
         {
@@ -61,39 +76,100 @@ public class DashboardService : IDashboardService
             OncekiYil = oncekiYil,
             BuYil = buYil,
 
-            KategoriToplamlari = kategoriToplamlari,
+            KategoriBazliSatis = TopKategorilereIndir(
+                satisKalemleri
+                    .GroupBy(x => x.Kalem.Malzeme.Kategori?.KategoriAdi ?? "Kategorisiz")
+                    .Select(g => new KategoriToplamViewModel { KategoriAdi = g.Key, ToplamTutar = g.Sum(x => KalemToplami(x.Kalem)) })
+                    .OrderByDescending(k => k.ToplamTutar)
+                    .ToList()),
 
-            AylikTrend = Enumerable.Range(1, 12)
+            KategoriBazliAlis = TopKategorilereIndir(
+                alisKalemleri
+                    .GroupBy(x => x.Kalem.Malzeme.Kategori?.KategoriAdi ?? "Kategorisiz")
+                    .Select(g => new KategoriToplamViewModel { KategoriAdi = g.Key, ToplamTutar = g.Sum(x => KalemToplami(x.Kalem)) })
+                    .OrderByDescending(k => k.ToplamTutar)
+                    .ToList()),
+
+            AylikSatisTrendi = Enumerable.Range(1, 12)
                 .Select(ay => new AylikTrendViewModel
                 {
                     Ay = ay,
                     AyAdi = new DateTime(buYil, ay, 1).ToString("MMM", turkce),
-                    OncekiYilToplam = satisFaturalari
-                        .Where(f => f.Tarih.Year == oncekiYil && f.Tarih.Month == ay)
-                        .Sum(f => f.Kalemler.Sum(KalemToplami)),
-                    BuYilToplam = satisFaturalari
-                        .Where(f => f.Tarih.Year == buYil && f.Tarih.Month == ay)
-                        .Sum(f => f.Kalemler.Sum(KalemToplami))
+                    OncekiYilToplam = satisKalemleriKategoriFiltreli
+                        .Where(x => x.Fatura.Tarih.Year == oncekiYil && x.Fatura.Tarih.Month == ay)
+                        .Sum(x => KalemToplami(x.Kalem)),
+                    BuYilToplam = satisKalemleriKategoriFiltreli
+                        .Where(x => x.Fatura.Tarih.Year == buYil && x.Fatura.Tarih.Month == ay)
+                        .Sum(x => KalemToplami(x.Kalem))
                 })
                 .ToList(),
 
-            EnCokSatisYapilanMusteriler = satisFaturalari
-                .GroupBy(f => f.Cari.Unvan)
-                .Select(g => new MusteriToplamViewModel { CariUnvan = g.Key, ToplamTutar = g.Sum(f => f.Kalemler.Sum(KalemToplami)) })
+            AylikAlisTrendi = Enumerable.Range(1, 12)
+                .Select(ay => new AylikTrendViewModel
+                {
+                    Ay = ay,
+                    AyAdi = new DateTime(buYil, ay, 1).ToString("MMM", turkce),
+                    OncekiYilToplam = alisKalemleriKategoriFiltreli
+                        .Where(x => x.Fatura.Tarih.Year == oncekiYil && x.Fatura.Tarih.Month == ay)
+                        .Sum(x => KalemToplami(x.Kalem)),
+                    BuYilToplam = alisKalemleriKategoriFiltreli
+                        .Where(x => x.Fatura.Tarih.Year == buYil && x.Fatura.Tarih.Month == ay)
+                        .Sum(x => KalemToplami(x.Kalem))
+                })
+                .ToList(),
+
+            EnCokSatisYapilanMusteriler = satisKalemleri
+                .GroupBy(x => x.Fatura.Cari.Unvan)
+                .Select(g => new MusteriToplamViewModel { CariUnvan = g.Key, ToplamTutar = g.Sum(x => KalemToplami(x.Kalem)) })
                 .OrderByDescending(m => m.ToplamTutar)
                 .Take(TopN)
                 .ToList(),
 
-            EnCokSatilanMalzemeler = satisFaturalari
-                .SelectMany(f => f.Kalemler)
-                .GroupBy(k => k.Malzeme.MalzemeAdi)
-                .Select(g => new MalzemeToplamViewModel { MalzemeAdi = g.Key, ToplamTutar = g.Sum(KalemToplami) })
+            EnCokAlisYapilanTedarikciler = alisKalemleri
+                .GroupBy(x => x.Fatura.Cari.Unvan)
+                .Select(g => new MusteriToplamViewModel { CariUnvan = g.Key, ToplamTutar = g.Sum(x => KalemToplami(x.Kalem)) })
                 .OrderByDescending(m => m.ToplamTutar)
                 .Take(TopN)
                 .ToList(),
 
-            KritikStokListesi = kritikStok.Select(MalzemeyiKritikStokVmYap).ToList()
+            EnCokSatilanMalzemeler = satisKalemleri
+                .GroupBy(x => x.Kalem.Malzeme.MalzemeAdi)
+                .Select(g => new MalzemeToplamViewModel { MalzemeAdi = g.Key, ToplamTutar = g.Sum(x => KalemToplami(x.Kalem)) })
+                .OrderByDescending(m => m.ToplamTutar)
+                .Take(TopN)
+                .ToList(),
+
+            EnCokAlinanMalzemeler = alisKalemleri
+                .GroupBy(x => x.Kalem.Malzeme.MalzemeAdi)
+                .Select(g => new MalzemeToplamViewModel { MalzemeAdi = g.Key, ToplamTutar = g.Sum(x => KalemToplami(x.Kalem)) })
+                .OrderByDescending(m => m.ToplamTutar)
+                .Take(TopN)
+                .ToList(),
+
+            KritikStokListesi = kritikStokFiltreli.Select(MalzemeyiKritikStokVmYap).ToList()
         };
+    }
+
+    private static (DateTime? Baslangic, DateTime? Bitis) AralikTarihleri(DashboardAralik aralik)
+    {
+        var bugun = DateTime.Today;
+        return aralik switch
+        {
+            DashboardAralik.BuAy => (new DateTime(bugun.Year, bugun.Month, 1), bugun),
+            DashboardAralik.BuYil => (new DateTime(bugun.Year, 1, 1), bugun),
+            _ => (null, null)
+        };
+    }
+
+    private static List<KategoriToplamViewModel> TopKategorilereIndir(List<KategoriToplamViewModel> kategoriToplamlari)
+    {
+        if (kategoriToplamlari.Count <= MaxKategoriDilimi)
+            return kategoriToplamlari;
+
+        var ilkler = kategoriToplamlari.Take(MaxKategoriDilimi - 1).ToList();
+        var digerToplami = kategoriToplamlari.Skip(MaxKategoriDilimi - 1).Sum(k => k.ToplamTutar);
+        ilkler.Add(new KategoriToplamViewModel { KategoriAdi = "Diğer", ToplamTutar = digerToplami });
+        return ilkler;
     }
 
     private static AnlikStokViewModel MalzemeyiKritikStokVmYap(Malzeme m) => new()
