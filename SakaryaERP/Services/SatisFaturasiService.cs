@@ -7,10 +7,12 @@ namespace SakaryaERP.Services;
 public class SatisFaturasiService : ISatisFaturasiService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IOnayYetkisiService _onayYetkisiService;
 
-    public SatisFaturasiService(IUnitOfWork unitOfWork)
+    public SatisFaturasiService(IUnitOfWork unitOfWork, IOnayYetkisiService onayYetkisiService)
     {
         _unitOfWork = unitOfWork;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<SatisFaturasi> CreateAsync(SatisFaturasi fatura, List<SatisFaturasiKalemi> kalemler)
@@ -161,6 +163,8 @@ public class SatisFaturasiService : ISatisFaturasiService
 
         if (fatura.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan faturalar onaylanabilir.");
+
+        _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(KalemToplami), "Satış Faturası");
 
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");

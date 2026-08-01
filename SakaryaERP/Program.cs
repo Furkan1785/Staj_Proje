@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
+using SakaryaERP.BackgroundJobs;
 using SakaryaERP.Data;
 using SakaryaERP.Data.Repositories;
 using SakaryaERP.HealthChecks;
@@ -74,6 +75,10 @@ builder.Services.AddScoped<ISatisFaturasiService, SatisFaturasiService>();
 builder.Services.AddScoped<IHesapPlaniService, HesapPlaniService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IOnayYetkisiService, OnayYetkisiService>();
+builder.Services.AddScoped<IAdminEmailProvider, IdentityAdminEmailProvider>();
+builder.Services.AddScoped<IBildirimService, BildirimService>();
+builder.Services.AddHostedService<GunlukBildirimHostedService>();
 
 builder.Services.AddHealthChecks()
     .AddCheck<VeritabaniHealthCheck>("veritabani");

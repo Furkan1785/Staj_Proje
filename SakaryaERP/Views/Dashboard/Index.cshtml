@@ -14,6 +14,20 @@
     var topIkinciBaslik = satisGorunumu ? "En Çok Satılan Malzemeler" : "En Çok Alınan Malzemeler";
 }
 
+@if (TempData["Basari"] != null)
+{
+    <div class="alert alert-success">@TempData["Basari"]</div>
+}
+
+@if (User.IsInRole("Admin"))
+{
+    <form method="post" asp-controller="Bildirim" asp-action="SimdiGonder" class="d-inline float-end mb-2"
+          onsubmit="return confirm('Kritik stok ve vadesi yaklaşan çek/senet için Admin kullanıcılara özet e-posta gönderilsin mi?')">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-sm btn-outline-secondary">Bildirimleri Şimdi Gönder</button>
+    </form>
+}
+
 <form method="get" id="dashboardFiltreForm">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h3 class="mb-0">Dashboard</h3>
