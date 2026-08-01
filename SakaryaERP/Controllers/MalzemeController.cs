@@ -19,17 +19,23 @@ public class MalzemeController : Controller
     private readonly IMalzemeService _malzemeService;
     private readonly IMalzemeKategoriService _malzemeKategoriService;
     private readonly IMalzemeHareketFisiService _malzemeHareketFisiService;
+    private readonly ISatisFaturasiService _satisFaturasiService;
+    private readonly IAlisFaturasiService _alisFaturasiService;
     private readonly ILogger<MalzemeController> _logger;
 
     public MalzemeController(
         IMalzemeService malzemeService,
         IMalzemeKategoriService malzemeKategoriService,
         IMalzemeHareketFisiService malzemeHareketFisiService,
+        ISatisFaturasiService satisFaturasiService,
+        IAlisFaturasiService alisFaturasiService,
         ILogger<MalzemeController> logger)
     {
         _malzemeService = malzemeService;
         _malzemeKategoriService = malzemeKategoriService;
         _malzemeHareketFisiService = malzemeHareketFisiService;
+        _satisFaturasiService = satisFaturasiService;
+        _alisFaturasiService = alisFaturasiService;
         _logger = logger;
     }
 
@@ -184,6 +190,8 @@ public class MalzemeController : Controller
         if (malzeme is null) return NotFound();
 
         var sonHareketler = await _malzemeHareketFisiService.GetMalzemeGecmisiAsync(id, null, null);
+        var satisFaturalari = await _satisFaturasiService.GetOnaylanmisListeAsync();
+        var alisFaturalari = await _alisFaturasiService.GetOnaylanmisListeAsync();
 
         return View(new MalzemeDetayViewModel
         {
@@ -217,6 +225,30 @@ public class MalzemeController : Controller
                     Giris = k.MalzemeHareketFisi.HareketTipi == HareketTipi.Giris ? k.Miktar : 0,
                     Cikis = k.MalzemeHareketFisi.HareketTipi is HareketTipi.Cikis or HareketTipi.Fire ? k.Miktar : 0,
                     Aciklama = k.Aciklama
+                }).ToList(),
+            SonSatislar = satisFaturalari
+                .SelectMany(f => f.Kalemler.Where(k => k.MalzemeId == id).Select(k => new { Fatura = f, Kalem = k }))
+                .OrderByDescending(x => x.Fatura.Tarih)
+                .Take(5)
+                .Select(x => new MalzemeFaturaSatiriViewModel
+                {
+                    FaturaId = x.Fatura.Id,
+                    Tarih = x.Fatura.Tarih,
+                    FaturaNo = x.Fatura.FaturaNo,
+                    CariUnvan = x.Fatura.Cari.Unvan,
+                    Miktar = x.Kalem.Miktar
+                }).ToList(),
+            SonAlislar = alisFaturalari
+                .SelectMany(f => f.Kalemler.Where(k => k.MalzemeId == id).Select(k => new { Fatura = f, Kalem = k }))
+                .OrderByDescending(x => x.Fatura.Tarih)
+                .Take(5)
+                .Select(x => new MalzemeFaturaSatiriViewModel
+                {
+                    FaturaId = x.Fatura.Id,
+                    Tarih = x.Fatura.Tarih,
+                    FaturaNo = x.Fatura.FaturaNo,
+                    CariUnvan = x.Fatura.Cari.Unvan,
+                    Miktar = x.Kalem.Miktar
                 }).ToList()
         });
     }

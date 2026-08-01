@@ -59,6 +59,15 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-hareketler" type="button" role="tab">Hareketler</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-ceksenet" type="button" role="tab">
+                            Çek/Senet
+                            @if (Model.CekSenetler.Count > 0)
+                            {
+                                <span class="badge bg-secondary">@Model.CekSenetler.Count</span>
+                            }
+                        </button>
+                    </li>
                 </ul>
             </div>
             <div class="card-body tab-content">
@@ -124,6 +133,43 @@
                     <a asp-action="Ekstre" asp-route-cariId="@Model.Id" class="small">
                         Tam ekstreyi gör (tarih aralığı seçerek) &raquo;
                     </a>
+                </div>
+
+                <div class="tab-pane fade" id="sekme-ceksenet" role="tabpanel">
+                    @if (Model.CekSenetler.Count == 0)
+                    {
+                        <p class="text-muted text-center mb-0">Bu cariye ait bir çek/senet kaydı bulunmuyor.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Belge Tipi</th>
+                                        <th>Belge No</th>
+                                        <th>Vade Tarihi</th>
+                                        <th class="text-end">Tutar</th>
+                                        <th>Durum</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var c in Model.CekSenetler)
+                                    {
+                                        <tr>
+                                            <td>@c.BelgeTipiText</td>
+                                            <td>@c.BelgeNo</td>
+                                            <td>@c.VadeTarihi.ToString("dd.MM.yyyy")</td>
+                                            <td class="text-end">@c.Tutar.ToString("N2")</td>
+                                            <td><span class="badge @c.DurumSinifi">@c.DurumText</span></td>
+                                            <td><a asp-controller="CekSenet" asp-action="Detay" asp-route-id="@c.Id" class="small">Detay &raquo;</a></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

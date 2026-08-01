@@ -7,6 +7,7 @@ public class SatisSiparisiDetayViewModel
     public int Id { get; set; }
     public string SiparisNo { get; set; } = "";
     public DateTime Tarih { get; set; }
+    public int CariId { get; set; }
     public string CariUnvan { get; set; } = "";
     public string? TeklifNo { get; set; }
     public string? Aciklama { get; set; }

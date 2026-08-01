@@ -54,7 +54,7 @@
             <dt class="col-sm-2">Vade Tarihi</dt>
             <dd class="col-sm-4">@(Model.VadeTarihi?.ToString("dd.MM.yyyy") ?? "-")</dd>
             <dt class="col-sm-2">Müşteri</dt>
-            <dd class="col-sm-4">@Model.CariUnvan</dd>
+            <dd class="col-sm-4"><partial name="_CariLinki" model="(Model.CariId, Model.CariUnvan)" /></dd>
             <dt class="col-sm-2">Sipariş No</dt>
             <dd class="col-sm-4">@(Model.SiparisNo ?? "-")</dd>
             <dt class="col-sm-2">İrsaliye No</dt>

@@ -8,6 +8,7 @@ public class SatisTeklifiDetayViewModel
     public string TeklifNo { get; set; } = "";
     public DateTime Tarih { get; set; }
     public DateTime? GecerlilikTarihi { get; set; }
+    public int CariId { get; set; }
     public string CariUnvan { get; set; } = "";
     public string? TalepNo { get; set; }
     public string? Aciklama { get; set; }

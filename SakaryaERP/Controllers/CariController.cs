@@ -16,11 +16,13 @@ public class CariController : Controller
 {
     private readonly ICariService _cariService;
     private readonly ICariFisiService _cariFisiService;
+    private readonly ICekSenetService _cekSenetService;
 
-    public CariController(ICariService cariService, ICariFisiService cariFisiService)
+    public CariController(ICariService cariService, ICariFisiService cariFisiService, ICekSenetService cekSenetService)
     {
         _cariService = cariService;
         _cariFisiService = cariFisiService;
+        _cekSenetService = cekSenetService;
     }
 
     public IActionResult Index() => View();
@@ -110,6 +112,20 @@ public class CariController : Controller
             KumulatifBakiye = s.KumulatifBakiye
         }).ToList();
 
+        var cekSenetler = (await _cekSenetService.GetAllAsync())
+            .Where(c => c.CariId == id && !c.IsDeleted)
+            .OrderByDescending(c => c.VadeTarihi)
+            .Select(c => new CariCekSenetSatiriViewModel
+            {
+                Id = c.Id,
+                BelgeTipiText = BelgeTipiMetni(c.BelgeTipi),
+                BelgeNo = c.BelgeNo,
+                VadeTarihi = c.VadeTarihi,
+                Tutar = c.Tutar,
+                DurumText = CekSenetDurumMetni(c.Durum),
+                DurumSinifi = CekSenetDurumSinifi(c.Durum)
+            }).ToList();
+
         return View(new CariDetayViewModel
         {
             Id = cari.Id,
@@ -123,7 +139,8 @@ public class CariController : Controller
             Bakiye = cari.Bakiye,
             KrediLimiti = cari.KrediLimiti,
             IsDeleted = cari.IsDeleted,
-            SonHareketler = sonHareketler
+            SonHareketler = sonHareketler,
+            CekSenetler = cekSenetler
         });
     }
 
@@ -362,5 +379,32 @@ public class CariController : Controller
         FisTipi.Alacak => "Alacak",
         FisTipi.Mahsup => "Mahsup",
         _ => tipi.ToString()
+    };
+
+    private static string BelgeTipiMetni(BelgeTipi tipi) => tipi switch
+    {
+        BelgeTipi.Cek => "Çek",
+        BelgeTipi.Senet => "Senet",
+        _ => tipi.ToString()
+    };
+
+    private static string CekSenetDurumMetni(CekSenetDurum durum) => durum switch
+    {
+        CekSenetDurum.Portfoyde => "Portföyde",
+        CekSenetDurum.Tahsilde => "Tahsilde",
+        CekSenetDurum.Ciro => "Ciro",
+        CekSenetDurum.Karsiliksiz => "Karşılıksız",
+        CekSenetDurum.TahsilEdildi => "Tahsil Edildi",
+        _ => durum.ToString()
+    };
+
+    private static string CekSenetDurumSinifi(CekSenetDurum durum) => durum switch
+    {
+        CekSenetDurum.Portfoyde => "bg-primary",
+        CekSenetDurum.Tahsilde => "bg-warning text-dark",
+        CekSenetDurum.Ciro => "bg-info text-dark",
+        CekSenetDurum.Karsiliksiz => "bg-danger",
+        CekSenetDurum.TahsilEdildi => "bg-success",
+        _ => "bg-secondary"
     };
 }

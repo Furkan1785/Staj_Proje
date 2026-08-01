@@ -1,0 +1,15 @@
+@model (int CariId, string CariUnvan)
+@{
+    // Cari modülü sadece Admin/Muhasebe rolüne açık ([Authorize(Roles = "Admin,Muhasebe")]
+    // CariController üzerinde) — Satış rolündeki bir kullanıcıya kırık/Erişim Reddedildi'ye
+    // düşen bir link göstermemek için sadece yetkili rollerde link, aksi halde düz metin.
+    var cariGorulebilir = User.IsInRole("Admin") || User.IsInRole("Muhasebe");
+}
+@if (cariGorulebilir)
+{
+    <a asp-controller="Cari" asp-action="Detay" asp-route-id="@Model.CariId">@Model.CariUnvan</a>
+}
+else
+{
+    @Model.CariUnvan
+}

@@ -156,6 +156,7 @@ public class SatisSiparisiController : Controller
             Id = siparis.Id,
             SiparisNo = siparis.SiparisNo,
             Tarih = siparis.Tarih,
+            CariId = siparis.CariId,
             CariUnvan = siparis.Cari.Unvan,
             TeklifNo = siparis.SatisTeklifi?.TeklifNo,
             Aciklama = siparis.Aciklama,

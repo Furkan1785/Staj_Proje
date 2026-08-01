@@ -14,4 +14,16 @@ public class CariDetayViewModel
     public decimal KrediLimiti { get; set; }
     public bool IsDeleted { get; set; }
     public List<CariEkstreSatiriViewModel> SonHareketler { get; set; } = [];
+    public List<CariCekSenetSatiriViewModel> CekSenetler { get; set; } = [];
+}
+
+public class CariCekSenetSatiriViewModel
+{
+    public int Id { get; set; }
+    public string BelgeTipiText { get; set; } = "";
+    public string BelgeNo { get; set; } = "";
+    public DateTime VadeTarihi { get; set; }
+    public decimal Tutar { get; set; }
+    public string DurumText { get; set; } = "";
+    public string DurumSinifi { get; set; } = "";
 }

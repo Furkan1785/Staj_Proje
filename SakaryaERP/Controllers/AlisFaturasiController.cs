@@ -282,6 +282,7 @@ public class AlisFaturasiController : Controller
             Id = fatura.Id,
             FaturaNo = fatura.FaturaNo,
             Tarih = fatura.Tarih,
+            CariId = fatura.CariId,
             CariUnvan = fatura.Cari.Unvan,
             SiparisNo = fatura.AlisSiparisi?.SiparisNo,
             IrsaliyeNo = fatura.AlisIrsaliyesi?.IrsaliyeNo,

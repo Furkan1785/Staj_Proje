@@ -7,6 +7,7 @@ public class AlisFaturasiDetayViewModel
     public int Id { get; set; }
     public string FaturaNo { get; set; } = "";
     public DateTime Tarih { get; set; }
+    public int CariId { get; set; }
     public string CariUnvan { get; set; } = "";
     public string? SiparisNo { get; set; }
     public string? IrsaliyeNo { get; set; }

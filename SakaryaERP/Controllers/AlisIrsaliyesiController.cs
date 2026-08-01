@@ -160,6 +160,7 @@ public class AlisIrsaliyesiController : Controller
             Id = irsaliye.Id,
             IrsaliyeNo = irsaliye.IrsaliyeNo,
             Tarih = irsaliye.Tarih,
+            CariId = irsaliye.CariId,
             CariUnvan = irsaliye.Cari.Unvan,
             SubeAdi = irsaliye.Sube.SubeAdi,
             SiparisNo = irsaliye.AlisSiparisi?.SiparisNo,

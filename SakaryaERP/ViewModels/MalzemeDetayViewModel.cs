@@ -21,4 +21,19 @@ public class MalzemeDetayViewModel
     public string? RafNo { get; set; }
     public decimal Bakiye { get; set; }
     public List<MalzemeGecmisiSatiriViewModel> SonHareketler { get; set; } = [];
+    public List<MalzemeFaturaSatiriViewModel> SonSatislar { get; set; } = [];
+    public List<MalzemeFaturaSatiriViewModel> SonAlislar { get; set; } = [];
+}
+
+// Malzeme.Bakiye, satış/alış faturası onayında MalzemeHareketFisi oluşturulmadan
+// doğrudan güncelleniyor (bkz. SatisFaturasiService/AlisFaturasiService) — yani
+// "Hareket Geçmişi" sekmesi (sadece MalzemeHareketFisiKalemi'ne bakıyor) bu
+// hareketleri göstermiyor. Bu kör noktayı kapatmak için ayrı bir sekme.
+public class MalzemeFaturaSatiriViewModel
+{
+    public int FaturaId { get; set; }
+    public DateTime Tarih { get; set; }
+    public string FaturaNo { get; set; } = "";
+    public string CariUnvan { get; set; } = "";
+    public decimal Miktar { get; set; }
 }

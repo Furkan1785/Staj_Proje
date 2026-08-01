@@ -342,6 +342,7 @@ public class SatisFaturasiController : Controller
             FaturaNo = fatura.FaturaNo,
             Tarih = fatura.Tarih,
             VadeTarihi = fatura.VadeTarihi,
+            CariId = fatura.CariId,
             CariUnvan = fatura.Cari.Unvan,
             SiparisNo = fatura.SatisSiparisi?.SiparisNo,
             IrsaliyeNo = fatura.SevkIrsaliyesi?.IrsaliyeNo,

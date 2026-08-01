@@ -257,6 +257,7 @@ public class SevkIrsaliyesiController : Controller
             Id = irsaliye.Id,
             IrsaliyeNo = irsaliye.IrsaliyeNo,
             Tarih = irsaliye.Tarih,
+            CariId = irsaliye.SatisSiparisi.CariId,
             CariUnvan = irsaliye.SatisSiparisi.Cari.Unvan,
             SiparisNo = irsaliye.SatisSiparisi.SiparisNo,
             SubeAdi = irsaliye.Sube.SubeAdi,

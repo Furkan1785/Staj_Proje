@@ -72,6 +72,9 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-hareket-gecmisi" type="button" role="tab">Hareket Geçmişi</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sekme-satis-alis" type="button" role="tab">Satış/Alış Geçmişi</button>
+                    </li>
                 </ul>
             </div>
             <div class="card-body tab-content">
@@ -154,6 +157,81 @@
                             Tüm hareket geçmişini gör &raquo;
                         </a>
                     }
+                </div>
+
+                <div class="tab-pane fade" id="sekme-satis-alis" role="tabpanel">
+                    <p class="text-muted small">
+                        Satış/alış faturası onayında stok doğrudan güncellenir (ayrı bir stok hareket fişi oluşmaz),
+                        bu yüzden bu hareketler "Hareket Geçmişi" sekmesinde görünmez — bakiyeyi etkileyen tüm belgeleri görmek için bu sekme kullanılır.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6>Son Satışlar</h6>
+                            @if (Model.SonSatislar.Count == 0)
+                            {
+                                <p class="text-muted text-center mb-0">Bu malzeme henüz satılmadı.</p>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Tarih</th>
+                                                <th>Fatura No</th>
+                                                <th>Müşteri</th>
+                                                <th class="text-end">Miktar</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var s in Model.SonSatislar)
+                                            {
+                                                <tr>
+                                                    <td>@s.Tarih.ToString("dd.MM.yyyy")</td>
+                                                    <td><a asp-controller="SatisFaturasi" asp-action="Detay" asp-route-id="@s.FaturaId">@s.FaturaNo</a></td>
+                                                    <td>@s.CariUnvan</td>
+                                                    <td class="text-end">@s.Miktar.ToString("N2") @Model.Birim</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Son Alışlar</h6>
+                            @if (Model.SonAlislar.Count == 0)
+                            {
+                                <p class="text-muted text-center mb-0">Bu malzeme henüz satın alınmadı.</p>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Tarih</th>
+                                                <th>Fatura No</th>
+                                                <th>Tedarikçi</th>
+                                                <th class="text-end">Miktar</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var a in Model.SonAlislar)
+                                            {
+                                                <tr>
+                                                    <td>@a.Tarih.ToString("dd.MM.yyyy")</td>
+                                                    <td><a asp-controller="AlisFaturasi" asp-action="Detay" asp-route-id="@a.FaturaId">@a.FaturaNo</a></td>
+                                                    <td>@a.CariUnvan</td>
+                                                    <td class="text-end">@a.Miktar.ToString("N2") @Model.Birim</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

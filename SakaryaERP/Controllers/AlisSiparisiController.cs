@@ -71,6 +71,7 @@ public class AlisSiparisiController : Controller
             Id = siparis.Id,
             SiparisNo = siparis.SiparisNo,
             Tarih = siparis.Tarih,
+            CariId = siparis.CariId,
             CariUnvan = siparis.Cari.Unvan,
             SubeAdi = siparis.Sube.SubeAdi,
             Aciklama = siparis.Aciklama,

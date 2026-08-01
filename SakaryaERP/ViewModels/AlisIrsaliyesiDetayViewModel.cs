@@ -7,6 +7,7 @@ public class AlisIrsaliyesiDetayViewModel
     public int Id { get; set; }
     public string IrsaliyeNo { get; set; } = "";
     public DateTime Tarih { get; set; }
+    public int CariId { get; set; }
     public string CariUnvan { get; set; } = "";
     public string SubeAdi { get; set; } = "";
     public string? SiparisNo { get; set; }

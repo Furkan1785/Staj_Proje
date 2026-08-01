@@ -254,6 +254,7 @@ public class SatisTeklifiController : Controller
             TeklifNo = teklif.TeklifNo,
             Tarih = teklif.Tarih,
             GecerlilikTarihi = teklif.GecerlilikTarihi,
+            CariId = teklif.CariId,
             CariUnvan = teklif.Cari.Unvan,
             TalepNo = teklif.MusteriTalebi?.TalepNo,
             Aciklama = teklif.Aciklama,
