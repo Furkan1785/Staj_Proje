@@ -20,7 +20,7 @@ public static class DemoSeeder
         var subeService = services.GetRequiredService<ISubeService>();
         var subeMerkez = await subeService.CreateAsync(new Sube { SubeAdi = "Merkez Şube", Adres = "İstanbul, Kadıköy" });
         var subeSakarya = await subeService.CreateAsync(new Sube { SubeAdi = "Sakarya Şube", Adres = "Sakarya, Serdivan" });
-        await subeService.CreateAsync(new Sube { SubeAdi = "Bursa Şube", Adres = "Bursa, Nilüfer" });
+        var subeBursa = await subeService.CreateAsync(new Sube { SubeAdi = "Bursa Şube", Adres = "Bursa, Nilüfer" });
 
         var bankaService = services.GetRequiredService<IBankaHesabiService>();
         var banka1 = await bankaService.CreateAsync(new BankaHesabi { HesapAdi = "Şirket Vadesiz Hesap", BankaAdi = "Garanti BBVA", IBAN = "TR120006200023400001234567", ParaBirimi = "TRY" });
@@ -38,6 +38,12 @@ public static class DemoSeeder
         var cari6 = await cariService.CreateAsync(new Cari { CariKodu = "C006", Unvan = "Marmara Çelik Ltd. Şti.", CariTipi = CariTipi.Tedarikci, VergiNo = "3344556677", Adres = "Kocaeli, İzmit", Telefon = "02623334455", EMail = "info@marmaracelik.com", KrediLimiti = 120000 });
         var cari7 = await cariService.CreateAsync(new Cari { CariKodu = "C007", Unvan = "Anadolu İnşaat Malzemeleri A.Ş.", CariTipi = CariTipi.Musteri, VergiNo = "7788990011", Adres = "Ankara, Çankaya", Telefon = "03123456789", EMail = "info@anadoluinsaat.com", KrediLimiti = 60000 });
         var cari8 = await cariService.CreateAsync(new Cari { CariKodu = "C008", Unvan = "Karadeniz Elektrik San.", CariTipi = CariTipi.HerIkisi, VergiNo = "2233445566", Adres = "Samsun, İlkadım", Telefon = "03623456789", EMail = "info@karadenizelektrik.com", KrediLimiti = 45000 });
+        var cari9 = await cariService.CreateAsync(new Cari { CariKodu = "C009", Unvan = "Doğu Anadolu Metal Ltd.", CariTipi = CariTipi.Tedarikci, VergiNo = "8899001122", Adres = "Erzurum, Yakutiye", Telefon = "04423456789", EMail = "info@doguanadolumetal.com", KrediLimiti = 90000 });
+        var cari10 = await cariService.CreateAsync(new Cari { CariKodu = "C010", Unvan = "Batı Yapı Malzemeleri A.Ş.", CariTipi = CariTipi.Musteri, VergiNo = "9900112233", Adres = "İzmir, Karşıyaka", Telefon = "02323456780", EMail = "info@batiyapi.com", KrediLimiti = 55000 });
+        var cari11 = await cariService.CreateAsync(new Cari { CariKodu = "C011", Unvan = "Trakya Elektrik ve Aydınlatma", CariTipi = CariTipi.HerIkisi, VergiNo = "0011223344", Adres = "Tekirdağ, Çorlu", Telefon = "02823456789", EMail = "info@trakyaelektrik.com", KrediLimiti = 65000 });
+        var cari12 = await cariService.CreateAsync(new Cari { CariKodu = "C012", Unvan = "Akdeniz İnşaat Sanayi", CariTipi = CariTipi.Musteri, VergiNo = "1234509876", Adres = "Antalya, Muratpaşa", Telefon = "02423456789", EMail = "info@akdenizinsaat.com", KrediLimiti = 70000 });
+        var cari13 = await cariService.CreateAsync(new Cari { CariKodu = "C013", Unvan = "Orta Anadolu Kimya Ltd.", CariTipi = CariTipi.Tedarikci, VergiNo = "5566778899", Adres = "Kayseri, Melikgazi", Telefon = "03523456789", EMail = "info@ortaanadolukimya.com", KrediLimiti = 85000 });
+        var cari14 = await cariService.CreateAsync(new Cari { CariKodu = "C014", Unvan = "Karadeniz Boru ve Profil San.", CariTipi = CariTipi.Tedarikci, VergiNo = "6677001122", Adres = "Zonguldak, Ereğli", Telefon = "03723456789", EMail = "info@karadenizboru.com", KrediLimiti = 95000 });
 
         var kategoriService = services.GetRequiredService<IMalzemeKategoriService>();
         var metalUrunler = await kategoriService.CreateAsync(new MalzemeKategori { KategoriAdi = "Metal Ürünler" });
@@ -60,26 +66,26 @@ public static class DemoSeeder
         var m07 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M007", Barkod = "8690000000073", MalzemeAdi = "Galvaniz Sac 1mm", Marka = "Marmara Çelik", Kalite = "DX51D", Tip = "Sac", Birim = "m2", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 95, SatisFiyati = 128, KdvOrani = 20, MinStokMiktari = 150, MaxStokMiktari = 2000, RafNo = "B-02", Bakiye = 610, KategoriId = sacUrunleri.Id });
         var m08 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M008", Barkod = "8690000000080", MalzemeAdi = "Paslanmaz Sac 2mm", Marka = "Marmara Çelik", Kalite = "304", Tip = "Sac", Birim = "m2", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 340, SatisFiyati = 425, KdvOrani = 20, MinStokMiktari = 50, MaxStokMiktari = 700, RafNo = "B-03", Bakiye = 160, KategoriId = sacUrunleri.Id });
         var m09 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M009", Barkod = "8690000000097", MalzemeAdi = "Alüminyum Sac 1.5mm", Marka = "Marmara Çelik", Kalite = "5754", Tip = "Sac", Birim = "m2", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 190, SatisFiyati = 245, KdvOrani = 20, MinStokMiktari = 80, MaxStokMiktari = 900, RafNo = "B-04", Bakiye = 210, KategoriId = sacUrunleri.Id });
-        await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M010", Barkod = "8690000000103", MalzemeAdi = "Sac Profil 50x50", Marka = "Marmara Çelik", Kalite = "St37", Tip = "Profil", Birim = "Metre", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 88, SatisFiyati = 115, KdvOrani = 20, MinStokMiktari = 150, MaxStokMiktari = 2000, RafNo = "B-05", Bakiye = 380, KategoriId = sacUrunleri.Id });
+        var m10 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M010", Barkod = "8690000000103", MalzemeAdi = "Sac Profil 50x50", Marka = "Marmara Çelik", Kalite = "St37", Tip = "Profil", Birim = "Metre", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 88, SatisFiyati = 115, KdvOrani = 20, MinStokMiktari = 150, MaxStokMiktari = 2000, RafNo = "B-05", Bakiye = 380, KategoriId = sacUrunleri.Id });
 
         var m11 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M011", Barkod = "8690000000110", MalzemeAdi = "Epoksi Boya - Gri", Marka = "Ege Kimya", Kalite = "Endüstriyel", Tip = "Sıvı", Birim = "Kg", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 85, SatisFiyati = 115, KdvOrani = 20, MinStokMiktari = 50, MaxStokMiktari = 800, RafNo = "C-01", Bakiye = 220, KategoriId = boyaKaplama.Id });
         var m12 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M012", Barkod = "8690000000127", MalzemeAdi = "Astar Boya", Marka = "Ege Kimya", Kalite = "Endüstriyel", Tip = "Sıvı", Birim = "Kg", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 60, SatisFiyati = 82, KdvOrani = 20, MinStokMiktari = 40, MaxStokMiktari = 600, RafNo = "C-02", Bakiye = 90, KategoriId = boyaKaplama.Id });
-        await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M013", Barkod = "8690000000134", MalzemeAdi = "Sentetik Boya - Mavi", Marka = "Ege Kimya", Kalite = "Standart", Tip = "Sıvı", Birim = "Kg", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 70, SatisFiyati = 95, KdvOrani = 20, MinStokMiktari = 30, MaxStokMiktari = 500, RafNo = "C-03", Bakiye = 65, KategoriId = boyaKaplama.Id });
-        await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M014", Barkod = "8690000000141", MalzemeAdi = "Toz Boya - Siyah", Marka = "Ege Kimya", Kalite = "Elektrostatik", Tip = "Toz", Birim = "Kg", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 110, SatisFiyati = 145, KdvOrani = 20, MinStokMiktari = 30, MaxStokMiktari = 400, RafNo = "C-04", Bakiye = 55, KategoriId = boyaKaplama.Id });
+        var m13 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M013", Barkod = "8690000000134", MalzemeAdi = "Sentetik Boya - Mavi", Marka = "Ege Kimya", Kalite = "Standart", Tip = "Sıvı", Birim = "Kg", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 70, SatisFiyati = 95, KdvOrani = 20, MinStokMiktari = 30, MaxStokMiktari = 500, RafNo = "C-03", Bakiye = 65, KategoriId = boyaKaplama.Id });
+        var m14 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M014", Barkod = "8690000000141", MalzemeAdi = "Toz Boya - Siyah", Marka = "Ege Kimya", Kalite = "Elektrostatik", Tip = "Toz", Birim = "Kg", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 110, SatisFiyati = 145, KdvOrani = 20, MinStokMiktari = 30, MaxStokMiktari = 400, RafNo = "C-04", Bakiye = 55, KategoriId = boyaKaplama.Id });
 
         var m15 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M015", Barkod = "8690000000158", MalzemeAdi = "Kablo 2.5mm NYA", Marka = "Karadeniz Elektrik", Kalite = "TSE", Tip = "Kablo", Birim = "Metre", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 12, SatisFiyati = 17, KdvOrani = 20, MinStokMiktari = 1000, MaxStokMiktari = 10000, RafNo = "D-01", Bakiye = 3200, KategoriId = elektrikMalzemeleri.Id });
         var m16 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M016", Barkod = "8690000000165", MalzemeAdi = "Sigorta 16A", Marka = "Karadeniz Elektrik", Kalite = "TSE", Tip = "Otomat Sigorta", Birim = "Adet", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 45, SatisFiyati = 62, KdvOrani = 20, MinStokMiktari = 100, MaxStokMiktari = 1000, RafNo = "D-02", Bakiye = 340, KategoriId = elektrikMalzemeleri.Id });
         var m17 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M017", Barkod = "8690000000172", MalzemeAdi = "Priz Grubu", Marka = "Karadeniz Elektrik", Kalite = "Standart", Tip = "Priz", Birim = "Adet", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 35, SatisFiyati = 48, KdvOrani = 20, MinStokMiktari = 80, MaxStokMiktari = 900, RafNo = "D-03", Bakiye = 210, KategoriId = elektrikMalzemeleri.Id });
         var m18 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M018", Barkod = "8690000000189", MalzemeAdi = "Aydınlatma Armatürü LED", Marka = "Karadeniz Elektrik", Kalite = "Standart", Tip = "Armatür", Birim = "Adet", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 180, SatisFiyati = 245, KdvOrani = 20, MinStokMiktari = 30, MaxStokMiktari = 400, RafNo = "D-04", Bakiye = 95, KategoriId = elektrikMalzemeleri.Id });
-        await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M019", Barkod = "8690000000196", MalzemeAdi = "Kablo Kanalı", Marka = "Karadeniz Elektrik", Kalite = "PVC", Tip = "Kanal", Birim = "Metre", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 22, SatisFiyati = 31, KdvOrani = 20, MinStokMiktari = 200, MaxStokMiktari = 2500, RafNo = "D-05", Bakiye = 480, KategoriId = elektrikMalzemeleri.Id });
+        var m19 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M019", Barkod = "8690000000196", MalzemeAdi = "Kablo Kanalı", Marka = "Karadeniz Elektrik", Kalite = "PVC", Tip = "Kanal", Birim = "Metre", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 22, SatisFiyati = 31, KdvOrani = 20, MinStokMiktari = 200, MaxStokMiktari = 2500, RafNo = "D-05", Bakiye = 480, KategoriId = elektrikMalzemeleri.Id });
 
         var m20 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M020", Barkod = "8690000000202", MalzemeAdi = "Cıvata M8x40", Marka = "Anadolu İnşaat", Kalite = "8.8", Tip = "Cıvata", Birim = "Adet", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 3, SatisFiyati = 5, KdvOrani = 20, MinStokMiktari = 2000, MaxStokMiktari = 20000, RafNo = "E-01", Bakiye = 6400, KategoriId = baglantiElemanlari.Id });
-        await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M021", Barkod = "8690000000219", MalzemeAdi = "Somun M8", Marka = "Anadolu İnşaat", Kalite = "8.8", Tip = "Somun", Birim = "Adet", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 1.5m, SatisFiyati = 2.5m, KdvOrani = 20, MinStokMiktari = 2000, MaxStokMiktari = 20000, RafNo = "E-02", Bakiye = 7200, KategoriId = baglantiElemanlari.Id });
-        await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M022", Barkod = "8690000000226", MalzemeAdi = "Rondela M8", Marka = "Anadolu İnşaat", Kalite = "Standart", Tip = "Rondela", Birim = "Adet", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 0.8m, SatisFiyati = 1.4m, KdvOrani = 20, MinStokMiktari = 3000, MaxStokMiktari = 30000, RafNo = "E-03", Bakiye = 9500, KategoriId = baglantiElemanlari.Id });
-        await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M023", Barkod = "8690000000233", MalzemeAdi = "Kaynak Elektrodu 3.2mm", Marka = "Yıldız Otomotiv", Kalite = "Çelik", Tip = "Elektrod", Birim = "Kg", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 130, SatisFiyati = 175, KdvOrani = 20, MinStokMiktari = 20, MaxStokMiktari = 300, RafNo = "E-04", Bakiye = 45, KategoriId = baglantiElemanlari.Id });
+        var m21 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M021", Barkod = "8690000000219", MalzemeAdi = "Somun M8", Marka = "Anadolu İnşaat", Kalite = "8.8", Tip = "Somun", Birim = "Adet", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 1.5m, SatisFiyati = 2.5m, KdvOrani = 20, MinStokMiktari = 2000, MaxStokMiktari = 20000, RafNo = "E-02", Bakiye = 7200, KategoriId = baglantiElemanlari.Id });
+        var m22 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M022", Barkod = "8690000000226", MalzemeAdi = "Rondela M8", Marka = "Anadolu İnşaat", Kalite = "Standart", Tip = "Rondela", Birim = "Adet", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 0.8m, SatisFiyati = 1.4m, KdvOrani = 20, MinStokMiktari = 3000, MaxStokMiktari = 30000, RafNo = "E-03", Bakiye = 9500, KategoriId = baglantiElemanlari.Id });
+        var m23 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M023", Barkod = "8690000000233", MalzemeAdi = "Kaynak Elektrodu 3.2mm", Marka = "Yıldız Otomotiv", Kalite = "Çelik", Tip = "Elektrod", Birim = "Kg", TeminTuru = TeminTuru.Alis, StokTipi = StokTipi.TicariMal, AlisFiyati = 130, SatisFiyati = 175, KdvOrani = 20, MinStokMiktari = 20, MaxStokMiktari = 300, RafNo = "E-04", Bakiye = 45, KategoriId = baglantiElemanlari.Id });
 
         await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M024", MalzemeAdi = "Kaynaklı Boru Yarı Mamul 2 inç", Birim = "Metre", TeminTuru = TeminTuru.Uretim, StokTipi = StokTipi.YariMamul, AlisFiyati = 0, SatisFiyati = 0, KdvOrani = 20, MinStokMiktari = 100, MaxStokMiktari = 1000, RafNo = "F-01", Bakiye = 300 });
-        await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M025", MalzemeAdi = "Bitmiş Ürün - Korkuluk Sistemi", Birim = "Adet", TeminTuru = TeminTuru.Uretim, StokTipi = StokTipi.Mamul, AlisFiyati = 0, SatisFiyati = 850, KdvOrani = 20, MinStokMiktari = 5, MaxStokMiktari = 50, RafNo = "F-02", Bakiye = 12 });
+        var m25 = await malzemeService.CreateAsync(new Malzeme { MalzemeKodu = "M025", MalzemeAdi = "Bitmiş Ürün - Korkuluk Sistemi", Birim = "Adet", TeminTuru = TeminTuru.Uretim, StokTipi = StokTipi.Mamul, AlisFiyati = 0, SatisFiyati = 850, KdvOrani = 20, MinStokMiktari = 5, MaxStokMiktari = 50, RafNo = "F-02", Bakiye = 12 });
 
         var cariFisiService = services.GetRequiredService<ICariFisiService>();
         await cariFisiService.CreateAsync(new CariFisi { CariId = cari1.Id, Tarih = DateTime.Today.AddDays(-20), FisTipi = FisTipi.Borc, Tutar = 15000, OdemeYontemi = OdemeYontemi.Havale, BankaHesabiId = banka1.Id, Aciklama = "Satış faturası borçlandırma" });
@@ -92,6 +98,19 @@ public static class DemoSeeder
         await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Senet, BelgeNo = "S-2026-014", CariId = cari4.Id, VadeTarihi = DateTime.Today, Tutar = 6500, BankaAdi = null, SubeAdi = null });
         await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Cek, BelgeNo = "0123789", CariId = cari3.Id, VadeTarihi = DateTime.Today.AddDays(20), Tutar = 9800, BankaAdi = "İş Bankası", SubeAdi = "İzmit Şubesi" });
         await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Senet, BelgeNo = "S-2026-021", CariId = cari7.Id, VadeTarihi = DateTime.Today.AddDays(35), Tutar = 4200, BankaAdi = null, SubeAdi = null });
+        await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Cek, BelgeNo = "0124011", CariId = cari10.Id, VadeTarihi = DateTime.Today.AddDays(1), Tutar = 7300, BankaAdi = "Garanti BBVA", SubeAdi = "Karşıyaka Şubesi" });
+        await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Senet, BelgeNo = "S-2026-030", CariId = cari12.Id, VadeTarihi = DateTime.Today.AddDays(2), Tutar = 5600, BankaAdi = null, SubeAdi = null });
+        await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Cek, BelgeNo = "0124055", CariId = cari4.Id, VadeTarihi = DateTime.Today.AddDays(-10), Tutar = 3400, BankaAdi = "İş Bankası", SubeAdi = "Nilüfer Şubesi" });
+        await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Cek, BelgeNo = "0124098", CariId = cari1.Id, VadeTarihi = DateTime.Today.AddDays(45), Tutar = 11200, BankaAdi = "Garanti BBVA", SubeAdi = "Kadıköy Şubesi" });
+        await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Senet, BelgeNo = "S-2026-041", CariId = cari7.Id, VadeTarihi = DateTime.Today.AddDays(60), Tutar = 6800, BankaAdi = null, SubeAdi = null });
+
+        // Tahsilat/karşılıksız aşamasına geçmiş örnekler — çek/senet aksiyon geçmişinde çeşitlilik için
+        var tahsildekiCek = await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Cek, BelgeNo = "0122500", CariId = cari10.Id, VadeTarihi = DateTime.Today.AddDays(15), Tutar = 8900, BankaAdi = "İş Bankası", SubeAdi = "Karşıyaka Şubesi" });
+        await cekSenetService.TahsileVerAsync(tahsildekiCek.Id);
+
+        var tahsilEdilenSenet = await cekSenetService.CreateAsync(new CekSenet { BelgeTipi = BelgeTipi.Senet, BelgeNo = "S-2026-005", CariId = cari12.Id, VadeTarihi = DateTime.Today.AddDays(-30), Tutar = 4100, BankaAdi = null, SubeAdi = null });
+        await cekSenetService.TahsileVerAsync(tahsilEdilenSenet.Id);
+        await cekSenetService.TahsilEdildiYapAsync(tahsilEdilenSenet.Id, banka1.Id, null);
 
         var malzemeHareketFisiService = services.GetRequiredService<IMalzemeHareketFisiService>();
         var giris1 = await malzemeHareketFisiService.CreateAsync(
@@ -108,6 +127,49 @@ public static class DemoSeeder
                 new MalzemeHareketFisiKalemi { MalzemeId = m03.Id, Miktar = 50, Aciklama = "Müşteri siparişi sevkiyatı" }
             ]);
         await malzemeHareketFisiService.OnaylaAsync(cikis1.Id);
+
+        var giris2 = await malzemeHareketFisiService.CreateAsync(
+            new MalzemeHareketFisi { Tarih = DateTime.Today.AddDays(-45), HareketTipi = HareketTipi.Giris, SubeId = subeSakarya.Id },
+            [
+                new MalzemeHareketFisiKalemi { MalzemeId = m06.Id, Miktar = 120, Aciklama = "Tedarikçiden gelen sevkiyat" },
+                new MalzemeHareketFisiKalemi { MalzemeId = m15.Id, Miktar = 1500, Aciklama = "Tedarikçiden gelen sevkiyat" }
+            ]);
+        await malzemeHareketFisiService.OnaylaAsync(giris2.Id);
+
+        var fire1 = await malzemeHareketFisiService.CreateAsync(
+            new MalzemeHareketFisi { Tarih = DateTime.Today.AddDays(-30), HareketTipi = HareketTipi.Fire, SubeId = subeMerkez.Id },
+            [
+                new MalzemeHareketFisiKalemi { MalzemeId = m08.Id, Miktar = 8, Aciklama = "Kesim firesi" }
+            ]);
+        await malzemeHareketFisiService.OnaylaAsync(fire1.Id);
+
+        var transfer1 = await malzemeHareketFisiService.CreateAsync(
+            new MalzemeHareketFisi { Tarih = DateTime.Today.AddDays(-60), HareketTipi = HareketTipi.Transfer, SubeId = subeBursa.Id },
+            [
+                new MalzemeHareketFisiKalemi { MalzemeId = m20.Id, Miktar = 500, Aciklama = "Şubeler arası transfer" }
+            ]);
+        await malzemeHareketFisiService.OnaylaAsync(transfer1.Id);
+
+        var giris3 = await malzemeHareketFisiService.CreateAsync(
+            new MalzemeHareketFisi { Tarih = DateTime.Today.AddDays(-90), HareketTipi = HareketTipi.Giris, SubeId = subeMerkez.Id },
+            [
+                new MalzemeHareketFisiKalemi { MalzemeId = m11.Id, Miktar = 100, Aciklama = "Tedarikçiden gelen sevkiyat" }
+            ]);
+        await malzemeHareketFisiService.OnaylaAsync(giris3.Id);
+
+        var cikis2 = await malzemeHareketFisiService.CreateAsync(
+            new MalzemeHareketFisi { Tarih = DateTime.Today.AddDays(-75), HareketTipi = HareketTipi.Cikis, SubeId = subeSakarya.Id },
+            [
+                new MalzemeHareketFisiKalemi { MalzemeId = m19.Id, Miktar = 60, Aciklama = "Şantiye sevkiyatı" }
+            ]);
+        await malzemeHareketFisiService.OnaylaAsync(cikis2.Id);
+
+        // Onaylanmamış (Beklemede) bırakılan bir fiş — onay ekranının test edilebilmesi için
+        await malzemeHareketFisiService.CreateAsync(
+            new MalzemeHareketFisi { Tarih = DateTime.Today.AddDays(-1), HareketTipi = HareketTipi.Giris, SubeId = subeMerkez.Id },
+            [
+                new MalzemeHareketFisiKalemi { MalzemeId = m14.Id, Miktar = 40, Aciklama = "Tedarikçiden gelen sevkiyat (onay bekliyor)" }
+            ]);
 
         var musteriTalebiService = services.GetRequiredService<IMusteriTalebiService>();
         var satisTeklifiService = services.GetRequiredService<ISatisTeklifiService>();
@@ -351,5 +413,140 @@ public static class DemoSeeder
             [
                 new AlisIrsaliyesiKalemi { MalzemeId = m18.Id, Miktar = 40 }
             ]);
+
+        // --- Hacim verisi: son 14 ay boyunca rastgele sipariş→irsaliye→fatura zincirleri ---
+        // Yukarıdaki elle kurgulanmış zincirler senaryo çeşitliliği için; grid'lerin ve
+        // Dashboard'daki aylık trend grafiğinin boş/tek-noktalı görünmemesi için buradaki
+        // döngü hacim sağlıyor. Sabit seed (20260801) ile her --seed-demo çalıştırmasında
+        // aynı veri üretiliyor (tekrarlanabilir demo).
+        var random = new Random(20260801);
+        var subeler = new List<Sube> { subeMerkez, subeSakarya, subeBursa };
+        var musteriCariler = new List<Cari> { cari1, cari3, cari4, cari7, cari8, cari10, cari11, cari12 };
+        var tedarikciCariler = new List<Cari> { cari2, cari3, cari5, cari6, cari8, cari9, cari11, cari13, cari14 };
+        var satisMalzemeHavuzu = new List<Malzeme>
+        {
+            m01, m02, m03, m04, m05, m06, m07, m08, m09, m10, m11, m12, m13, m14,
+            m15, m16, m17, m18, m19, m20, m21, m22, m23, m25
+        };
+        var alisMalzemeHavuzu = new List<Malzeme>
+        {
+            m01, m02, m03, m04, m05, m06, m07, m08, m09, m10, m11, m12, m13, m14,
+            m15, m16, m17, m18, m19, m20, m21, m22, m23
+        };
+
+        for (var ayOffset = 13; ayOffset >= 0; ayOffset--)
+        {
+            var ayBaslangic = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).AddMonths(-ayOffset);
+            var maxGun = ayOffset == 0
+                ? Math.Max(DateTime.Today.Day - 3, 1)
+                : DateTime.DaysInMonth(ayBaslangic.Year, ayBaslangic.Month) - 2;
+
+            var alisSayisi = random.Next(2, 4);
+            for (var i = 0; i < alisSayisi; i++)
+            {
+                var tarih = ayBaslangic.AddDays(random.Next(0, maxGun));
+                await RastgeleAlisZinciriOlustur(
+                    alisSiparisiService, alisIrsaliyesiService, alisFaturasiService, random, tarih,
+                    tedarikciCariler[random.Next(tedarikciCariler.Count)], subeler[random.Next(subeler.Count)], alisMalzemeHavuzu);
+            }
+
+            var satisSayisi = random.Next(3, 6);
+            for (var i = 0; i < satisSayisi; i++)
+            {
+                var tarih = ayBaslangic.AddDays(random.Next(0, maxGun));
+                await RastgeleSatisZinciriOlustur(
+                    satisSiparisiService, sevkIrsaliyesiService, satisFaturasiService, random, tarih,
+                    musteriCariler[random.Next(musteriCariler.Count)], subeler[random.Next(subeler.Count)], satisMalzemeHavuzu);
+            }
+        }
+    }
+
+    // Stok yetersizse (bkz. SevkIrsaliyesiService.OnaylaAsync) bu deneme sessizce atlanır —
+    // hacim verisi ürettiğimiz için tek bir başarısız deneme senaryoyu bozmaz.
+    private static async Task RastgeleSatisZinciriOlustur(
+        ISatisSiparisiService satisSiparisiService, ISevkIrsaliyesiService sevkIrsaliyesiService, ISatisFaturasiService satisFaturasiService,
+        Random random, DateTime tarih, Cari cari, Sube sube, List<Malzeme> malzemeHavuzu)
+    {
+        try
+        {
+            var kalemSayisi = random.Next(1, 4);
+            var secilenler = malzemeHavuzu.OrderBy(_ => random.Next()).Take(kalemSayisi).ToList();
+            var siparisKalemleri = secilenler.Select(m => new SatisSiparisiKalemi
+            {
+                MalzemeId = m.Id,
+                Miktar = random.Next(3, 25),
+                BirimFiyat = m.SatisFiyati,
+                KdvOrani = m.KdvOrani,
+                Iskonto = random.Next(0, 4) == 0 ? 5 : 0
+            }).ToList();
+
+            var siparis = await satisSiparisiService.CreateAsync(new SatisSiparisi { CariId = cari.Id, Tarih = tarih }, siparisKalemleri);
+            await satisSiparisiService.OnaylaAsync(siparis.Id);
+
+            var irsaliye = await sevkIrsaliyesiService.CreateAsync(
+                new SevkIrsaliyesi { SatisSiparisiId = siparis.Id, SubeId = sube.Id, Tarih = tarih.AddDays(1), SevkAdresi = cari.Adres },
+                siparisKalemleri.Select(k => new SevkIrsaliyesiKalemi { MalzemeId = k.MalzemeId, Miktar = k.Miktar }).ToList());
+            await sevkIrsaliyesiService.OnaylaAsync(irsaliye.Id);
+
+            var fatura = await satisFaturasiService.CreateAsync(
+                new SatisFaturasi { CariId = cari.Id, SevkIrsaliyesiId = irsaliye.Id, Tarih = tarih.AddDays(1), VadeTarihi = tarih.AddDays(31) },
+                siparisKalemleri.Select(k => new SatisFaturasiKalemi
+                {
+                    MalzemeId = k.MalzemeId,
+                    Miktar = k.Miktar,
+                    BirimFiyat = k.BirimFiyat,
+                    KdvOrani = k.KdvOrani,
+                    Iskonto = k.Iskonto
+                }).ToList());
+            await satisFaturasiService.OnaylaAsync(fatura.Id);
+        }
+        catch (InvalidOperationException)
+        {
+            // stok yetersiz, geçersiz kombinasyon vb. — bu ay için bir deneme atlanır
+        }
+    }
+
+    private static async Task RastgeleAlisZinciriOlustur(
+        IAlisSiparisiService alisSiparisiService, IAlisIrsaliyesiService alisIrsaliyesiService, IAlisFaturasiService alisFaturasiService,
+        Random random, DateTime tarih, Cari cari, Sube sube, List<Malzeme> malzemeHavuzu)
+    {
+        try
+        {
+            var kalemSayisi = random.Next(1, 4);
+            var secilenler = malzemeHavuzu.OrderBy(_ => random.Next()).Take(kalemSayisi).ToList();
+            var siparisKalemleri = secilenler.Select(m => new AlisSiparisiKalemi
+            {
+                MalzemeId = m.Id,
+                Miktar = random.Next(50, 250),
+                BirimFiyat = m.AlisFiyati,
+                KdvOrani = m.KdvOrani,
+                Iskonto = random.Next(0, 4) == 0 ? 3 : 0
+            }).ToList();
+
+            var siparis = await alisSiparisiService.CreateAsync(
+                new AlisSiparisi { CariId = cari.Id, SubeId = sube.Id, Tarih = tarih, Aciklama = "Stok tamamlama siparişi" }, siparisKalemleri);
+            await alisSiparisiService.OnaylaAsync(siparis.Id);
+
+            var irsaliye = await alisIrsaliyesiService.CreateAsync(
+                new AlisIrsaliyesi { AlisSiparisiId = siparis.Id, CariId = cari.Id, SubeId = sube.Id, Tarih = tarih.AddDays(1) },
+                siparisKalemleri.Select(k => new AlisIrsaliyesiKalemi { MalzemeId = k.MalzemeId, Miktar = k.Miktar }).ToList());
+            await alisIrsaliyesiService.OnaylaAsync(irsaliye.Id);
+
+            var fatura = await alisFaturasiService.CreateAsync(
+                new AlisFaturasi { CariId = cari.Id, AlisIrsaliyesiId = irsaliye.Id, Tarih = tarih.AddDays(1) },
+                siparisKalemleri.Select(k => new AlisFaturasiKalemi
+                {
+                    MalzemeId = k.MalzemeId,
+                    Miktar = k.Miktar,
+                    BirimFiyat = k.BirimFiyat,
+                    KdvOrani = k.KdvOrani,
+                    Iskonto = k.Iskonto
+                }).ToList());
+            await alisFaturasiService.OnaylaAsync(fatura.Id);
+        }
+        catch (InvalidOperationException)
+        {
+            // geçersiz kombinasyon vb. — bu ay için bir deneme atlanır
+        }
     }
 }

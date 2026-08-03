@@ -19,8 +19,15 @@ public class OnayYetkisiService : IOnayYetkisiService
         if (esik is null || tutar <= esik)
             return;
 
-        var adminMi = _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") ?? false;
-        if (!adminMi)
+        // HttpContext yoksa bu bir web isteği değil, sistem süreci demektir (seeder,
+        // arka plan job vb.) — "kullanıcı" kavramı hiç yok, bu yüzden rol bazlı onay
+        // kısıtı burada uygulanmaz. Kısıt sadece gerçek bir web isteği üzerinden
+        // (Admin olmayan bir kullanıcının tıklamasıyla) tetiklenen onaylarda geçerli.
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is null)
+            return;
+
+        if (!httpContext.User.IsInRole("Admin"))
             throw new InvalidOperationException(
                 $"{esik.Value.ToString("N0")} TL üstündeki bir {belgeTuru} sadece Admin tarafından onaylanabilir " +
                 $"(bu belge: {tutar.ToString("N0")} TL).");

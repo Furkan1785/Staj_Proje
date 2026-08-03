@@ -65,10 +65,14 @@ public class OnayYetkisiServiceTests
     }
 
     [Fact]
-    public void YuksekTutarKontrolEt_HttpContextYokken_GuvenliTarafOlarakEngeller()
+    public void YuksekTutarKontrolEt_HttpContextYokken_SistemSureciSayilirEngellenmez()
     {
+        // HttpContext yokluğu bir web isteği dışında çalışıldığı anlamına gelir (seeder,
+        // arka plan job vb.) — "kullanıcı" kavramı olmadığı için rol kısıtı uygulanmaz.
         var servis = new OnayYetkisiService(new HttpContextAccessor(), YapilandirmaOlustur(50000));
 
-        Assert.Throws<InvalidOperationException>(() => servis.YuksekTutarKontrolEt(75000, "Satış Faturası"));
+        var hata = Record.Exception(() => servis.YuksekTutarKontrolEt(75000, "Satış Faturası"));
+
+        Assert.Null(hata);
     }
 }
