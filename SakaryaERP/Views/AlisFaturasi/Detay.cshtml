@@ -26,6 +26,13 @@
                 <button type="submit" class="btn btn-outline-danger">İptal Et</button>
             </form>
         }
+        @if (Model.Durum == BelgeDurum.Onaylandi)
+        {
+            <form method="post" asp-action="IptalEt" asp-route-id="@Model.Id" onsubmit="return confirm('Bu onaylı fatura iptal edilsin mi? Stok, cari bakiyesi ve muhasebe fişi ters yönde geri alınacak. Bu işlem geri alınamaz.')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger">İptal Et</button>
+            </form>
+        }
         <a asp-action="Pdf" asp-route-id="@Model.Id" class="btn btn-outline-secondary" target="_blank">PDF</a>
         <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
     </div>

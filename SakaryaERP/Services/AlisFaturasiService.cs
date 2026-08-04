@@ -174,7 +174,8 @@ public class AlisFaturasiService : IAlisFaturasiService
             Tutar = toplamTutar,
             OdemeYontemi = OdemeYontemi.Havale,
             Aciklama = $"Alış Faturası {fatura.FaturaNo}",
-            OtomatikOlusturuldu = true
+            OtomatikOlusturuldu = true,
+            AlisFaturasiId = fatura.Id
         };
 
         // Alacak fişi: tedarikçiye olan borcumuz arttığı için Cari.Bakiye azalır
@@ -218,14 +219,67 @@ public class AlisFaturasiService : IAlisFaturasiService
 
     public async Task IptalEtAsync(int id)
     {
-        var fatura = await _unitOfWork.Repository<AlisFaturasi>().GetByIdAsync(id)
+        var fatura = await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+            .Include(f => f.Kalemler)
+            .FirstOrDefaultAsync(f => f.Id == id)
             ?? throw new InvalidOperationException("Alış faturası bulunamadı.");
 
-        if (fatura.Durum != BelgeDurum.Beklemede)
-            throw new InvalidOperationException("Sadece beklemede olan faturalar iptal edilebilir.");
+        if (fatura.Durum == BelgeDurum.Iptal)
+            throw new InvalidOperationException("Bu fatura zaten iptal edilmiş.");
+
+        if (fatura.Durum == BelgeDurum.Beklemede)
+        {
+            fatura.Durum = BelgeDurum.Iptal;
+            await _unitOfWork.SaveChangesAsync();
+            return;
+        }
+
+        // Onaylanmış fatura: onayda yapılan stok/cari/muhasebe etkisini tek transaction
+        // içinde ters yönde geri al (ya hep ya hiç).
+        await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+
+        // İrsaliyeden gelen faturalarda stok irsaliye onayında artırılmıştı, burada dokunulmaz;
+        // irsaliyesiz faturalarda onayda artırılan stok burada geri alınır.
+        if (fatura.AlisIrsaliyesiId is null)
+        {
+            var malzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+            var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+                .Where(m => malzemeIdleri.Contains(m.Id))
+                .ToDictionaryAsync(m => m.Id);
+
+            foreach (var kalem in fatura.Kalemler)
+            {
+                var malzeme = malzemeler[kalem.MalzemeId];
+                var yeniBakiye = malzeme.Bakiye - kalem.Miktar;
+                if (yeniBakiye < 0)
+                    throw new InvalidOperationException(
+                        $"{malzeme.MalzemeKodu} için fatura iptal edilemiyor: geri alınacak miktar mevcut stok bakiyesini " +
+                        $"negatife düşürür (mevcut: {malzeme.Bakiye}, geri alınacak: {kalem.Miktar}). Muhtemelen bu malzemeden " +
+                        "sonradan başka bir işlemle stok düşülmüş.");
+                malzeme.Bakiye = yeniBakiye;
+            }
+        }
+
+        var toplamTutar = fatura.Kalemler.Sum(KalemToplami);
+        cari.Bakiye += toplamTutar;
+
+        var otomatikFis = await _unitOfWork.Repository<CariFisi>().QueryTumu()
+            .FirstOrDefaultAsync(f => f.AlisFaturasiId == fatura.Id && !f.IsDeleted);
+        if (otomatikFis is not null)
+            otomatikFis.IsDeleted = true;
+
+        var muhasebeFisi = await _unitOfWork.Repository<MuhasebeFisi>().QueryTumu()
+            .FirstOrDefaultAsync(m => m.AlisFaturasiId == fatura.Id && !m.IsDeleted);
+        if (muhasebeFisi is not null)
+            muhasebeFisi.IsDeleted = true;
 
         fatura.Durum = BelgeDurum.Iptal;
         await _unitOfWork.SaveChangesAsync();
+
+        await transaction.CommitAsync();
     }
 
     private static decimal KalemToplami(AlisFaturasiKalemi k)

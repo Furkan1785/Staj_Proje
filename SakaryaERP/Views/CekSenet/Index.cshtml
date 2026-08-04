@@ -191,6 +191,8 @@
                             } else if (row.durum === 'Tahsilde') {
                                 html += '<button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#tahsilEdildiModal" data-id="' + id + '">Tahsil Edildi</button>';
                                 html += aksiyonFormuOlustur('Karsiliksiz', id, 'btn-outline-danger', 'Karşılıksız', 'Bu belge karşılıksız olarak işaretlensin mi? Bu işlem geri alınamaz.');
+                            } else if (row.durum === 'TahsilEdildi') {
+                                html += aksiyonFormuOlustur('TahsilIptalEt', id, 'btn-outline-danger', 'Tahsilatı Geri Al', 'Bu tahsilat geri alınsın mı? Cari ve banka/kasa bakiyesi ters yönde geri alınacak, belge Tahsilde durumuna dönecek.');
                             }
                             html += '</div>';
                             return html;

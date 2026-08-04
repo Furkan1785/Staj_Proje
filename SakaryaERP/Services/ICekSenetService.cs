@@ -15,4 +15,8 @@ public interface ICekSenetService
     Task CiroEtAsync(int id, string ciroBilgisi);
     Task TahsilEdildiYapAsync(int id, int? bankaHesabiId, int? kasaHesabiId);
     Task KarsiliksizYapAsync(int id);
+
+    // Yanlışlıkla "Tahsil Edildi" yapılmış bir belgeyi geri alır: cari/banka-kasa bakiyesini
+    // ters yönde geri alır, otomatik oluşan cari fişini iptal eder, durumu Tahsilde'ye döndürür.
+    Task TahsilIptalEtAsync(int id);
 }

@@ -264,6 +264,22 @@ public class CekSenetController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TahsilIptalEt(int id, bool returnToDetay = false)
+    {
+        try
+        {
+            await _cekSenetService.TahsilIptalEtAsync(id);
+            TempData["Basari"] = "Tahsilat geri alındı, belge tekrar Tahsilde durumuna döndü.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+        return returnToDetay ? RedirectToAction(nameof(Detay), new { id }) : RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Karsiliksiz(int id, bool returnToDetay = false)
     {
         try

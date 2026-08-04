@@ -106,6 +106,13 @@
                         <button type="submit" class="btn btn-outline-danger">Karşılıksız</button>
                     </form>
                 }
+                else if (Model.Durum == CekSenetDurum.TahsilEdildi)
+                {
+                    <form method="post" asp-action="TahsilIptalEt" asp-route-id="@Model.Id" asp-route-returnToDetay="true" onsubmit="return confirm('Bu tahsilat geri alınsın mı? Cari ve banka/kasa bakiyesi ters yönde geri alınacak, belge Tahsilde durumuna dönecek.')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger">Tahsilatı Geri Al</button>
+                    </form>
+                }
                 else
                 {
                     <span class="text-muted">Bu durumdaki bir belge için aksiyon bulunmuyor.</span>

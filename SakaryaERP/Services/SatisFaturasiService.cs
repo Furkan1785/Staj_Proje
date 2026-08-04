@@ -207,7 +207,8 @@ public class SatisFaturasiService : ISatisFaturasiService
             Tutar = toplamTutar,
             OdemeYontemi = OdemeYontemi.Havale,
             Aciklama = $"Satış Faturası {fatura.FaturaNo}",
-            OtomatikOlusturuldu = true
+            OtomatikOlusturuldu = true,
+            SatisFaturasiId = fatura.Id
         };
 
         // Borç fişi: müşteri bize borçlanır, Cari.Bakiye artar (CariFisiService'teki yön kuralıyla aynı).
@@ -250,14 +251,60 @@ public class SatisFaturasiService : ISatisFaturasiService
 
     public async Task IptalEtAsync(int id)
     {
-        var fatura = await _unitOfWork.Repository<SatisFaturasi>().GetByIdAsync(id)
+        var fatura = await _unitOfWork.Repository<SatisFaturasi>().QueryTumu()
+            .Include(f => f.Kalemler)
+            .FirstOrDefaultAsync(f => f.Id == id)
             ?? throw new InvalidOperationException("Satış faturası bulunamadı.");
 
-        if (fatura.Durum != BelgeDurum.Beklemede)
-            throw new InvalidOperationException("Sadece beklemede olan faturalar iptal edilebilir.");
+        if (fatura.Durum == BelgeDurum.Iptal)
+            throw new InvalidOperationException("Bu fatura zaten iptal edilmiş.");
+
+        if (fatura.Durum == BelgeDurum.Beklemede)
+        {
+            fatura.Durum = BelgeDurum.Iptal;
+            await _unitOfWork.SaveChangesAsync();
+            return;
+        }
+
+        // Onaylanmış fatura: onayda yapılan stok/cari/muhasebe etkisini tek transaction
+        // içinde ters yönde geri al (ya hep ya hiç).
+        await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+
+        // İrsaliyeden gelen faturalarda stok irsaliye onayında düşülmüştü, burada dokunulmaz;
+        // irsaliyesiz faturalarda onayda düşülen stok burada geri eklenir (negatife düşme riski yok).
+        if (fatura.SevkIrsaliyesiId is null)
+        {
+            var malzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+            var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+                .Where(m => malzemeIdleri.Contains(m.Id))
+                .ToDictionaryAsync(m => m.Id);
+
+            foreach (var kalem in fatura.Kalemler)
+            {
+                malzemeler[kalem.MalzemeId].Bakiye += kalem.Miktar;
+            }
+        }
+
+        var toplamTutar = fatura.Kalemler.Sum(KalemToplami);
+        cari.Bakiye -= toplamTutar;
+
+        var otomatikFis = await _unitOfWork.Repository<CariFisi>().QueryTumu()
+            .FirstOrDefaultAsync(f => f.SatisFaturasiId == fatura.Id && !f.IsDeleted);
+        if (otomatikFis is not null)
+            otomatikFis.IsDeleted = true;
+
+        var muhasebeFisi = await _unitOfWork.Repository<MuhasebeFisi>().QueryTumu()
+            .FirstOrDefaultAsync(m => m.SatisFaturasiId == fatura.Id && !m.IsDeleted);
+        if (muhasebeFisi is not null)
+            muhasebeFisi.IsDeleted = true;
 
         fatura.Durum = BelgeDurum.Iptal;
         await _unitOfWork.SaveChangesAsync();
+
+        await transaction.CommitAsync();
     }
 
     private static decimal KalemToplami(SatisFaturasiKalemi k)

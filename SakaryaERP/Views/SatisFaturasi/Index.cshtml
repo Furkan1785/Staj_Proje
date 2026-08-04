@@ -129,6 +129,8 @@
                             if (row.durum === 'Beklemede') {
                                 html += aksiyonFormuOlustur('Onayla', id, 'btn-outline-success', 'Onayla', 'Bu fatura onaylansın mı? Cariye borç hareketi eklenecek.');
                                 html += aksiyonFormuOlustur('IptalEt', id, 'btn-outline-danger', 'İptal Et', 'Bu fatura iptal edilsin mi?');
+                            } else if (row.durum === 'Onaylandi') {
+                                html += aksiyonFormuOlustur('IptalEt', id, 'btn-outline-danger', 'İptal Et', 'Bu onaylı fatura iptal edilsin mi? Stok, cari bakiyesi ve muhasebe fişi ters yönde geri alınacak. Bu işlem geri alınamaz.');
                             }
                             html += '</div>';
                             return html;

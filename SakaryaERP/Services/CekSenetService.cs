@@ -178,10 +178,57 @@ public class CekSenetService : ICekSenetService
             BankaHesabiId = bankaHesabiId,
             KasaHesabiId = kasaHesabiId,
             Aciklama = $"{(cekSenet.BelgeTipi == BelgeTipi.Cek ? "Çek" : "Senet")} tahsilatı - Belge No: {cekSenet.BelgeNo}",
-            OtomatikOlusturuldu = true
+            OtomatikOlusturuldu = true,
+            CekSenetId = cekSenet.Id
         });
 
         cekSenet.Durum = CekSenetDurum.TahsilEdildi;
+        await _unitOfWork.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+    }
+
+    public async Task TahsilIptalEtAsync(int id)
+    {
+        var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+
+        if (cekSenet.Durum != CekSenetDurum.TahsilEdildi)
+            throw new InvalidOperationException("Sadece tahsil edildi durumundaki bir belgenin tahsilatı geri alınabilir.");
+
+        var otomatikFis = await _unitOfWork.Repository<CariFisi>().QueryTumu()
+            .FirstOrDefaultAsync(f => f.CekSenetId == cekSenet.Id && !f.IsDeleted)
+            ?? throw new InvalidOperationException("Bu tahsilata ait cari fişi bulunamadı.");
+
+        await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(cekSenet.CariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+        cari.Bakiye += otomatikFis.Tutar;
+
+        if (otomatikFis.BankaHesabiId is not null)
+        {
+            var banka = await _unitOfWork.Repository<BankaHesabi>().GetByIdAsync(otomatikFis.BankaHesabiId.Value)
+                ?? throw new InvalidOperationException("Banka hesabı bulunamadı.");
+            var yeniBakiye = banka.Bakiye - otomatikFis.Tutar;
+            if (yeniBakiye < 0)
+                throw new InvalidOperationException(
+                    $"Tahsilat geri alınamıyor: banka hesabı bakiyesi negatife düşer (mevcut: {banka.Bakiye}, geri alınacak: {otomatikFis.Tutar}).");
+            banka.Bakiye = yeniBakiye;
+        }
+        else if (otomatikFis.KasaHesabiId is not null)
+        {
+            var kasa = await _unitOfWork.Repository<KasaHesabi>().GetByIdAsync(otomatikFis.KasaHesabiId.Value)
+                ?? throw new InvalidOperationException("Kasa hesabı bulunamadı.");
+            var yeniBakiye = kasa.Bakiye - otomatikFis.Tutar;
+            if (yeniBakiye < 0)
+                throw new InvalidOperationException(
+                    $"Tahsilat geri alınamıyor: kasa hesabı bakiyesi negatife düşer (mevcut: {kasa.Bakiye}, geri alınacak: {otomatikFis.Tutar}).");
+            kasa.Bakiye = yeniBakiye;
+        }
+
+        otomatikFis.IsDeleted = true;
+        cekSenet.Durum = CekSenetDurum.Tahsilde;
         await _unitOfWork.SaveChangesAsync();
 
         await transaction.CommitAsync();
