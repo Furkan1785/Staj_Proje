@@ -1,0 +1,128 @@
+@model KdvOzetViewModel
+@{
+    ViewData["Title"] = "KDV Özet Raporu";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">KDV Özet Raporu</h3>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-auto">
+                <label class="form-label">Başlangıç</label>
+                <input type="date" name="baslangic" class="form-control" value="@Model.Baslangic.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-auto">
+                <label class="form-label">Bitiş</label>
+                <input type="date" name="bitis" class="form-control" value="@Model.Bitis.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Filtrele</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted small">Hesaplanan KDV (Satış)</div>
+                <div class="fs-4 fw-semibold">@Model.HesaplananKdv.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted small">İndirilecek KDV (Alış)</div>
+                <div class="fs-4 fw-semibold">@Model.IndirilecekKdv.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 @(Model.OdenecekKdv >= 0 ? "border-danger" : "border-success")">
+            <div class="card-body text-center">
+                <div class="text-muted small">@(Model.OdenecekKdv >= 0 ? "Ödenecek KDV" : "Devreden KDV")</div>
+                <div class="fs-4 fw-semibold">@Math.Abs(Model.OdenecekKdv).ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.AylikKirilim.Count == 0)
+{
+    <div class="alert alert-info">Seçilen tarih aralığında onaylanmış fatura bulunmuyor.</div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-header">Aylık KDV Kırılımı</div>
+        <div class="card-body">
+            <canvas id="kdvGrafik" height="260"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Aylık Kırılım (Tablo)</div>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Ay</th>
+                        <th class="text-end">Hesaplanan KDV</th>
+                        <th class="text-end">İndirilecek KDV</th>
+                        <th class="text-end">Fark</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.AylikKirilim)
+                    {
+                        <tr>
+                            <td>@a.Etiket</td>
+                            <td class="text-end">@a.HesaplananKdv.ToString("N2")</td>
+                            <td class="text-end">@a.IndirilecekKdv.ToString("N2")</td>
+                            <td class="text-end">@a.OdenecekKdv.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js"></script>
+    <script>
+        var etiketler = @Json.Serialize(Model.AylikKirilim.Select(a => a.Etiket));
+        var hesaplanan = @Json.Serialize(Model.AylikKirilim.Select(a => a.HesaplananKdv));
+        var indirilecek = @Json.Serialize(Model.AylikKirilim.Select(a => a.IndirilecekKdv));
+
+        var mavi = '#2a78d6';
+        var turuncu = '#d68a2a';
+        var izgaraRengi = '#e1e0d9';
+        var eksenRengi = '#898781';
+
+        if (etiketler.length > 0) {
+            new Chart(document.getElementById('kdvGrafik'), {
+                type: 'bar',
+                data: {
+                    labels: etiketler,
+                    datasets: [
+                        { label: 'Hesaplanan KDV', data: hesaplanan, backgroundColor: mavi, borderRadius: 4 },
+                        { label: 'İndirilecek KDV', data: indirilecek, backgroundColor: turuncu, borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    plugins: { legend: { labels: { color: eksenRengi } } },
+                    scales: {
+                        x: { ticks: { color: eksenRengi }, grid: { display: false } },
+                        y: { ticks: { color: eksenRengi }, grid: { color: izgaraRengi } }
+                    }
+                }
+            });
+        }
+    </script>
+}

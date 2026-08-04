@@ -79,6 +79,7 @@ else
                 {
                     <div class="nav-section-title">Muhasebe</div>
                     <a class="nav-link @(Aktif("HesapPlani") ? "active" : "")" asp-controller="HesapPlani" asp-action="Index">Hesap Planı</a>
+                    <a class="nav-link @(Aktif("KdvRaporu") ? "active" : "")" asp-controller="KdvRaporu" asp-action="Ozet">KDV Özet Raporu</a>
                 }
 
                 <div class="nav-section-title">Diğer</div>
