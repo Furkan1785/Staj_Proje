@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -24,10 +25,10 @@ public class SatinalmaRaporuController : Controller
 
         var vm = new SatinalmaOzetViewModel
         {
-            GenelToplam = faturalar.Sum(f => f.Kalemler.Sum(KalemToplami)),
+            GenelToplam = faturalar.Sum(f => f.Kalemler.Sum(FinansHesaplama.SatirToplami)),
             TedarikciToplamlari = faturalar
                 .GroupBy(f => f.Cari.Unvan)
-                .Select(g => new TedarikciToplamViewModel { CariUnvan = g.Key, ToplamTutar = g.Sum(f => f.Kalemler.Sum(KalemToplami)) })
+                .Select(g => new TedarikciToplamViewModel { CariUnvan = g.Key, ToplamTutar = g.Sum(f => f.Kalemler.Sum(FinansHesaplama.SatirToplami)) })
                 .OrderByDescending(t => t.ToplamTutar)
                 .ToList(),
             AylikToplamlar = faturalar
@@ -37,7 +38,7 @@ public class SatinalmaRaporuController : Controller
                     Yil = g.Key.Year,
                     Ay = g.Key.Month,
                     Etiket = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy", turkce),
-                    ToplamTutar = g.Sum(f => f.Kalemler.Sum(KalemToplami))
+                    ToplamTutar = g.Sum(f => f.Kalemler.Sum(FinansHesaplama.SatirToplami))
                 })
                 .OrderBy(a => a.Yil).ThenBy(a => a.Ay)
                 .ToList()
@@ -46,10 +47,4 @@ public class SatinalmaRaporuController : Controller
         return View(vm);
     }
 
-    private static decimal KalemToplami(AlisFaturasiKalemi k)
-    {
-        var araToplam = k.Miktar * k.BirimFiyat;
-        var iskontolu = araToplam * (1 - k.Iskonto / 100);
-        return iskontolu * (1 + k.KdvOrani / 100);
-    }
 }

@@ -1,3 +1,4 @@
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 
 namespace SakaryaERP.ViewModels;
@@ -19,7 +20,7 @@ public class AlisSiparisiDetayViewModel
     public decimal ToplamTutar => Kalemler.Sum(k => k.SatirToplami);
 }
 
-public class AlisSiparisiKalemDetayViewModel
+public class AlisSiparisiKalemDetayViewModel : IFiyatliKalem
 {
     public string MalzemeKodu { get; set; } = "";
     public string MalzemeAdi { get; set; } = "";
@@ -32,5 +33,5 @@ public class AlisSiparisiKalemDetayViewModel
     public decimal KalanMiktar { get; set; }
     public decimal TeslimYuzdesi { get; set; }
 
-    public decimal SatirToplami => Math.Round(Miktar * BirimFiyat * (1 - Iskonto / 100) * (1 + KdvOrani / 100), 2);
+    public decimal SatirToplami => FinansHesaplama.SatirToplami(this);
 }

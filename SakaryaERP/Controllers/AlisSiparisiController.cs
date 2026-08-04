@@ -58,7 +58,7 @@ public class AlisSiparisiController : Controller
             Durum = s.Durum.ToString(),
             DurumText = DurumMetni(s.Durum),
             TeslimDurumu = TeslimDurumuMetni(s, _alisSiparisiService.TeslimMiktarlariHesapla(s)),
-            ToplamTutar = s.Kalemler.Sum(KalemToplami)
+            ToplamTutar = s.Kalemler.Sum(FinansHesaplama.SatirToplami)
         });
 
         return Json(new { draw, recordsTotal = toplamKayit, recordsFiltered = filtrelenmisKayit, data = veri });
@@ -172,12 +172,6 @@ public class AlisSiparisiController : Controller
             .Select(m => new { id = m.Id, kod = m.MalzemeKodu, ad = m.MalzemeAdi, birim = m.Birim });
     }
 
-    private static decimal KalemToplami(AlisSiparisiKalemi k)
-    {
-        var araToplam = k.Miktar * k.BirimFiyat;
-        var iskontolu = araToplam * (1 - k.Iskonto / 100);
-        return iskontolu * (1 + k.KdvOrani / 100);
-    }
 
     private static string DurumMetni(BelgeDurum durum) => durum switch
     {
@@ -210,7 +204,7 @@ public class AlisSiparisiController : Controller
         var satirlar = kayitlar.Select(s => new object?[]
         {
             s.SiparisNo, s.Tarih, s.Cari.Unvan, s.Sube.SubeAdi, DurumMetni(s.Durum),
-            TeslimDurumuMetni(s, _alisSiparisiService.TeslimMiktarlariHesapla(s)), s.Kalemler.Sum(KalemToplami)
+            TeslimDurumuMetni(s, _alisSiparisiService.TeslimMiktarlariHesapla(s)), s.Kalemler.Sum(FinansHesaplama.SatirToplami)
         });
 
         var dosya = ExcelYardimcisi.ListeOlustur("Alış Siparişleri", basliklar, satirlar);

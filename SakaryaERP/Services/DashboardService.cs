@@ -1,4 +1,5 @@
 using System.Globalization;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.ViewModels;
 
@@ -186,17 +187,7 @@ public class DashboardService : IDashboardService
         DurumSinifi = "bg-danger"
     };
 
-    private static decimal KalemToplami(SatisFaturasiKalemi k)
-    {
-        var araToplam = k.Miktar * k.BirimFiyat;
-        var iskontolu = araToplam * (1 - k.Iskonto / 100);
-        return iskontolu * (1 + k.KdvOrani / 100);
-    }
+    private static decimal KalemToplami(SatisFaturasiKalemi k) => FinansHesaplama.SatisFaturasiSatirToplami(k);
 
-    private static decimal KalemToplami(AlisFaturasiKalemi k)
-    {
-        var araToplam = k.Miktar * k.BirimFiyat;
-        var iskontolu = araToplam * (1 - k.Iskonto / 100);
-        return iskontolu * (1 + k.KdvOrani / 100);
-    }
+    private static decimal KalemToplami(AlisFaturasiKalemi k) => FinansHesaplama.SatirToplami(k);
 }

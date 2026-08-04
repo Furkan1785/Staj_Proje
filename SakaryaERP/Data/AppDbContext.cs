@@ -219,7 +219,8 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
-        DenetimKayitlariOlustur(now);
+        var kullaniciAdi = _httpContextAccessor?.HttpContext?.User?.Identity?.Name;
+        DenetimKayitlariOlustur(now, kullaniciAdi);
 
         foreach (var entry in ChangeTracker.Entries<BaseEntity>())
         {
@@ -227,6 +228,7 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
             {
                 entry.Entity.CreatedAt = now;
                 entry.Entity.IsDeleted = false;
+                entry.Entity.CreatedBy = kullaniciAdi;
             }
             else if (entry.State == EntityState.Modified)
             {
@@ -240,9 +242,8 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     // Sadece güncellenen (Modified) kayıtları denetliyor — yeni oluşturulan
     // kayıtların "geçmişi" BaseEntity.CreatedAt/CreatedBy ile zaten karşılanıyor,
     // asıl değer taşıyan "kim neyi ne zamandan neye değiştirdi" sorusu bu.
-    private void DenetimKayitlariOlustur(DateTime zaman)
+    private void DenetimKayitlariOlustur(DateTime zaman, string? kullaniciAdi)
     {
-        var kullaniciAdi = _httpContextAccessor?.HttpContext?.User?.Identity?.Name;
         var denetimKayitlari = new List<AuditLog>();
 
         foreach (var entry in ChangeTracker.Entries<BaseEntity>().Where(e => e.State == EntityState.Modified))

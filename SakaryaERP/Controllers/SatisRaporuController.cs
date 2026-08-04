@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -24,16 +25,16 @@ public class SatisRaporuController : Controller
 
         var vm = new SatisOzetViewModel
         {
-            GenelToplam = faturalar.Sum(f => f.Kalemler.Sum(KalemToplami)),
+            GenelToplam = faturalar.Sum(f => f.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami)),
             MusteriToplamlari = faturalar
                 .GroupBy(f => f.Cari.Unvan)
-                .Select(g => new MusteriToplamViewModel { CariUnvan = g.Key, ToplamTutar = g.Sum(f => f.Kalemler.Sum(KalemToplami)) })
+                .Select(g => new MusteriToplamViewModel { CariUnvan = g.Key, ToplamTutar = g.Sum(f => f.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami)) })
                 .OrderByDescending(t => t.ToplamTutar)
                 .ToList(),
             MalzemeToplamlari = faturalar
                 .SelectMany(f => f.Kalemler)
                 .GroupBy(k => k.Malzeme.MalzemeAdi)
-                .Select(g => new MalzemeToplamViewModel { MalzemeAdi = g.Key, ToplamTutar = g.Sum(KalemToplami) })
+                .Select(g => new MalzemeToplamViewModel { MalzemeAdi = g.Key, ToplamTutar = g.Sum(FinansHesaplama.SatisFaturasiSatirToplami) })
                 .OrderByDescending(t => t.ToplamTutar)
                 .ToList(),
             AylikToplamlar = faturalar
@@ -43,7 +44,7 @@ public class SatisRaporuController : Controller
                     Yil = g.Key.Year,
                     Ay = g.Key.Month,
                     Etiket = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy", turkce),
-                    ToplamTutar = g.Sum(f => f.Kalemler.Sum(KalemToplami))
+                    ToplamTutar = g.Sum(f => f.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami))
                 })
                 .OrderBy(a => a.Yil).ThenBy(a => a.Ay)
                 .ToList()
@@ -52,10 +53,4 @@ public class SatisRaporuController : Controller
         return View(vm);
     }
 
-    private static decimal KalemToplami(SatisFaturasiKalemi k)
-    {
-        var araToplam = k.Miktar * k.BirimFiyat;
-        var iskontolu = araToplam * (1 - k.Iskonto / 100);
-        return iskontolu * (1 + k.KdvOrani / 100);
-    }
 }

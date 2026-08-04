@@ -65,7 +65,7 @@ public class SatisFaturasiController : Controller
             IrsaliyeNo = f.SevkIrsaliyesi?.IrsaliyeNo ?? "-",
             Durum = f.Durum.ToString(),
             DurumText = DurumMetni(f.Durum),
-            ToplamTutar = f.Kalemler.Sum(KalemToplami)
+            ToplamTutar = f.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami)
         });
 
         return Json(new { draw, recordsTotal = toplamKayit, recordsFiltered = filtrelenmisKayit, data = veri });
@@ -376,12 +376,6 @@ public class SatisFaturasiController : Controller
             .Select(m => new { id = m.Id, kod = m.MalzemeKodu, ad = m.MalzemeAdi, birim = m.Birim });
     }
 
-    private static decimal KalemToplami(SatisFaturasiKalemi k)
-    {
-        var araToplam = k.Miktar * k.BirimFiyat;
-        var iskontolu = araToplam * (1 - k.Iskonto / 100);
-        return iskontolu * (1 + k.KdvOrani / 100);
-    }
 
     private static IContainer PdfBaslikHucresi(IContainer container) =>
         container.DefaultTextStyle(x => x.Bold()).PaddingVertical(4).BorderBottom(1).BorderColor(Colors.Grey.Medium);
@@ -430,7 +424,7 @@ public class SatisFaturasiController : Controller
         var satirlar = kayitlar.Select(f => new object?[]
         {
             f.FaturaNo, f.Tarih, f.VadeTarihi, f.Cari.Unvan, f.SatisSiparisi?.SiparisNo ?? "-",
-            f.SevkIrsaliyesi?.IrsaliyeNo ?? "-", DurumMetni(f.Durum), f.Kalemler.Sum(KalemToplami)
+            f.SevkIrsaliyesi?.IrsaliyeNo ?? "-", DurumMetni(f.Durum), f.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami)
         });
 
         var dosya = ExcelYardimcisi.ListeOlustur("Satış Faturaları", basliklar, satirlar);

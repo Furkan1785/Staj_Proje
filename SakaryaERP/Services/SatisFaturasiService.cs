@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SakaryaERP.Helpers;
 using SakaryaERP.Data;
 using SakaryaERP.Models;
 
@@ -167,7 +168,7 @@ public class SatisFaturasiService : ISatisFaturasiService
         if (fatura.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan faturalar onaylanabilir.");
 
-        _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(KalemToplami), "Satış Faturası");
+        _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami), "Satış Faturası");
 
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
@@ -193,7 +194,7 @@ public class SatisFaturasiService : ISatisFaturasiService
             }
         }
 
-        var toplamTutar = fatura.Kalemler.Sum(KalemToplami);
+        var toplamTutar = fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami);
         var netTutar = fatura.Kalemler.Sum(k => k.Miktar * k.BirimFiyat * (1 - k.Iskonto / 100m));
         var kdvTutari = toplamTutar - netTutar;
 
@@ -268,7 +269,7 @@ public class SatisFaturasiService : ISatisFaturasiService
 
         // Onaylanmış yüksek tutarlı bir faturayı geri almak, onaylamak kadar hassas bir
         // finansal işlem — aynı Admin-only eşiğine tabi olsun.
-        _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(KalemToplami), "Satış Faturası İptali");
+        _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami), "Satış Faturası İptali");
 
         // Onaylanmış fatura: onayda yapılan stok/cari/muhasebe etkisini tek transaction
         // içinde ters yönde geri al (ya hep ya hiç).
@@ -292,7 +293,7 @@ public class SatisFaturasiService : ISatisFaturasiService
             }
         }
 
-        var toplamTutar = fatura.Kalemler.Sum(KalemToplami);
+        var toplamTutar = fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami);
         cari.Bakiye -= toplamTutar;
 
         var otomatikFis = await _unitOfWork.Repository<CariFisi>().QueryTumu()
@@ -311,10 +312,4 @@ public class SatisFaturasiService : ISatisFaturasiService
         await transaction.CommitAsync();
     }
 
-    private static decimal KalemToplami(SatisFaturasiKalemi k)
-    {
-        var araToplam = k.Miktar * k.BirimFiyat;
-        var iskontolu = araToplam * (1 - k.Iskonto / 100);
-        return iskontolu * (1 + k.KdvOrani / 100);
-    }
 }

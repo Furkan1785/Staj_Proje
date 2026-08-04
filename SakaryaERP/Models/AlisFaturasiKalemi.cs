@@ -1,6 +1,6 @@
 namespace SakaryaERP.Models;
 
-public class AlisFaturasiKalemi : BaseEntity
+public class AlisFaturasiKalemi : BaseEntity, IFiyatliKalem
 {
     public int AlisFaturasiId { get; set; }
     public int MalzemeId { get; set; }
