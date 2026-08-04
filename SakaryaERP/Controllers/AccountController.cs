@@ -41,7 +41,7 @@ public class AccountController : Controller
         }
 
         if (sonuc.IsLockedOut)
-            ModelState.AddModelError("", "Hesap çok sayıda hatalı denemeden dolayı geçici olarak kilitlendi.");
+            ModelState.AddModelError("", "Hesap kilitli. Yöneticinizle iletişime geçin.");
         else
             ModelState.AddModelError("", "E-posta veya şifre hatalı.");
 

@@ -1,0 +1,52 @@
+@model KullaniciDuzenleViewModel
+@{
+    ViewData["Title"] = "Kullanıcı Düzenle";
+}
+
+<h3 class="mb-4">Kullanıcı Düzenle</h3>
+
+<form asp-action="Duzenle" method="post" class="p-4 border rounded bg-white">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="AdSoyad" class="form-label"></label>
+            <input asp-for="AdSoyad" class="form-control" />
+            <span asp-validation-for="AdSoyad" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="SubeId" class="form-label"></label>
+            <select asp-for="SubeId" class="form-select" asp-items="Model.SubeListesi">
+                <option value="">- Seçiniz -</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Roller</label>
+            <div class="d-flex flex-column gap-1">
+                @foreach (var rol in Model.RolListesi)
+                {
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="SeciliRoller" value="@rol" id="rol_@rol"
+                               checked="@(Model.SeciliRoller.Contains(rol))" />
+                        <label class="form-check-label" for="rol_@rol">@rol</label>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

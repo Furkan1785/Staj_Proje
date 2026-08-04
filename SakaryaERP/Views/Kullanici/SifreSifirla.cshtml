@@ -1,0 +1,32 @@
+@model KullaniciSifreSifirlaViewModel
+@{
+    ViewData["Title"] = "Şifre Sıfırla";
+}
+
+<h3 class="mb-4">Şifre Sıfırla — @Model.AdSoyad</h3>
+
+<form asp-action="SifreSifirla" method="post" class="p-4 border rounded bg-white" style="max-width: 480px;">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="AdSoyad" />
+
+    <div class="mb-3">
+        <label asp-for="YeniSifre" class="form-label"></label>
+        <input asp-for="YeniSifre" class="form-control" />
+        <span asp-validation-for="YeniSifre" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="YeniSifreTekrar" class="form-label"></label>
+        <input asp-for="YeniSifreTekrar" class="form-control" />
+        <span asp-validation-for="YeniSifreTekrar" class="text-danger"></span>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Şifreyi Güncelle</button>
+        <a asp-action="Index" class="btn btn-secondary">Vazgeç</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

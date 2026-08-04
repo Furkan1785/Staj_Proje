@@ -1,0 +1,115 @@
+@model IEnumerable<KullaniciListItemViewModel>
+@{
+    ViewData["Title"] = "Kullanıcılar";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Kullanıcılar</h3>
+    <div class="d-flex align-items-center gap-3">
+        <span id="kayitSayaci" class="badge bg-secondary">0 kayıt</span>
+        <a asp-action="Ekle" class="btn btn-primary">+ Yeni Kullanıcı</a>
+    </div>
+</div>
+
+@if (TempData["Basari"] != null)
+{
+    <div class="alert alert-success">@TempData["Basari"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger">@TempData["Hata"]</div>
+}
+
+<div class="table-responsive">
+    <table id="kullaniciTablosu" class="table table-striped table-bordered align-middle w-100 grid-sticky-header">
+        <thead>
+            <tr>
+                <th>Ad Soyad</th>
+                <th>E-posta</th>
+                <th>Roller</th>
+                <th>Şube</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+            </tr>
+            <tr>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th>
+                    <select class="form-select form-select-sm sutun-filtre">
+                        <option value="">Tümü</option>
+                        <option value="Aktif">Aktif</option>
+                        <option value="Pasif">Pasif</option>
+                    </select>
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var k in Model)
+            {
+                <tr>
+                    <td>@k.AdSoyad</td>
+                    <td>@k.Email</td>
+                    <td>@k.Roller</td>
+                    <td>@(k.SubeAdi ?? "-")</td>
+                    <td>
+                        @if (k.Aktif)
+                        {
+                            <span class="badge bg-success">Aktif</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Pasif</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Duzenle" asp-route-id="@k.Id" class="btn btn-sm btn-outline-primary me-1">Düzenle</a>
+                        <a asp-action="SifreSifirla" asp-route-id="@k.Id" class="btn btn-sm btn-outline-secondary me-1">Şifre Sıfırla</a>
+                        @if (k.Aktif)
+                        {
+                            <form asp-action="PasifYap" asp-route-id="@k.Id" method="post" class="d-inline" onsubmit="return confirm('Bu kullanıcı pasif yapılsın mı?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Pasif Yap</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="AktifEt" asp-route-id="@k.Id" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Aktif Et</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.bootstrap5.min.css" />
+    <script src="~/lib/datatables/js/dataTables.min.js"></script>
+    <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            var tablo = new DataTable('#kullaniciTablosu', {
+                order: [[0, 'asc']],
+                language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
+                columns: [
+                    null, // Ad Soyad
+                    null, // E-posta
+                    null, // Roller
+                    null, // Şube
+                    null, // Durum
+                    { orderable: false, searchable: false } // İşlemler
+                ]
+            });
+
+            tablo.on('draw', function () {
+                document.getElementById('kayitSayaci').textContent = tablo.rows({ search: 'applied' }).count() + ' kayıt';
+            });
+
+            sutunFiltreleriBagla('kullaniciTablosu', tablo);
+        });
+    </script>
+}

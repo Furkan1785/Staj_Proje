@@ -82,6 +82,12 @@ else
                     <a class="nav-link @(Aktif("KdvRaporu") ? "active" : "")" asp-controller="KdvRaporu" asp-action="Ozet">KDV Özet Raporu</a>
                 }
 
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="nav-section-title">Yönetim</div>
+                    <a class="nav-link @(Aktif("Kullanici") ? "active" : "")" asp-controller="Kullanici" asp-action="Index">Kullanıcılar</a>
+                }
+
                 <div class="nav-section-title">Diğer</div>
                 <a class="nav-link @(Aktif("Sube") ? "active" : "")" asp-controller="Sube" asp-action="Index">Şubeler</a>
                 <a class="nav-link" asp-controller="Home" asp-action="Privacy">Gizlilik</a>
