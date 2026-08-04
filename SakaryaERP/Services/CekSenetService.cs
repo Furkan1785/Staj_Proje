@@ -39,6 +39,13 @@ public class CekSenetService : ICekSenetService
         var mevcut = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(cekSenet.Id)
             ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
 
+        // Durum Portföyde'den ilerlediyse (Tahsilde/Ciro/TahsilEdildi/Karşılıksız) belge zaten
+        // bir cari harekete bağlanmış veya el değiştirmiş olabilir; tutar/cari gibi alanların
+        // sonradan değiştirilmesi geçmiş kayıtlarla tutarsızlık yaratır.
+        if (mevcut.Durum != CekSenetDurum.Portfoyde)
+            throw new InvalidOperationException(
+                $"Durumu '{DurumMetni(mevcut.Durum)}' olan bir çek/senet düzenlenemez, sadece Portföyde durumundaki belgeler düzenlenebilir.");
+
         mevcut.BelgeTipi = cekSenet.BelgeTipi;
         mevcut.BelgeNo = cekSenet.BelgeNo;
         mevcut.CariId = cekSenet.CariId;
@@ -178,4 +185,14 @@ public class CekSenetService : ICekSenetService
 
         await transaction.CommitAsync();
     }
+
+    private static string DurumMetni(CekSenetDurum durum) => durum switch
+    {
+        CekSenetDurum.Portfoyde => "Portföyde",
+        CekSenetDurum.Tahsilde => "Tahsilde",
+        CekSenetDurum.Ciro => "Ciro",
+        CekSenetDurum.Karsiliksiz => "Karşılıksız",
+        CekSenetDurum.TahsilEdildi => "Tahsil Edildi",
+        _ => durum.ToString()
+    };
 }

@@ -155,6 +155,12 @@ public class CekSenetController : Controller
         if (cekSenet is null)
             return NotFound();
 
+        if (cekSenet.Durum != CekSenetDurum.Portfoyde)
+        {
+            TempData["Hata"] = $"Durumu '{DurumMetni(cekSenet.Durum)}' olan bir çek/senet düzenlenemez.";
+            return RedirectToAction(nameof(Detay), new { id });
+        }
+
         var vm = new CekSenetFormViewModel
         {
             Id = cekSenet.Id,

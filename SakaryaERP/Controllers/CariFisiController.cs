@@ -105,6 +105,48 @@ public class CariFisiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Detay(int id)
+    {
+        var fis = await _cariFisiService.GetByIdDetayAsync(id);
+        if (fis is null)
+            return NotFound();
+
+        var vm = new CariFisiDetayViewModel
+        {
+            Id = fis.Id,
+            FisNo = fis.FisNo,
+            Tarih = fis.Tarih,
+            CariId = fis.CariId,
+            CariUnvan = fis.Cari.Unvan,
+            FisTipi = fis.FisTipi,
+            FisTipiText = FisTipiMetni(fis.FisTipi),
+            Tutar = fis.Tutar,
+            OdemeYontemiText = OdemeYontemiMetni(fis.OdemeYontemi),
+            HesapAdi = fis.BankaHesabi?.HesapAdi ?? fis.KasaHesabi?.KasaAdi,
+            Aciklama = fis.Aciklama,
+            IptalEdildi = fis.IsDeleted
+        };
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> IptalEt(int id)
+    {
+        try
+        {
+            await _cariFisiService.IptalEtAsync(id);
+            TempData["Basari"] = "Cari fişi iptal edildi.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Detay), new { id });
+    }
+
     private async Task DoldurListeler(CariFisiFormViewModel vm)
     {
         var cariler = await _cariService.GetAllAsync();

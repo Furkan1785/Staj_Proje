@@ -6,6 +6,10 @@ public interface ICariFisiService
 {
     Task<CariFisi> CreateAsync(CariFisi fis);
 
+    Task<CariFisi?> GetByIdDetayAsync(int id);
+
+    Task IptalEtAsync(int id);
+
     Task<(IEnumerable<CariFisi> Kayitlar, int ToplamKayit, int FiltrelenmisKayit)> GetSayfaliListeAsync(
         int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu);
 

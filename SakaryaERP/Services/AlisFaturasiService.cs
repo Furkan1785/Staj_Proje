@@ -145,6 +145,21 @@ public class AlisFaturasiService : IAlisFaturasiService
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
 
+        // İrsaliyeden gelen faturalarda stok zaten irsaliye onayında artırılmıştır;
+        // irsaliyesiz (doğrudan girilen) faturalarda burada artırılır.
+        if (fatura.AlisIrsaliyesiId is null)
+        {
+            var malzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+            var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+                .Where(m => malzemeIdleri.Contains(m.Id))
+                .ToDictionaryAsync(m => m.Id);
+
+            foreach (var kalem in fatura.Kalemler)
+            {
+                malzemeler[kalem.MalzemeId].Bakiye += kalem.Miktar;
+            }
+        }
+
         var toplamTutar = fatura.Kalemler.Sum(KalemToplami);
         var netTutar = fatura.Kalemler.Sum(k => k.Miktar * k.BirimFiyat * (1 - k.Iskonto / 100m));
         var kdvTutari = toplamTutar - netTutar;

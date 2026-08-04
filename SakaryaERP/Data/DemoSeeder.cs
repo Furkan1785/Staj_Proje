@@ -180,7 +180,7 @@ public static class DemoSeeder
         // Satış zinciri 1: Akcan Ticaret — talep → teklif → sipariş → irsaliye → fatura (tümü onaylı)
         var talep1 = await musteriTalebiService.CreateAsync(new MusteriTalebi { CariId = cari1.Id, Tarih = DateTime.Today.AddDays(-25), Icerik = "Boru ve profil malzemeleri için fiyat talebi" });
         var teklif1 = await satisTeklifiService.CreateAsync(
-            new SatisTeklifi { CariId = cari1.Id, MusteriTalebiId = talep1.Id, Tarih = DateTime.Today.AddDays(-24), GecerlilikTarihi = DateTime.Today.AddDays(-9) },
+            new SatisTeklifi { CariId = cari1.Id, MusteriTalebiId = talep1.Id, Tarih = DateTime.Today.AddDays(-24), GecerlilikTarihi = DateTime.Today.AddDays(6) },
             [
                 new SatisTeklifiKalemi { MalzemeId = m01.Id, Miktar = 100, BirimFiyat = 62, KdvOrani = 20, Iskonto = 0 },
                 new SatisTeklifiKalemi { MalzemeId = m02.Id, Miktar = 80, BirimFiyat = 79, KdvOrani = 20, Iskonto = 0 }
@@ -214,7 +214,7 @@ public static class DemoSeeder
         // Satış zinciri 2: Yıldız Otomotiv — sac ve boya alımı
         var talep2 = await musteriTalebiService.CreateAsync(new MusteriTalebi { CariId = cari4.Id, Tarih = DateTime.Today.AddDays(-17), Icerik = "Sac ve boya malzemeleri için fiyat talebi" });
         var teklif2 = await satisTeklifiService.CreateAsync(
-            new SatisTeklifi { CariId = cari4.Id, MusteriTalebiId = talep2.Id, Tarih = DateTime.Today.AddDays(-16), GecerlilikTarihi = DateTime.Today.AddDays(-1) },
+            new SatisTeklifi { CariId = cari4.Id, MusteriTalebiId = talep2.Id, Tarih = DateTime.Today.AddDays(-16), GecerlilikTarihi = DateTime.Today.AddDays(14) },
             [
                 new SatisTeklifiKalemi { MalzemeId = m07.Id, Miktar = 40, BirimFiyat = 128, KdvOrani = 20, Iskonto = 0 },
                 new SatisTeklifiKalemi { MalzemeId = m11.Id, Miktar = 25, BirimFiyat = 115, KdvOrani = 20, Iskonto = 0 }

@@ -1,0 +1,75 @@
+@model CariFisiDetayViewModel
+@{
+    ViewData["Title"] = "Cari Fişi Detayı";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Cari Fişi <small class="text-muted">(@Model.FisNo)</small></h3>
+    <div class="d-flex gap-2">
+        <a asp-controller="Cari" asp-action="Detay" asp-route-id="@Model.CariId" class="btn btn-outline-secondary">Cariye Git</a>
+        <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+    </div>
+</div>
+
+@if (TempData["Basari"] != null)
+{
+    <div class="alert alert-success">@TempData["Basari"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger">@TempData["Hata"]</div>
+}
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card position-sticky" style="top: 1rem;">
+            <div class="card-body text-center">
+                <div class="text-muted small">Fiş No</div>
+                <div class="fs-5 fw-semibold mb-2">@Model.FisNo</div>
+                <div class="text-muted small">Cari</div>
+                <div class="fw-semibold mb-3">@Model.CariUnvan</div>
+                <span class="badge @(Model.IptalEdildi ? "bg-secondary" : "bg-success")">@(Model.IptalEdildi ? "İptal Edildi" : "Aktif")</span>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Tutar</span>
+                    <span class="fw-semibold">@Model.Tutar.ToString("N2")</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">Fiş Bilgileri</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Tarih</dt>
+                    <dd class="col-sm-9">@Model.Tarih.ToString("dd.MM.yyyy")</dd>
+                    <dt class="col-sm-3">Fiş Tipi</dt>
+                    <dd class="col-sm-9">@Model.FisTipiText</dd>
+                    <dt class="col-sm-3">Ödeme Yöntemi</dt>
+                    <dd class="col-sm-9">@Model.OdemeYontemiText</dd>
+                    <dt class="col-sm-3">Banka/Kasa Hesabı</dt>
+                    <dd class="col-sm-9">@(Model.HesapAdi ?? "-")</dd>
+                    <dt class="col-sm-3">Açıklama</dt>
+                    <dd class="col-sm-9">@(Model.Aciklama ?? "-")</dd>
+                </dl>
+            </div>
+        </div>
+
+        @if (!Model.IptalEdildi)
+        {
+            <div class="card mt-3">
+                <div class="card-header">İşlemler</div>
+                <div class="card-body d-flex gap-2">
+                    <form method="post" asp-action="IptalEt" asp-route-id="@Model.Id"
+                          onsubmit="return confirm('Bu fiş iptal edilsin mi? Cari ve banka/kasa bakiyesi ters yönde geri alınacak. Bu işlem geri alınamaz.')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger">Fişi İptal Et</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -14,17 +14,20 @@ public class SatisSiparisiController : Controller
     private readonly ISatisTeklifiService _satisTeklifiService;
     private readonly ICariService _cariService;
     private readonly IMalzemeService _malzemeService;
+    private readonly ISatisFaturasiService _satisFaturasiService;
 
     public SatisSiparisiController(
         ISatisSiparisiService satisSiparisiService,
         ISatisTeklifiService satisTeklifiService,
         ICariService cariService,
-        IMalzemeService malzemeService)
+        IMalzemeService malzemeService,
+        ISatisFaturasiService satisFaturasiService)
     {
         _satisSiparisiService = satisSiparisiService;
         _satisTeklifiService = satisTeklifiService;
         _cariService = cariService;
         _malzemeService = malzemeService;
+        _satisFaturasiService = satisFaturasiService;
     }
 
     public IActionResult Index() => View();
@@ -163,6 +166,7 @@ public class SatisSiparisiController : Controller
             Durum = siparis.Durum,
             DurumText = DurumMetni(siparis.Durum),
             Zincir = BelgeZinciriOlustur(siparis),
+            FaturaOlusturulabilirMi = !await _satisFaturasiService.AktifFaturaVarMiSiparisIcinAsync(siparis.Id),
             Kalemler = siparis.Kalemler.Select(k =>
             {
                 var sevkEdilen = Math.Min(sevkMiktarlari.GetValueOrDefault(k.MalzemeId), k.Miktar);

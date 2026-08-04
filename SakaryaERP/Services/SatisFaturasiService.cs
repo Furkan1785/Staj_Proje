@@ -141,8 +141,11 @@ public class SatisFaturasiService : ISatisFaturasiService
 
     public async Task<bool> AktifFaturaVarMiSiparisIcinAsync(int satisSiparisiId)
     {
+        // Kasıtlı olarak SevkIrsaliyesiId'ye bakılmıyor: sipariş irsaliye üzerinden zaten
+        // faturalandıysa (CreateAsync SatisSiparisiId'yi irsaliyenin siparişine eşitler),
+        // aynı siparişten bir de "irsaliyesiz" fatura açılırsa stok ve cari hareketi çift sayılır.
         return await _unitOfWork.Repository<SatisFaturasi>().QueryTumu()
-            .AnyAsync(f => f.SatisSiparisiId == satisSiparisiId && f.SevkIrsaliyesiId == null && f.Durum != BelgeDurum.Iptal);
+            .AnyAsync(f => f.SatisSiparisiId == satisSiparisiId && f.Durum != BelgeDurum.Iptal);
     }
 
     public async Task<List<SatisFaturasi>> GetOnaylanmisListeAsync()

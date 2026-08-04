@@ -27,6 +27,7 @@
                 <th>Ödeme Yöntemi</th>
                 <th>Banka/Kasa Hesabı</th>
                 <th>Açıklama</th>
+                <th>İşlemler</th>
             </tr>
             <tr>
                 <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
@@ -51,6 +52,7 @@
                 </th>
                 <th></th>
                 <th><input type="text" class="form-control form-control-sm sutun-filtre" placeholder="Ara" /></th>
+                <th></th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -87,7 +89,15 @@
                     },
                     { data: 'odemeYontemiText' },
                     { data: 'hesapAdi', defaultContent: '' },
-                    { data: 'aciklama', defaultContent: '' }
+                    { data: 'aciklama', defaultContent: '' },
+                    {
+                        data: 'id',
+                        orderable: false,
+                        searchable: false,
+                        render: function (id) {
+                            return '<a href="/CariFisi/Detay/' + id + '" class="btn btn-sm btn-outline-secondary">Detay</a>';
+                        }
+                    }
                 ]
             });
 

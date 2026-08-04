@@ -30,7 +30,7 @@
         {
             <a asp-controller="SevkIrsaliyesi" asp-action="Ekle" asp-route-siparisId="@Model.Id" class="btn btn-outline-primary">Sevk İrsaliyesi Oluştur</a>
         }
-        @if (Model.Durum == BelgeDurum.Onaylandi)
+        @if (Model.Durum == BelgeDurum.Onaylandi && Model.FaturaOlusturulabilirMi)
         {
             <a asp-controller="SatisFaturasi" asp-action="Ekle" asp-route-siparisId="@Model.Id" class="btn btn-outline-primary">Fatura Oluştur (İrsaliyesiz)</a>
         }

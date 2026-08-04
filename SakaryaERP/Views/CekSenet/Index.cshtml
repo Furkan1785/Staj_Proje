@@ -183,8 +183,8 @@
                         render: function (id, type, row) {
                             var html = '<div class="d-flex flex-wrap gap-1">';
                             html += '<a href="/CekSenet/Detay/' + id + '" class="btn btn-sm btn-outline-secondary">Detay</a>';
-                            html += '<a href="/CekSenet/Duzenle/' + id + '" class="btn btn-sm btn-outline-primary">Düzenle</a>';
                             if (row.durum === 'Portfoyde') {
+                                html += '<a href="/CekSenet/Duzenle/' + id + '" class="btn btn-sm btn-outline-primary">Düzenle</a>';
                                 html += aksiyonFormuOlustur('TahsileVer', id, 'btn-outline-success', 'Tahsile Ver', 'Bu belge tahsile verilsin mi?');
                                 html += '<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ciroModal" data-id="' + id + '">Ciro Et</button>';
                             } else if (row.durum === 'Tahsilde') {

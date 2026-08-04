@@ -1,4 +1,5 @@
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -6,6 +7,7 @@ using SakaryaERP.ViewModels;
 
 namespace SakaryaERP.Controllers;
 
+[Authorize(Roles = "Admin,Muhasebe")]
 public class SatinalmaRaporuController : Controller
 {
     private readonly IAlisFaturasiService _alisFaturasiService;

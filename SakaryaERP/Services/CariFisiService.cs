@@ -65,6 +65,52 @@ public class CariFisiService : ICariFisiService
         return fis;
     }
 
+    public async Task<CariFisi?> GetByIdDetayAsync(int id)
+    {
+        return await _unitOfWork.Repository<CariFisi>().QueryTumu()
+            .Include(f => f.Cari)
+            .Include(f => f.BankaHesabi)
+            .Include(f => f.KasaHesabi)
+            .FirstOrDefaultAsync(f => f.Id == id);
+    }
+
+    // Fiş tutarı/carisi sonradan değiştirilemez (yanlış düzeltme bakiyeleri bozar); tek güvenli
+    // yol fişi iptal edip (bakiye etkisini ters yönde geri alıp) doğrusunu yeniden girmektir.
+    public async Task IptalEtAsync(int id)
+    {
+        var fis = await _unitOfWork.Repository<CariFisi>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Cari fişi bulunamadı.");
+
+        if (fis.IsDeleted)
+            throw new InvalidOperationException("Bu fiş zaten iptal edilmiş.");
+
+        await using var transaction = await _unitOfWork.BeginTransactionAsync();
+
+        var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fis.CariId)
+            ?? throw new InvalidOperationException("Cari bulunamadı.");
+
+        var cariYonu = CariYonKatsayisi(fis.FisTipi);
+        cari.Bakiye -= cariYonu * fis.Tutar;
+
+        if (fis.BankaHesabiId is not null)
+        {
+            var banka = await _unitOfWork.Repository<BankaHesabi>().GetByIdAsync(fis.BankaHesabiId.Value)
+                ?? throw new InvalidOperationException("Banka hesabı bulunamadı.");
+            banka.Bakiye += cariYonu * fis.Tutar;
+        }
+        else if (fis.KasaHesabiId is not null)
+        {
+            var kasa = await _unitOfWork.Repository<KasaHesabi>().GetByIdAsync(fis.KasaHesabiId.Value)
+                ?? throw new InvalidOperationException("Kasa hesabı bulunamadı.");
+            kasa.Bakiye += cariYonu * fis.Tutar;
+        }
+
+        fis.IsDeleted = true;
+        await _unitOfWork.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+    }
+
     public async Task<(IEnumerable<CariFisi> Kayitlar, int ToplamKayit, int FiltrelenmisKayit)> GetSayfaliListeAsync(
         int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu)
     {

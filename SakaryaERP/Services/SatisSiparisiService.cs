@@ -38,6 +38,9 @@ public class SatisSiparisiService : ISatisSiparisiService
                 ?? throw new InvalidOperationException("Satış teklifi bulunamadı.");
             if (teklif.Durum != BelgeDurum.Onaylandi)
                 throw new InvalidOperationException("Sipariş sadece onaylanmış bir teklifden oluşturulabilir.");
+            if (teklif.GecerlilikTarihi is not null && teklif.GecerlilikTarihi.Value.Date < DateTime.Today)
+                throw new InvalidOperationException(
+                    $"Teklifin geçerlilik süresi {teklif.GecerlilikTarihi.Value:dd.MM.yyyy} tarihinde dolmuş, siparişe dönüştürülemez.");
         }
 
         var toplamSayi = await _unitOfWork.Repository<SatisSiparisi>().QueryTumu().CountAsync();

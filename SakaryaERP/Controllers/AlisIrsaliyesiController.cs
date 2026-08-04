@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SakaryaERP.Models;
@@ -6,6 +7,7 @@ using SakaryaERP.ViewModels;
 
 namespace SakaryaERP.Controllers;
 
+[Authorize(Roles = "Admin,Muhasebe")]
 public class AlisIrsaliyesiController : Controller
 {
     private readonly IAlisIrsaliyesiService _alisIrsaliyesiService;
