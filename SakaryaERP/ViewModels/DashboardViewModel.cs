@@ -19,6 +19,7 @@ public class DashboardViewModel
     public decimal GenelSatisToplamiUSD { get; set; }
     public decimal GenelSatinalmaToplamiTRY { get; set; }
     public decimal GenelSatinalmaToplamiUSD { get; set; }
+    public decimal BrutKar { get; set; }
 
     public int OncekiYil { get; set; }
     public int BuYil { get; set; }

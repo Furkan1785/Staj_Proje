@@ -79,6 +79,33 @@ public class SatisFaturasiServiceTests
     }
 
     [Fact]
+    public async Task OnaylaAsync_MaliyetliMalzeme_BirimMaliyetSnapshotAlirVeCogsYevmiyeKaydiOlusturur()
+    {
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        malzeme.AlisFiyati = 30;
+        baglam.HesapPlani.Add(new HesapPlani { HesapKodu = "621", HesapAdi = "Satılan Ticari Mallar Maliyeti", HesapTipi = HesapTipi.Gider });
+        baglam.HesapPlani.Add(new HesapPlani { HesapKodu = "153", HesapAdi = "Ticari Mallar", HesapTipi = HesapTipi.Aktif });
+        await baglam.SaveChangesAsync();
+
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        var servis = new SatisFaturasiService(unitOfWork, onayYetkisiService);
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id, miktar: 10));
+
+        await servis.OnaylaAsync(fatura.Id);
+
+        var guncelKalem = await baglam.SatisFaturasiKalemleri.FirstAsync(k => k.SatisFaturasiId == fatura.Id);
+        Assert.Equal(30, guncelKalem.BirimMaliyet);
+
+        var muhasebeFisi = await baglam.MuhasebeFisleri
+            .Include(m => m.Kalemler).ThenInclude(k => k.HesapPlani)
+            .FirstAsync(m => m.SatisFaturasiId == fatura.Id);
+        var cogsBorc = muhasebeFisi.Kalemler.Single(k => k.HesapPlani.HesapKodu == "621");
+        var cogsAlacak = muhasebeFisi.Kalemler.Single(k => k.HesapPlani.HesapKodu == "153");
+        Assert.Equal(300, cogsBorc.Borc);
+        Assert.Equal(300, cogsAlacak.Alacak);
+    }
+
+    [Fact]
     public async Task IptalEtAsync_OnaylanmisIrsaliyesizFatura_StokCariMuhasebeTersineCevirir()
     {
         var (baglam, servis, cari, malzeme) = await SenaryoKur();

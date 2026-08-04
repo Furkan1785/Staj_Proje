@@ -43,7 +43,7 @@
     <div class="row g-4">
         <div class="col-lg-9 order-2 order-lg-1">
             <div class="row g-4">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card h-100 stat-tile-group">
                         <div class="card-header">Toplam Satış</div>
                         <div class="card-body" style="--stat-tile-accent: #2a78d6;">
@@ -60,7 +60,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card h-100 stat-tile-group">
                         <div class="card-header">Toplam Satınalma</div>
                         <div class="card-body" style="--stat-tile-accent: #4a3aa7;">
@@ -74,6 +74,14 @@
                                     <div class="stat-tile-value">$ @Model.GenelSatinalmaToplamiUSD.ToString("N0")</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 @(Model.BrutKar >= 0 ? "border-success" : "border-danger")">
+                        <div class="card-header">Brüt Kar</div>
+                        <div class="card-body text-center d-flex align-items-center justify-content-center">
+                            <div class="fs-3 fw-semibold @(Model.BrutKar >= 0 ? "text-success" : "text-danger")">₺ @Model.BrutKar.ToString("N0")</div>
                         </div>
                     </div>
                 </div>

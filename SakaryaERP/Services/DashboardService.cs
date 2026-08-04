@@ -65,6 +65,12 @@ public class DashboardService : IDashboardService
         var genelSatisToplami = satisKalemleri.Sum(x => KalemToplami(x.Kalem));
         var genelSatinalmaToplami = alisKalemleri.Sum(x => KalemToplami(x.Kalem));
 
+        // Brüt kar: KDV hariç net satış - satılan malın maliyeti (Malzeme.AlisFiyati'nin
+        // fatura onayı anındaki anlık görüntüsü, bkz. SatisFaturasiKalemi.BirimMaliyet).
+        var netSatisToplami = satisKalemleri.Sum(x => FinansHesaplama.SatisFaturasiNetTutari(x.Kalem));
+        var satilanMalMaliyeti = satisKalemleri.Sum(x => x.Kalem.Miktar * x.Kalem.BirimMaliyet);
+        var brutKar = netSatisToplami - satilanMalMaliyeti;
+
         var kritikStokFiltreli = kritikStok.Where(m => KategoriEslesir(m.KategoriId)).ToList();
 
         return new DashboardViewModel
@@ -73,6 +79,7 @@ public class DashboardService : IDashboardService
             GenelSatisToplamiUSD = genelSatisToplami / UsdKuru,
             GenelSatinalmaToplamiTRY = genelSatinalmaToplami,
             GenelSatinalmaToplamiUSD = genelSatinalmaToplami / UsdKuru,
+            BrutKar = brutKar,
 
             OncekiYil = oncekiYil,
             BuYil = buYil,

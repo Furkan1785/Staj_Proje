@@ -173,15 +173,15 @@ public class SatisFaturasiService : ISatisFaturasiService
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
 
+        var malzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+        var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .Where(m => malzemeIdleri.Contains(m.Id))
+            .ToDictionaryAsync(m => m.Id);
+
         // İrsaliyeden gelen faturalarda stok zaten irsaliye onayında düşülmüştür;
         // irsaliyesiz (doğrudan siparişten veya manuel) faturalarda burada düşülür.
         if (fatura.SevkIrsaliyesiId is null)
         {
-            var malzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
-            var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
-                .Where(m => malzemeIdleri.Contains(m.Id))
-                .ToDictionaryAsync(m => m.Id);
-
             foreach (var kalem in fatura.Kalemler)
             {
                 var malzeme = malzemeler[kalem.MalzemeId];
@@ -194,9 +194,15 @@ public class SatisFaturasiService : ISatisFaturasiService
             }
         }
 
+        // Brüt kar/COGS hesabı satılan andaki maliyeti kullansın diye Malzeme.AlisFiyati
+        // onay anında kaleme kopyalanır (sonradan AlisFiyati değişse bile geçmiş fatura etkilenmez).
+        foreach (var kalem in fatura.Kalemler)
+            kalem.BirimMaliyet = malzemeler[kalem.MalzemeId].AlisFiyati;
+
         var toplamTutar = fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami);
         var netTutar = fatura.Kalemler.Sum(k => k.Miktar * k.BirimFiyat * (1 - k.Iskonto / 100m));
         var kdvTutari = toplamTutar - netTutar;
+        var toplamMaliyet = fatura.Kalemler.Sum(k => k.Miktar * k.BirimMaliyet);
 
         var toplamFisSayisi = await _unitOfWork.Repository<CariFisi>().QueryTumu().CountAsync();
         var cariFisi = new CariFisi
@@ -217,18 +223,19 @@ public class SatisFaturasiService : ISatisFaturasiService
 
         await _unitOfWork.Repository<CariFisi>().AddAsync(cariFisi);
         await _unitOfWork.Repository<MuhasebeFisi>().AddAsync(
-            await YevmiyeKaydiOlusturAsync(fatura, netTutar, kdvTutari, toplamTutar));
+            await YevmiyeKaydiOlusturAsync(fatura, netTutar, kdvTutari, toplamTutar, toplamMaliyet));
 
         fatura.Durum = BelgeDurum.Onaylandi;
         await _unitOfWork.SaveChangesAsync();
     }
 
     // Satış faturası onayında basit yevmiye kaydı: 120 Alıcılar borçlanır,
-    // 600 Yurtiçi Satışlar ve 391 Hesaplanan KDV alacaklanır.
-    private async Task<MuhasebeFisi> YevmiyeKaydiOlusturAsync(SatisFaturasi fatura, decimal netTutar, decimal kdvTutari, decimal toplamTutar)
+    // 600 Yurtiçi Satışlar ve 391 Hesaplanan KDV alacaklanır; ayrıca satılan malın maliyeti
+    // 621 Satılan Ticari Mallar Maliyeti'ne borç, 153 Ticari Mallar'a alacak yazılır (COGS).
+    private async Task<MuhasebeFisi> YevmiyeKaydiOlusturAsync(SatisFaturasi fatura, decimal netTutar, decimal kdvTutari, decimal toplamTutar, decimal toplamMaliyet)
     {
         var hesaplar = await _unitOfWork.Repository<HesapPlani>().QueryTumu()
-            .Where(h => h.HesapKodu == "120" || h.HesapKodu == "600" || h.HesapKodu == "391")
+            .Where(h => h.HesapKodu == "120" || h.HesapKodu == "600" || h.HesapKodu == "391" || h.HesapKodu == "621" || h.HesapKodu == "153")
             .ToDictionaryAsync(h => h.HesapKodu);
 
         var aciklama = $"Satış Faturası {fatura.FaturaNo}";
@@ -239,6 +246,11 @@ public class SatisFaturasiService : ISatisFaturasiService
         };
         if (kdvTutari > 0)
             kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["391"].Id, Borc = 0, Alacak = kdvTutari, Aciklama = aciklama });
+        if (toplamMaliyet > 0)
+        {
+            kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["621"].Id, Borc = toplamMaliyet, Alacak = 0, Aciklama = aciklama });
+            kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["153"].Id, Borc = 0, Alacak = toplamMaliyet, Aciklama = aciklama });
+        }
 
         var toplamFisSayisi = await _unitOfWork.Repository<MuhasebeFisi>().QueryTumu().CountAsync();
         return new MuhasebeFisi

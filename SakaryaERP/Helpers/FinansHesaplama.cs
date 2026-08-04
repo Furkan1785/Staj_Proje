@@ -15,12 +15,16 @@ public static class FinansHesaplama
     // Satış Faturası: ara toplam/iskonto/KDV ayrı ayrı gösterildiği için (PDF ve Detay sayfası)
     // her ara adım kendi içinde yuvarlanır — "ara toplam - iskonto + KDV" ekrandaki genel
     // toplamla birebir tutsun diye backend de aynı zinciri kullanır.
-    public static decimal SatisFaturasiSatirToplami(IFiyatliKalem kalem)
+    public static decimal SatisFaturasiSatirToplami(IFiyatliKalem kalem) =>
+        Math.Round(SatisFaturasiNetTutari(kalem) * (1 + kalem.KdvOrani / 100), 2);
+
+    // İskonto uygulanmış, KDV hariç satır tutarı (Satış Faturası) — KDV ve Brüt Kar
+    // hesaplarının ikisi de aynı ara adımdan türesin diye ortak noktaya çıkarıldı.
+    public static decimal SatisFaturasiNetTutari(IFiyatliKalem kalem)
     {
         var iskontoOncesi = kalem.Miktar * kalem.BirimFiyat;
         var iskontoTutari = Math.Round(iskontoOncesi * kalem.Iskonto / 100, 2);
-        var iskontolu = iskontoOncesi - iskontoTutari;
-        return Math.Round(iskontolu * (1 + kalem.KdvOrani / 100), 2);
+        return iskontoOncesi - iskontoTutari;
     }
 
     // Alış Faturası kalemi başına KDV tutarı (İndirilecek KDV raporu için).
@@ -29,11 +33,6 @@ public static class FinansHesaplama
 
     // Satış Faturası kalemi başına KDV tutarı (Hesaplanan KDV raporu için) — SatisFaturasiSatirToplami
     // ile aynı ara toplam/iskonto zincirini kullanır, KDV üstüne KDV binmesin diye.
-    public static decimal SatisFaturasiKdvTutari(IFiyatliKalem kalem)
-    {
-        var iskontoOncesi = kalem.Miktar * kalem.BirimFiyat;
-        var iskontoTutari = Math.Round(iskontoOncesi * kalem.Iskonto / 100, 2);
-        var iskontolu = iskontoOncesi - iskontoTutari;
-        return Math.Round(iskontolu * kalem.KdvOrani / 100, 2);
-    }
+    public static decimal SatisFaturasiKdvTutari(IFiyatliKalem kalem) =>
+        Math.Round(SatisFaturasiNetTutari(kalem) * kalem.KdvOrani / 100, 2);
 }
