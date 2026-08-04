@@ -16,4 +16,5 @@ public class CariFisiDetayViewModel
     public string? HesapAdi { get; set; }
     public string? Aciklama { get; set; }
     public bool IptalEdildi { get; set; }
+    public bool OtomatikOlusturuldu { get; set; }
 }

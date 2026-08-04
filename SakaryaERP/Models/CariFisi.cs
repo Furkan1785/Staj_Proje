@@ -12,6 +12,10 @@ public class CariFisi : BaseEntity
     public int? KasaHesabiId { get; set; }
     public string? Aciklama { get; set; }
 
+    // Fatura onayı/çek-senet tahsilatı gibi bir belgeden otomatik oluşmuşsa true;
+    // bu tür fişler doğrudan iptal edilemez (kaynak belgeyle bağlantısı koparmasın diye).
+    public bool OtomatikOlusturuldu { get; set; }
+
     public Cari Cari { get; set; } = null!;
     public BankaHesabi? BankaHesabi { get; set; }
     public KasaHesabi? KasaHesabi { get; set; }

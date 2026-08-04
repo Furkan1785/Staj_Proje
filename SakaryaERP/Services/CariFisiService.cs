@@ -84,6 +84,11 @@ public class CariFisiService : ICariFisiService
         if (fis.IsDeleted)
             throw new InvalidOperationException("Bu fiş zaten iptal edilmiş.");
 
+        if (fis.OtomatikOlusturuldu)
+            throw new InvalidOperationException(
+                "Bu fiş bir belgeden (fatura/çek-senet tahsilatı) otomatik oluşturulmuştur, doğrudan iptal edilemez. " +
+                "Kaynak belgeyi iptal etmeniz gerekir.");
+
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
 
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fis.CariId)

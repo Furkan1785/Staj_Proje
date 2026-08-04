@@ -97,4 +97,50 @@ public class CariFisiServiceTests
 
         Assert.Contains("kasa hesabı", hata.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task IptalEtAsync_ManuelFis_BakiyeyiTersYondeGeriAlir()
+    {
+        var (baglam, servis, cari, _, kasa) = SenaryoKur();
+
+        var fis = await servis.CreateAsync(new CariFisi
+        {
+            CariId = cari.Id,
+            Tarih = DateTime.Today,
+            FisTipi = FisTipi.Borc,
+            Tutar = 500,
+            OdemeYontemi = OdemeYontemi.Nakit,
+            KasaHesabiId = kasa.Id
+        });
+
+        await servis.IptalEtAsync(fis.Id);
+
+        var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
+        var guncelKasa = await baglam.KasaHesaplari.FindAsync(kasa.Id);
+        Assert.Equal(0, guncelCari!.Bakiye);
+        Assert.Equal(1000, guncelKasa!.Bakiye);
+    }
+
+    [Fact]
+    public async Task IptalEtAsync_OtomatikOlusturulmusFis_HataFirlatirVeBakiyeDegismez()
+    {
+        var (baglam, servis, cari, _, kasa) = SenaryoKur();
+
+        var fis = await servis.CreateAsync(new CariFisi
+        {
+            CariId = cari.Id,
+            Tarih = DateTime.Today,
+            FisTipi = FisTipi.Borc,
+            Tutar = 500,
+            OdemeYontemi = OdemeYontemi.Nakit,
+            KasaHesabiId = kasa.Id,
+            OtomatikOlusturuldu = true
+        });
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => servis.IptalEtAsync(fis.Id));
+        Assert.Contains("otomatik oluşturulmuştur", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
+        Assert.Equal(500, guncelCari!.Bakiye);
+    }
 }

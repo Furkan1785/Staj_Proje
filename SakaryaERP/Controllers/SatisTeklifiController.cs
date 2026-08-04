@@ -17,17 +17,20 @@ public class SatisTeklifiController : Controller
     private readonly IMusteriTalebiService _musteriTalebiService;
     private readonly ICariService _cariService;
     private readonly IMalzemeService _malzemeService;
+    private readonly ISatisSiparisiService _satisSiparisiService;
 
     public SatisTeklifiController(
         ISatisTeklifiService satisTeklifiService,
         IMusteriTalebiService musteriTalebiService,
         ICariService cariService,
-        IMalzemeService malzemeService)
+        IMalzemeService malzemeService,
+        ISatisSiparisiService satisSiparisiService)
     {
         _satisTeklifiService = satisTeklifiService;
         _musteriTalebiService = musteriTalebiService;
         _cariService = cariService;
         _malzemeService = malzemeService;
+        _satisSiparisiService = satisSiparisiService;
     }
 
     public IActionResult Index() => View();
@@ -260,6 +263,8 @@ public class SatisTeklifiController : Controller
             Aciklama = teklif.Aciklama,
             Durum = teklif.Durum,
             DurumText = DurumMetni(teklif.Durum),
+            SiparisOlusturulabilirMi = teklif.Durum == BelgeDurum.Onaylandi
+                && !await _satisSiparisiService.AktifSiparisVarMiTeklifIcinAsync(teklif.Id),
             Zincir = BelgeZinciriOlustur(teklif),
             Kalemler = teklif.Kalemler.Select(k => new SatisTeklifiKalemDetayViewModel
             {

@@ -206,7 +206,8 @@ public class SatisFaturasiService : ISatisFaturasiService
             FisTipi = FisTipi.Borc,
             Tutar = toplamTutar,
             OdemeYontemi = OdemeYontemi.Havale,
-            Aciklama = $"Satış Faturası {fatura.FaturaNo}"
+            Aciklama = $"Satış Faturası {fatura.FaturaNo}",
+            OtomatikOlusturuldu = true
         };
 
         // Borç fişi: müşteri bize borçlanır, Cari.Bakiye artar (CariFisiService'teki yön kuralıyla aynı).

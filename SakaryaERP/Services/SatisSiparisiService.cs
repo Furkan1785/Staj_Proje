@@ -41,6 +41,8 @@ public class SatisSiparisiService : ISatisSiparisiService
             if (teklif.GecerlilikTarihi is not null && teklif.GecerlilikTarihi.Value.Date < DateTime.Today)
                 throw new InvalidOperationException(
                     $"Teklifin geçerlilik süresi {teklif.GecerlilikTarihi.Value:dd.MM.yyyy} tarihinde dolmuş, siparişe dönüştürülemez.");
+            if (await AktifSiparisVarMiTeklifIcinAsync(siparis.SatisTeklifiId.Value))
+                throw new InvalidOperationException("Bu teklif için zaten bir sipariş oluşturulmuş.");
         }
 
         var toplamSayi = await _unitOfWork.Repository<SatisSiparisi>().QueryTumu().CountAsync();
@@ -125,6 +127,12 @@ public class SatisSiparisiService : ISatisSiparisiService
 
         siparis.Durum = BelgeDurum.Iptal;
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<bool> AktifSiparisVarMiTeklifIcinAsync(int satisTeklifiId)
+    {
+        return await _unitOfWork.Repository<SatisSiparisi>().QueryTumu()
+            .AnyAsync(s => s.SatisTeklifiId == satisTeklifiId && s.Durum != BelgeDurum.Iptal);
     }
 
     public Dictionary<int, decimal> SevkMiktarlariHesapla(SatisSiparisi siparis)

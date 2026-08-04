@@ -124,7 +124,8 @@ public class CariFisiController : Controller
             OdemeYontemiText = OdemeYontemiMetni(fis.OdemeYontemi),
             HesapAdi = fis.BankaHesabi?.HesapAdi ?? fis.KasaHesabi?.KasaAdi,
             Aciklama = fis.Aciklama,
-            IptalEdildi = fis.IsDeleted
+            IptalEdildi = fis.IsDeleted,
+            OtomatikOlusturuldu = fis.OtomatikOlusturuldu
         };
 
         return View(vm);

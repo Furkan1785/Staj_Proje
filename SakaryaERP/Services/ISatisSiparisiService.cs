@@ -13,6 +13,9 @@ public interface ISatisSiparisiService
     Task OnaylaAsync(int id);
     Task IptalEtAsync(int id);
 
+    // Bir teklif için zaten iptal edilmemiş bir sipariş oluşturulmuş mu (tekrar dönüştürmeyi engellemek için).
+    Task<bool> AktifSiparisVarMiTeklifIcinAsync(int satisTeklifiId);
+
     // Onaylanmış sevk irsaliyesi kalemlerinden malzeme bazında sevk edilen toplam miktarı hesaplar.
     Dictionary<int, decimal> SevkMiktarlariHesapla(SatisSiparisi siparis);
 }

@@ -26,7 +26,7 @@
                 <button type="submit" class="btn btn-outline-danger">İptal Et</button>
             </form>
         }
-        @if (Model.Durum == BelgeDurum.Onaylandi)
+        @if (Model.SiparisOlusturulabilirMi)
         {
             <a asp-controller="SatisSiparisi" asp-action="Ekle" asp-route-teklifId="@Model.Id" class="btn btn-outline-primary">Siparişe Dönüştür</a>
         }

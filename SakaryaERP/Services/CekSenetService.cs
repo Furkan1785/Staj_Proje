@@ -177,7 +177,8 @@ public class CekSenetService : ICekSenetService
             OdemeYontemi = bankaHesabiId is not null ? OdemeYontemi.Havale : OdemeYontemi.Nakit,
             BankaHesabiId = bankaHesabiId,
             KasaHesabiId = kasaHesabiId,
-            Aciklama = $"{(cekSenet.BelgeTipi == BelgeTipi.Cek ? "Çek" : "Senet")} tahsilatı - Belge No: {cekSenet.BelgeNo}"
+            Aciklama = $"{(cekSenet.BelgeTipi == BelgeTipi.Cek ? "Çek" : "Senet")} tahsilatı - Belge No: {cekSenet.BelgeNo}",
+            OtomatikOlusturuldu = true
         });
 
         cekSenet.Durum = CekSenetDurum.TahsilEdildi;

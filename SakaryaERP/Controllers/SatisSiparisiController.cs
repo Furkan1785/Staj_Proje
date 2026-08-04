@@ -83,6 +83,11 @@ public class SatisSiparisiController : Controller
                 TempData["Hata"] = "Sipariş sadece onaylanmış bir teklifden oluşturulabilir.";
                 return RedirectToAction("Detay", "SatisTeklifi", new { id = teklifId });
             }
+            if (await _satisSiparisiService.AktifSiparisVarMiTeklifIcinAsync(teklifId.Value))
+            {
+                TempData["Hata"] = "Bu teklif için zaten bir sipariş oluşturulmuş.";
+                return RedirectToAction("Detay", "SatisTeklifi", new { id = teklifId });
+            }
 
             vm.CariId = teklif.CariId;
             vm.SatisTeklifiId = teklif.Id;

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using SakaryaERP.Data;
 
 namespace SakaryaERP.Tests;
@@ -13,6 +14,11 @@ public static class TestDbContextFactory
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            // InMemory sağlayıcısı gerçek transaction desteklemiyor; BeginTransactionAsync
+            // kullanan servis metotlarını (örn. CariFisiService.IptalEtAsync) test edebilmek
+            // için bu uyarı bilinçli olarak yok sayılıyor (transaction no-op olur, sonuç durumu
+            // yine de doğru test edilir).
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
         return new AppDbContext(options);
     }

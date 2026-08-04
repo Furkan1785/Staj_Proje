@@ -173,7 +173,8 @@ public class AlisFaturasiService : IAlisFaturasiService
             FisTipi = FisTipi.Alacak,
             Tutar = toplamTutar,
             OdemeYontemi = OdemeYontemi.Havale,
-            Aciklama = $"Alış Faturası {fatura.FaturaNo}"
+            Aciklama = $"Alış Faturası {fatura.FaturaNo}",
+            OtomatikOlusturuldu = true
         };
 
         // Alacak fişi: tedarikçiye olan borcumuz arttığı için Cari.Bakiye azalır
