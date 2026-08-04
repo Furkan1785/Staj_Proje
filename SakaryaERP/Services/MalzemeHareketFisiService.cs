@@ -131,6 +131,20 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    // Sadece Beklemede'deki fişler iptal edilebilir; Onaylandı fişin bakiye etkisi
+    // zaten oluşmuş olduğundan burada geri alma yapılmıyor (bu durum kapsam dışı).
+    public async Task IptalEtAsync(int id)
+    {
+        var fis = await _unitOfWork.Repository<MalzemeHareketFisi>().GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Malzeme hareket fişi bulunamadı.");
+
+        if (fis.Durum != BelgeDurum.Beklemede)
+            throw new InvalidOperationException("Sadece beklemede olan fişler iptal edilebilir.");
+
+        fis.Durum = BelgeDurum.Iptal;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     private static int HareketYonKatsayisi(HareketTipi tip) => tip switch
     {
         HareketTipi.Giris => 1,

@@ -91,6 +91,7 @@
                         searchable: false,
                         render: function (id, type, row) {
                             var html = '<div class="d-flex flex-wrap gap-1">';
+                            html += '<a href="/MusteriTalebi/Detay/' + id + '" class="btn btn-sm btn-outline-secondary">Detay</a>';
                             if (row.durum === 'Yeni' || row.durum === 'Isleniyor') {
                                 html += '<a href="/SatisTeklifi/Ekle?talepId=' + id + '" class="btn btn-sm btn-outline-primary">Teklif Oluştur</a>';
                             }

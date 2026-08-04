@@ -82,4 +82,28 @@ public class MalzemeHareketFisiServiceTests
 
         Assert.Contains("beklemedeki", hata.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task IptalEtAsync_BeklemedeFis_DurumIptalOlurBakiyeDegismez()
+    {
+        var (baglam, servis, malzeme, fis) = await SenaryoKur(HareketTipi.Giris, baslangicBakiye: 10, fisMiktari: 4);
+
+        await servis.IptalEtAsync(fis.Id);
+
+        var guncelFis = await baglam.MalzemeHareketFisleri.FindAsync(fis.Id);
+        var guncelMalzeme = await baglam.Malzemeler.FindAsync(malzeme.Id);
+        Assert.Equal(BelgeDurum.Iptal, guncelFis!.Durum);
+        Assert.Equal(10, guncelMalzeme!.Bakiye);
+    }
+
+    [Fact]
+    public async Task IptalEtAsync_ZatenOnaylanmisFis_HataFirlatir()
+    {
+        var (_, servis, _, fis) = await SenaryoKur(HareketTipi.Giris, baslangicBakiye: 10, fisMiktari: 4);
+        await servis.OnaylaAsync(fis.Id);
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => servis.IptalEtAsync(fis.Id));
+
+        Assert.Contains("beklemede", hata.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }

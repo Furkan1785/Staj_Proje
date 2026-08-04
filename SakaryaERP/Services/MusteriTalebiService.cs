@@ -77,6 +77,14 @@ public class MusteriTalebiService : IMusteriTalebiService
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    public async Task<MusteriTalebi?> GetByIdDetayAsync(int id)
+    {
+        return await _unitOfWork.Repository<MusteriTalebi>().QueryTumu()
+            .Include(t => t.Cari)
+            .Include(t => t.SatisTeklifleri)
+            .FirstOrDefaultAsync(t => t.Id == id);
+    }
+
     public async Task IslemeAlAsync(int id)
     {
         var talep = await _unitOfWork.Repository<MusteriTalebi>().GetByIdAsync(id)

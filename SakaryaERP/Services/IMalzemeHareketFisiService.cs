@@ -12,6 +12,7 @@ public interface IMalzemeHareketFisiService
     Task<MalzemeHareketFisi?> GetByIdDetayAsync(int id);
 
     Task OnaylaAsync(int id);
+    Task IptalEtAsync(int id);
 
     // Sadece onaylanmış fişlerin kalemleri — bekleyen bir fiş henüz bakiyeye
     // yansımadığı için "hareket geçmişi" sayılmaz.

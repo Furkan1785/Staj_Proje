@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -153,31 +156,9 @@ public class AlisIrsaliyesiController : Controller
 
     public async Task<IActionResult> Detay(int id)
     {
-        var irsaliye = await _alisIrsaliyesiService.GetByIdDetayAsync(id);
-        if (irsaliye is null)
+        var vm = await BuildDetayViewModel(id);
+        if (vm is null)
             return NotFound();
-
-        var vm = new AlisIrsaliyesiDetayViewModel
-        {
-            Id = irsaliye.Id,
-            IrsaliyeNo = irsaliye.IrsaliyeNo,
-            Tarih = irsaliye.Tarih,
-            CariId = irsaliye.CariId,
-            CariUnvan = irsaliye.Cari.Unvan,
-            SubeAdi = irsaliye.Sube.SubeAdi,
-            SiparisNo = irsaliye.AlisSiparisi?.SiparisNo,
-            Aciklama = irsaliye.Aciklama,
-            Durum = irsaliye.Durum,
-            DurumText = DurumMetni(irsaliye.Durum),
-            Zincir = BelgeZinciriOlustur(irsaliye),
-            Kalemler = irsaliye.Kalemler.Select(k => new AlisIrsaliyesiKalemDetayViewModel
-            {
-                MalzemeKodu = k.Malzeme.MalzemeKodu,
-                MalzemeAdi = k.Malzeme.MalzemeAdi,
-                Birim = k.Malzeme.Birim,
-                Miktar = k.Miktar
-            }).ToList()
-        };
 
         return View(vm);
     }
@@ -213,6 +194,98 @@ public class AlisIrsaliyesiController : Controller
         }
         return RedirectToAction(nameof(Index));
     }
+
+    public async Task<IActionResult> Pdf(int id)
+    {
+        var vm = await BuildDetayViewModel(id);
+        if (vm is null)
+            return NotFound();
+
+        var belge = Document.Create(container =>
+        {
+            container.Page(sayfa =>
+            {
+                sayfa.Size(PageSizes.A4);
+                sayfa.Margin(30);
+                sayfa.DefaultTextStyle(x => x.FontSize(9));
+
+                sayfa.Header().Column(baslikSutunu =>
+                {
+                    baslikSutunu.Item().Text("Alış İrsaliyesi").FontSize(16).Bold();
+                    baslikSutunu.Item().Text($"İrsaliye No: {vm.IrsaliyeNo}").FontSize(10);
+                    baslikSutunu.Item().Text($"Tarih: {vm.Tarih:dd.MM.yyyy}").FontSize(10);
+                    baslikSutunu.Item().Text($"Tedarikçi: {vm.CariUnvan}").FontSize(10);
+                    if (!string.IsNullOrWhiteSpace(vm.SiparisNo))
+                        baslikSutunu.Item().Text($"Sipariş No: {vm.SiparisNo}").FontSize(10);
+                    baslikSutunu.Item().Text($"Şube: {vm.SubeAdi}").FontSize(10);
+                    if (!string.IsNullOrWhiteSpace(vm.Aciklama))
+                        baslikSutunu.Item().Text($"Açıklama: {vm.Aciklama}").FontSize(10);
+                });
+
+                sayfa.Content().Table(tablo =>
+                {
+                    tablo.ColumnsDefinition(sutunlar =>
+                    {
+                        sutunlar.RelativeColumn(3);
+                        sutunlar.RelativeColumn(1);
+                        sutunlar.RelativeColumn(1);
+                    });
+
+                    tablo.Header(baslik =>
+                    {
+                        string[] basliklar = ["Malzeme", "Birim", "Miktar"];
+                        foreach (var b in basliklar)
+                            baslik.Cell().Element(PdfBaslikHucresi).Text(b);
+                    });
+
+                    foreach (var k in vm.Kalemler)
+                    {
+                        tablo.Cell().Element(PdfIcerikHucresi).Text($"{k.MalzemeKodu} - {k.MalzemeAdi}");
+                        tablo.Cell().Element(PdfIcerikHucresi).Text(k.Birim);
+                        tablo.Cell().Element(PdfIcerikHucresi).AlignRight().Text(k.Miktar.ToString("N2"));
+                    }
+                });
+            });
+        });
+
+        var dosyaAdi = $"alis-irsaliyesi-{vm.IrsaliyeNo}.pdf";
+        return File(belge.GeneratePdf(), "application/pdf", dosyaAdi);
+    }
+
+    private async Task<AlisIrsaliyesiDetayViewModel?> BuildDetayViewModel(int id)
+    {
+        var irsaliye = await _alisIrsaliyesiService.GetByIdDetayAsync(id);
+        if (irsaliye is null)
+            return null;
+
+        return new AlisIrsaliyesiDetayViewModel
+        {
+            Id = irsaliye.Id,
+            IrsaliyeNo = irsaliye.IrsaliyeNo,
+            Tarih = irsaliye.Tarih,
+            CariId = irsaliye.CariId,
+            CariUnvan = irsaliye.Cari.Unvan,
+            SubeAdi = irsaliye.Sube.SubeAdi,
+            SiparisNo = irsaliye.AlisSiparisi?.SiparisNo,
+            Aciklama = irsaliye.Aciklama,
+            Durum = irsaliye.Durum,
+            DurumText = DurumMetni(irsaliye.Durum),
+            Zincir = BelgeZinciriOlustur(irsaliye),
+            Kalemler = irsaliye.Kalemler.Select(k => new AlisIrsaliyesiKalemDetayViewModel
+            {
+                MalzemeKodu = k.Malzeme.MalzemeKodu,
+                MalzemeAdi = k.Malzeme.MalzemeAdi,
+                Birim = k.Malzeme.Birim,
+                Miktar = k.Miktar
+            }).ToList()
+        };
+    }
+
+    private static IContainer PdfBaslikHucresi(IContainer container) =>
+        container.DefaultTextStyle(x => x.Bold()).PaddingVertical(4).BorderBottom(1).BorderColor(Colors.Grey.Medium);
+
+    private static IContainer PdfIcerikHucresi(IContainer container) =>
+        container.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(3);
 
     private async Task DoldurListeler(AlisIrsaliyesiFormViewModel vm)
     {

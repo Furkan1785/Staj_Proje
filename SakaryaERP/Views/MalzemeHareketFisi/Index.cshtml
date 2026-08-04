@@ -100,6 +100,10 @@
                                     '<input type="hidden" name="__RequestVerificationToken" value="' + csrfToken + '" />' +
                                     '<input type="hidden" name="id" value="' + id + '" />' +
                                     '<button type="submit" class="btn btn-sm btn-outline-success">Onayla</button></form>';
+                                html += '<form method="post" action="/MalzemeHareketFisi/IptalEt" class="d-inline" onsubmit="return confirm(\'Bu fiş iptal edilsin mi?\')">' +
+                                    '<input type="hidden" name="__RequestVerificationToken" value="' + csrfToken + '" />' +
+                                    '<input type="hidden" name="id" value="' + id + '" />' +
+                                    '<button type="submit" class="btn btn-sm btn-outline-danger">İptal Et</button></form>';
                             }
                             html += '</div>';
                             return html;

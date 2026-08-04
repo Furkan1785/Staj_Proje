@@ -90,6 +90,34 @@ public class MusteriTalebiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Detay(int id)
+    {
+        var talep = await _musteriTalebiService.GetByIdDetayAsync(id);
+        if (talep is null)
+            return NotFound();
+
+        var vm = new MusteriTalebiDetayViewModel
+        {
+            Id = talep.Id,
+            TalepNo = talep.TalepNo,
+            Tarih = talep.Tarih,
+            CariId = talep.CariId,
+            CariUnvan = talep.Cari.Unvan,
+            Icerik = talep.Icerik,
+            Durum = talep.Durum,
+            DurumText = DurumMetni(talep.Durum),
+            Teklifler = talep.SatisTeklifleri.Select(t => new MusteriTalebiTeklifOzetViewModel
+            {
+                Id = t.Id,
+                TeklifNo = t.TeklifNo,
+                Tarih = t.Tarih,
+                DurumText = BelgeDurumMetni(t.Durum)
+            }).OrderByDescending(t => t.Tarih).ToList()
+        };
+
+        return View(vm);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> IslemeAl(int id)
@@ -136,6 +164,14 @@ public class MusteriTalebiController : Controller
         TalepDurum.Isleniyor => "İşleniyor",
         TalepDurum.Tamamlandi => "Tamamlandı",
         TalepDurum.Iptal => "İptal",
+        _ => durum.ToString()
+    };
+
+    private static string BelgeDurumMetni(BelgeDurum durum) => durum switch
+    {
+        BelgeDurum.Beklemede => "Beklemede",
+        BelgeDurum.Onaylandi => "Onaylandı",
+        BelgeDurum.Iptal => "İptal",
         _ => durum.ToString()
     };
 }

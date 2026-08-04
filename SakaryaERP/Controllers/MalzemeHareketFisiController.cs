@@ -148,6 +148,22 @@ public class MalzemeHareketFisiController : Controller
         return returnToDetay ? RedirectToAction(nameof(Detay), new { id }) : RedirectToAction(nameof(Index));
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> IptalEt(int id, bool returnToDetay = false)
+    {
+        try
+        {
+            await _malzemeHareketFisiService.IptalEtAsync(id);
+            TempData["Basari"] = "Fiş iptal edildi.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
+        return returnToDetay ? RedirectToAction(nameof(Detay), new { id }) : RedirectToAction(nameof(Index));
+    }
+
     private async Task DoldurListeler(MalzemeHareketFisiFormViewModel vm)
     {
         var subeler = await _subeService.GetAllAsync();

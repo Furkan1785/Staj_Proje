@@ -10,6 +10,7 @@ public interface IMusteriTalebiService
         int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu);
 
     Task<MusteriTalebi?> GetByIdAsync(int id);
+    Task<MusteriTalebi?> GetByIdDetayAsync(int id);
 
     Task IslemeAlAsync(int id);
     Task IptalEtAsync(int id);
