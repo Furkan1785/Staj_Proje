@@ -1,10 +1,10 @@
-using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -206,34 +206,15 @@ public class AlisSiparisiController : Controller
     {
         var (kayitlar, _, _) = await _alisSiparisiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[8], -1, "desc");
 
-        using var workbook = new XLWorkbook();
-        var sayfa = workbook.Worksheets.Add("Alış Siparişleri");
-
         string[] basliklar = ["Sipariş No", "Tarih", "Cari", "Şube", "Durum", "Teslim Durumu", "Toplam Tutar"];
-        for (var i = 0; i < basliklar.Length; i++)
+        var satirlar = kayitlar.Select(s => new object?[]
         {
-            sayfa.Cell(1, i + 1).Value = basliklar[i];
-            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+            s.SiparisNo, s.Tarih, s.Cari.Unvan, s.Sube.SubeAdi, DurumMetni(s.Durum),
+            TeslimDurumuMetni(s, _alisSiparisiService.TeslimMiktarlariHesapla(s)), s.Kalemler.Sum(KalemToplami)
+        });
 
-        var satirNo = 2;
-        foreach (var s in kayitlar)
-        {
-            sayfa.Cell(satirNo, 1).Value = s.SiparisNo;
-            sayfa.Cell(satirNo, 2).Value = s.Tarih;
-            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
-            sayfa.Cell(satirNo, 3).Value = s.Cari.Unvan;
-            sayfa.Cell(satirNo, 4).Value = s.Sube.SubeAdi;
-            sayfa.Cell(satirNo, 5).Value = DurumMetni(s.Durum);
-            sayfa.Cell(satirNo, 6).Value = TeslimDurumuMetni(s, _alisSiparisiService.TeslimMiktarlariHesapla(s));
-            sayfa.Cell(satirNo, 7).Value = s.Kalemler.Sum(KalemToplami);
-            satirNo++;
-        }
-        sayfa.Columns().AdjustToContents();
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var dosya = ExcelYardimcisi.ListeOlustur("Alış Siparişleri", basliklar, satirlar);
+        return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"alis-siparisi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 

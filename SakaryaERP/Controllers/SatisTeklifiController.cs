@@ -1,10 +1,10 @@
-using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -329,38 +329,15 @@ public class SatisTeklifiController : Controller
     {
         var (kayitlar, _, _) = await _satisTeklifiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[8], -1, "desc");
 
-        using var workbook = new XLWorkbook();
-        var sayfa = workbook.Worksheets.Add("Satış Teklifleri");
-
         string[] basliklar = ["Teklif No", "Tarih", "Geçerlilik Tarihi", "Cari", "Talep No", "Durum", "Toplam Tutar"];
-        for (var i = 0; i < basliklar.Length; i++)
+        var satirlar = kayitlar.Select(t => new object?[]
         {
-            sayfa.Cell(1, i + 1).Value = basliklar[i];
-            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+            t.TeklifNo, t.Tarih, t.GecerlilikTarihi, t.Cari.Unvan, t.MusteriTalebi?.TalepNo ?? "-",
+            DurumMetni(t.Durum), t.Kalemler.Sum(KalemToplami)
+        });
 
-        var satirNo = 2;
-        foreach (var t in kayitlar)
-        {
-            sayfa.Cell(satirNo, 1).Value = t.TeklifNo;
-            sayfa.Cell(satirNo, 2).Value = t.Tarih;
-            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
-            if (t.GecerlilikTarihi is not null)
-            {
-                sayfa.Cell(satirNo, 3).Value = t.GecerlilikTarihi.Value;
-                sayfa.Cell(satirNo, 3).Style.DateFormat.Format = "dd.MM.yyyy";
-            }
-            sayfa.Cell(satirNo, 4).Value = t.Cari.Unvan;
-            sayfa.Cell(satirNo, 5).Value = t.MusteriTalebi?.TalepNo ?? "-";
-            sayfa.Cell(satirNo, 6).Value = DurumMetni(t.Durum);
-            sayfa.Cell(satirNo, 7).Value = t.Kalemler.Sum(KalemToplami);
-            satirNo++;
-        }
-        sayfa.Columns().AdjustToContents();
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var dosya = ExcelYardimcisi.ListeOlustur("Satış Teklifleri", basliklar, satirlar);
+        return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"satis-teklifi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 }

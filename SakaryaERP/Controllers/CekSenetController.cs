@@ -1,7 +1,7 @@
-using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -321,37 +321,16 @@ public class CekSenetController : Controller
 
     public async Task<IActionResult> Excel()
     {
-        var kayitlar = await _cekSenetService.GetAllAsync();
-
-        using var workbook = new XLWorkbook();
-        var sayfa = workbook.Worksheets.Add("Çek-Senet");
+        var kayitlar = (await _cekSenetService.GetAllAsync()).Where(c => !c.IsDeleted);
 
         string[] basliklar = ["Belge Tipi", "Belge No", "Cari", "Vade Tarihi", "Tutar", "Banka Adı", "Şube Adı", "Durum"];
-        for (var i = 0; i < basliklar.Length; i++)
+        var satirlar = kayitlar.Select(c => new object?[]
         {
-            sayfa.Cell(1, i + 1).Value = basliklar[i];
-            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+            BelgeTipiMetni(c.BelgeTipi), c.BelgeNo, c.Cari.Unvan, c.VadeTarihi, c.Tutar, c.BankaAdi, c.SubeAdi, DurumMetni(c.Durum)
+        });
 
-        var satirNo = 2;
-        foreach (var c in kayitlar)
-        {
-            sayfa.Cell(satirNo, 1).Value = BelgeTipiMetni(c.BelgeTipi);
-            sayfa.Cell(satirNo, 2).Value = c.BelgeNo;
-            sayfa.Cell(satirNo, 3).Value = c.Cari.Unvan;
-            sayfa.Cell(satirNo, 4).Value = c.VadeTarihi;
-            sayfa.Cell(satirNo, 4).Style.DateFormat.Format = "dd.MM.yyyy";
-            sayfa.Cell(satirNo, 5).Value = c.Tutar;
-            sayfa.Cell(satirNo, 6).Value = c.BankaAdi;
-            sayfa.Cell(satirNo, 7).Value = c.SubeAdi;
-            sayfa.Cell(satirNo, 8).Value = DurumMetni(c.Durum);
-            satirNo++;
-        }
-        sayfa.Columns().AdjustToContents();
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var dosya = ExcelYardimcisi.ListeOlustur("Çek-Senet", basliklar, satirlar);
+        return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"cek-senet-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 }

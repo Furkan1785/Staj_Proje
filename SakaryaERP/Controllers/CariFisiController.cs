@@ -1,7 +1,7 @@
-using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -181,37 +181,17 @@ public class CariFisiController : Controller
 
     public async Task<IActionResult> Excel()
     {
-        var (kayitlar, _, _) = await _cariFisiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[8], 0, "desc");
-
-        using var workbook = new XLWorkbook();
-        var sayfa = workbook.Worksheets.Add("Cari Fişleri");
+        var (kayitlar, _, _) = await _cariFisiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[8], -1, "desc");
 
         string[] basliklar = ["Fiş No", "Tarih", "Cari", "Fiş Tipi", "Tutar", "Ödeme Yöntemi", "Hesap Adı", "Açıklama"];
-        for (var i = 0; i < basliklar.Length; i++)
+        var satirlar = kayitlar.Select(f => new object?[]
         {
-            sayfa.Cell(1, i + 1).Value = basliklar[i];
-            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+            f.FisNo, f.Tarih, f.Cari.Unvan, FisTipiMetni(f.FisTipi), f.Tutar,
+            OdemeYontemiMetni(f.OdemeYontemi), f.BankaHesabi?.HesapAdi ?? f.KasaHesabi?.KasaAdi, f.Aciklama
+        });
 
-        var satirNo = 2;
-        foreach (var f in kayitlar)
-        {
-            sayfa.Cell(satirNo, 1).Value = f.FisNo;
-            sayfa.Cell(satirNo, 2).Value = f.Tarih;
-            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
-            sayfa.Cell(satirNo, 3).Value = f.Cari.Unvan;
-            sayfa.Cell(satirNo, 4).Value = FisTipiMetni(f.FisTipi);
-            sayfa.Cell(satirNo, 5).Value = f.Tutar;
-            sayfa.Cell(satirNo, 6).Value = OdemeYontemiMetni(f.OdemeYontemi);
-            sayfa.Cell(satirNo, 7).Value = f.BankaHesabi?.HesapAdi ?? f.KasaHesabi?.KasaAdi;
-            sayfa.Cell(satirNo, 8).Value = f.Aciklama;
-            satirNo++;
-        }
-        sayfa.Columns().AdjustToContents();
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var dosya = ExcelYardimcisi.ListeOlustur("Cari Fişleri", basliklar, satirlar);
+        return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"cari-fisi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 }

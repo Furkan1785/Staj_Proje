@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -369,36 +370,15 @@ public class CariController : Controller
     {
         var cariler = await _cariService.GetAllAsync();
 
-        using var workbook = new XLWorkbook();
-        var sayfa = workbook.Worksheets.Add("Cariler");
-
         string[] basliklar = ["Cari Kodu", "Unvan", "Cari Tipi", "Vergi No", "Adres", "Telefon", "E-Posta", "Bakiye", "Kredi Limiti", "Durum"];
-        for (var i = 0; i < basliklar.Length; i++)
+        var satirlar = cariler.Select(c => new object?[]
         {
-            sayfa.Cell(1, i + 1).Value = basliklar[i];
-            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+            c.CariKodu, c.Unvan, CariTipiMetni(c.CariTipi), c.VergiNo, c.Adres, c.Telefon, c.EMail,
+            c.Bakiye, c.KrediLimiti, c.IsDeleted ? "Pasif" : "Aktif"
+        });
 
-        var satirNo = 2;
-        foreach (var c in cariler)
-        {
-            sayfa.Cell(satirNo, 1).Value = c.CariKodu;
-            sayfa.Cell(satirNo, 2).Value = c.Unvan;
-            sayfa.Cell(satirNo, 3).Value = CariTipiMetni(c.CariTipi);
-            sayfa.Cell(satirNo, 4).Value = c.VergiNo;
-            sayfa.Cell(satirNo, 5).Value = c.Adres;
-            sayfa.Cell(satirNo, 6).Value = c.Telefon;
-            sayfa.Cell(satirNo, 7).Value = c.EMail;
-            sayfa.Cell(satirNo, 8).Value = c.Bakiye;
-            sayfa.Cell(satirNo, 9).Value = c.KrediLimiti;
-            sayfa.Cell(satirNo, 10).Value = c.IsDeleted ? "Pasif" : "Aktif";
-            satirNo++;
-        }
-        sayfa.Columns().AdjustToContents();
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var dosya = ExcelYardimcisi.ListeOlustur("Cariler", basliklar, satirlar);
+        return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"cari-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 

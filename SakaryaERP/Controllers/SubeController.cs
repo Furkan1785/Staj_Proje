@@ -1,6 +1,6 @@
-using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -116,29 +116,11 @@ public class SubeController : Controller
     {
         var subeler = await _subeService.GetAllAsync();
 
-        using var workbook = new XLWorkbook();
-        var sayfa = workbook.Worksheets.Add("Şubeler");
-
         string[] basliklar = ["Şube Adı", "Adres", "Durum"];
-        for (var i = 0; i < basliklar.Length; i++)
-        {
-            sayfa.Cell(1, i + 1).Value = basliklar[i];
-            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+        var satirlar = subeler.Select(s => new object?[] { s.SubeAdi, s.Adres, s.IsDeleted ? "Pasif" : "Aktif" });
 
-        var satirNo = 2;
-        foreach (var s in subeler)
-        {
-            sayfa.Cell(satirNo, 1).Value = s.SubeAdi;
-            sayfa.Cell(satirNo, 2).Value = s.Adres;
-            sayfa.Cell(satirNo, 3).Value = s.IsDeleted ? "Pasif" : "Aktif";
-            satirNo++;
-        }
-        sayfa.Columns().AdjustToContents();
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var dosya = ExcelYardimcisi.ListeOlustur("Şubeler", basliklar, satirlar);
+        return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"sube-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 }

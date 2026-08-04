@@ -31,9 +31,6 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     public DbSet<Malzeme> Malzemeler { get; set; }
     public DbSet<MalzemeHareketFisi> MalzemeHareketFisleri { get; set; }
     public DbSet<MalzemeHareketFisiKalemi> MalzemeHareketFisiKalemleri { get; set; }
-    public DbSet<AlisTalebi> AlisTalepleri { get; set; }
-    public DbSet<AlisTeklifi> AlisTeklifleri { get; set; }
-    public DbSet<AlisTeklifiKalemi> AlisTeklifiKalemleri { get; set; }
     public DbSet<AlisSiparisi> AlisSiparisleri { get; set; }
     public DbSet<AlisSiparisiKalemi> AlisSiparisiKalemleri { get; set; }
     public DbSet<AlisIrsaliyesi> AlisIrsaliyeleri { get; set; }
@@ -156,12 +153,6 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
             .HasOne(k => k.AlisSiparisi)
             .WithMany(s => s.Kalemler)
             .HasForeignKey(k => k.AlisSiparisiId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<AlisTeklifiKalemi>()
-            .HasOne(k => k.AlisTeklifi)
-            .WithMany(t => t.Kalemler)
-            .HasForeignKey(k => k.AlisTeklifiId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<AlisIrsaliyesiKalemi>()

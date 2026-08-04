@@ -1,10 +1,10 @@
-using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -332,34 +332,15 @@ public class AlisIrsaliyesiController : Controller
     {
         var (kayitlar, _, _) = await _alisIrsaliyesiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[7], -1, "desc");
 
-        using var workbook = new XLWorkbook();
-        var sayfa = workbook.Worksheets.Add("Alış İrsaliyeleri");
-
         string[] basliklar = ["İrsaliye No", "Tarih", "Cari", "Şube", "Sipariş No", "Durum", "Kalem Sayısı"];
-        for (var i = 0; i < basliklar.Length; i++)
+        var satirlar = kayitlar.Select(irsaliye => new object?[]
         {
-            sayfa.Cell(1, i + 1).Value = basliklar[i];
-            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+            irsaliye.IrsaliyeNo, irsaliye.Tarih, irsaliye.Cari.Unvan, irsaliye.Sube.SubeAdi,
+            irsaliye.AlisSiparisi?.SiparisNo ?? "-", DurumMetni(irsaliye.Durum), irsaliye.Kalemler.Count
+        });
 
-        var satirNo = 2;
-        foreach (var irsaliye in kayitlar)
-        {
-            sayfa.Cell(satirNo, 1).Value = irsaliye.IrsaliyeNo;
-            sayfa.Cell(satirNo, 2).Value = irsaliye.Tarih;
-            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
-            sayfa.Cell(satirNo, 3).Value = irsaliye.Cari.Unvan;
-            sayfa.Cell(satirNo, 4).Value = irsaliye.Sube.SubeAdi;
-            sayfa.Cell(satirNo, 5).Value = irsaliye.AlisSiparisi?.SiparisNo ?? "-";
-            sayfa.Cell(satirNo, 6).Value = DurumMetni(irsaliye.Durum);
-            sayfa.Cell(satirNo, 7).Value = irsaliye.Kalemler.Count;
-            satirNo++;
-        }
-        sayfa.Columns().AdjustToContents();
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var dosya = ExcelYardimcisi.ListeOlustur("Alış İrsaliyeleri", basliklar, satirlar);
+        return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"alis-irsaliyesi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 }

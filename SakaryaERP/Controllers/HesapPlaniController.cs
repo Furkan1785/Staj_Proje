@@ -1,6 +1,6 @@
-using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SakaryaERP.Helpers;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
 using SakaryaERP.ViewModels;
@@ -55,29 +55,11 @@ public class HesapPlaniController : Controller
         var hesaplar = (await _hesapPlaniService.GetAllAsync()).ToList();
         var vm = HiyerarsikListeOlustur(hesaplar);
 
-        using var workbook = new XLWorkbook();
-        var sayfa = workbook.Worksheets.Add("Hesap Planı");
-
         string[] basliklar = ["Hesap Kodu", "Hesap Adı", "Hesap Tipi"];
-        for (var i = 0; i < basliklar.Length; i++)
-        {
-            sayfa.Cell(1, i + 1).Value = basliklar[i];
-            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
-        }
+        var satirlar = vm.Select(h => new object?[] { h.HesapKodu, new string(' ', h.Seviye * 2) + h.HesapAdi, h.HesapTipi });
 
-        var satirNo = 2;
-        foreach (var h in vm)
-        {
-            sayfa.Cell(satirNo, 1).Value = h.HesapKodu;
-            sayfa.Cell(satirNo, 2).Value = new string(' ', h.Seviye * 2) + h.HesapAdi;
-            sayfa.Cell(satirNo, 3).Value = h.HesapTipi;
-            satirNo++;
-        }
-        sayfa.Columns().AdjustToContents();
-
-        using var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        var dosya = ExcelYardimcisi.ListeOlustur("Hesap Planı", basliklar, satirlar);
+        return File(dosya, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"hesap-plani-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 
