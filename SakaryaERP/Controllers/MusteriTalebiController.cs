@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -174,4 +175,37 @@ public class MusteriTalebiController : Controller
         BelgeDurum.Iptal => "İptal",
         _ => durum.ToString()
     };
+
+    public async Task<IActionResult> Excel()
+    {
+        var (kayitlar, _, _) = await _musteriTalebiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[6], -1, "desc");
+
+        using var workbook = new XLWorkbook();
+        var sayfa = workbook.Worksheets.Add("Müşteri Talepleri");
+
+        string[] basliklar = ["Talep No", "Tarih", "Cari", "İçerik", "Durum"];
+        for (var i = 0; i < basliklar.Length; i++)
+        {
+            sayfa.Cell(1, i + 1).Value = basliklar[i];
+            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
+        }
+
+        var satirNo = 2;
+        foreach (var t in kayitlar)
+        {
+            sayfa.Cell(satirNo, 1).Value = t.TalepNo;
+            sayfa.Cell(satirNo, 2).Value = t.Tarih;
+            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
+            sayfa.Cell(satirNo, 3).Value = t.Cari.Unvan;
+            sayfa.Cell(satirNo, 4).Value = t.Icerik;
+            sayfa.Cell(satirNo, 5).Value = DurumMetni(t.Durum);
+            satirNo++;
+        }
+        sayfa.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"musteri-talebi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
+    }
 }

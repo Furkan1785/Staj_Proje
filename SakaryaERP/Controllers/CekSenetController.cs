@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -301,4 +302,40 @@ public class CekSenetController : Controller
         CekSenetDurum.TahsilEdildi => "Tahsil Edildi",
         _ => durum.ToString()
     };
+
+    public async Task<IActionResult> Excel()
+    {
+        var kayitlar = await _cekSenetService.GetAllAsync();
+
+        using var workbook = new XLWorkbook();
+        var sayfa = workbook.Worksheets.Add("Çek-Senet");
+
+        string[] basliklar = ["Belge Tipi", "Belge No", "Cari", "Vade Tarihi", "Tutar", "Banka Adı", "Şube Adı", "Durum"];
+        for (var i = 0; i < basliklar.Length; i++)
+        {
+            sayfa.Cell(1, i + 1).Value = basliklar[i];
+            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
+        }
+
+        var satirNo = 2;
+        foreach (var c in kayitlar)
+        {
+            sayfa.Cell(satirNo, 1).Value = BelgeTipiMetni(c.BelgeTipi);
+            sayfa.Cell(satirNo, 2).Value = c.BelgeNo;
+            sayfa.Cell(satirNo, 3).Value = c.Cari.Unvan;
+            sayfa.Cell(satirNo, 4).Value = c.VadeTarihi;
+            sayfa.Cell(satirNo, 4).Style.DateFormat.Format = "dd.MM.yyyy";
+            sayfa.Cell(satirNo, 5).Value = c.Tutar;
+            sayfa.Cell(satirNo, 6).Value = c.BankaAdi;
+            sayfa.Cell(satirNo, 7).Value = c.SubeAdi;
+            sayfa.Cell(satirNo, 8).Value = DurumMetni(c.Durum);
+            satirNo++;
+        }
+        sayfa.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"cek-senet-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
+    }
 }

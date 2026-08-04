@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -309,4 +310,38 @@ public class SevkIrsaliyesiController : Controller
         BelgeDurum.Iptal => "İptal",
         _ => durum.ToString()
     };
+
+    public async Task<IActionResult> Excel()
+    {
+        var (kayitlar, _, _) = await _sevkIrsaliyesiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[7], -1, "desc");
+
+        using var workbook = new XLWorkbook();
+        var sayfa = workbook.Worksheets.Add("Sevk İrsaliyeleri");
+
+        string[] basliklar = ["İrsaliye No", "Tarih", "Cari", "Sipariş No", "Şube", "Durum"];
+        for (var i = 0; i < basliklar.Length; i++)
+        {
+            sayfa.Cell(1, i + 1).Value = basliklar[i];
+            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
+        }
+
+        var satirNo = 2;
+        foreach (var irsaliye in kayitlar)
+        {
+            sayfa.Cell(satirNo, 1).Value = irsaliye.IrsaliyeNo;
+            sayfa.Cell(satirNo, 2).Value = irsaliye.Tarih;
+            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
+            sayfa.Cell(satirNo, 3).Value = irsaliye.SatisSiparisi.Cari.Unvan;
+            sayfa.Cell(satirNo, 4).Value = irsaliye.SatisSiparisi.SiparisNo;
+            sayfa.Cell(satirNo, 5).Value = irsaliye.Sube.SubeAdi;
+            sayfa.Cell(satirNo, 6).Value = DurumMetni(irsaliye.Durum);
+            satirNo++;
+        }
+        sayfa.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"sevk-irsaliyesi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
+    }
 }

@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SakaryaERP.Models;
@@ -121,5 +122,38 @@ public class BankaHesabiController : Controller
         await _bankaHesabiService.AktifEtAsync(id);
         TempData["Basari"] = "Banka hesabı aktif yapıldı.";
         return RedirectToAction(nameof(Index));
+    }
+
+    public async Task<IActionResult> Excel()
+    {
+        var hesaplar = await _bankaHesabiService.GetAllAsync();
+
+        using var workbook = new XLWorkbook();
+        var sayfa = workbook.Worksheets.Add("Banka Hesapları");
+
+        string[] basliklar = ["Hesap Adı", "Banka Adı", "IBAN", "Bakiye", "Para Birimi", "Durum"];
+        for (var i = 0; i < basliklar.Length; i++)
+        {
+            sayfa.Cell(1, i + 1).Value = basliklar[i];
+            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
+        }
+
+        var satirNo = 2;
+        foreach (var h in hesaplar)
+        {
+            sayfa.Cell(satirNo, 1).Value = h.HesapAdi;
+            sayfa.Cell(satirNo, 2).Value = h.BankaAdi;
+            sayfa.Cell(satirNo, 3).Value = h.IBAN;
+            sayfa.Cell(satirNo, 4).Value = h.Bakiye;
+            sayfa.Cell(satirNo, 5).Value = h.ParaBirimi;
+            sayfa.Cell(satirNo, 6).Value = h.IsDeleted ? "Pasif" : "Aktif";
+            satirNo++;
+        }
+        sayfa.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"banka-hesaplari-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 }

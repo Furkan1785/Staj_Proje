@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -177,4 +178,40 @@ public class CariFisiController : Controller
         OdemeYontemi.KrediKarti => "Kredi Kartı",
         _ => yontem.ToString()
     };
+
+    public async Task<IActionResult> Excel()
+    {
+        var (kayitlar, _, _) = await _cariFisiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[8], 0, "desc");
+
+        using var workbook = new XLWorkbook();
+        var sayfa = workbook.Worksheets.Add("Cari Fişleri");
+
+        string[] basliklar = ["Fiş No", "Tarih", "Cari", "Fiş Tipi", "Tutar", "Ödeme Yöntemi", "Hesap Adı", "Açıklama"];
+        for (var i = 0; i < basliklar.Length; i++)
+        {
+            sayfa.Cell(1, i + 1).Value = basliklar[i];
+            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
+        }
+
+        var satirNo = 2;
+        foreach (var f in kayitlar)
+        {
+            sayfa.Cell(satirNo, 1).Value = f.FisNo;
+            sayfa.Cell(satirNo, 2).Value = f.Tarih;
+            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
+            sayfa.Cell(satirNo, 3).Value = f.Cari.Unvan;
+            sayfa.Cell(satirNo, 4).Value = FisTipiMetni(f.FisTipi);
+            sayfa.Cell(satirNo, 5).Value = f.Tutar;
+            sayfa.Cell(satirNo, 6).Value = OdemeYontemiMetni(f.OdemeYontemi);
+            sayfa.Cell(satirNo, 7).Value = f.BankaHesabi?.HesapAdi ?? f.KasaHesabi?.KasaAdi;
+            sayfa.Cell(satirNo, 8).Value = f.Aciklama;
+            satirNo++;
+        }
+        sayfa.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"cari-fisi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
+    }
 }

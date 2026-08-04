@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -191,4 +192,38 @@ public class MalzemeHareketFisiController : Controller
         BelgeDurum.Iptal => "İptal",
         _ => durum.ToString()
     };
+
+    public async Task<IActionResult> Excel()
+    {
+        var (kayitlar, _, _) = await _malzemeHareketFisiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[6], -1, "desc");
+
+        using var workbook = new XLWorkbook();
+        var sayfa = workbook.Worksheets.Add("Malzeme Hareket Fişleri");
+
+        string[] basliklar = ["Fiş No", "Tarih", "Hareket Tipi", "Şube", "Kalem Sayısı", "Durum"];
+        for (var i = 0; i < basliklar.Length; i++)
+        {
+            sayfa.Cell(1, i + 1).Value = basliklar[i];
+            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
+        }
+
+        var satirNo = 2;
+        foreach (var f in kayitlar)
+        {
+            sayfa.Cell(satirNo, 1).Value = f.FisNo;
+            sayfa.Cell(satirNo, 2).Value = f.Tarih;
+            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
+            sayfa.Cell(satirNo, 3).Value = HareketTipiMetni(f.HareketTipi);
+            sayfa.Cell(satirNo, 4).Value = f.Sube.SubeAdi;
+            sayfa.Cell(satirNo, 5).Value = f.Kalemler.Count;
+            sayfa.Cell(satirNo, 6).Value = DurumMetni(f.Durum);
+            satirNo++;
+        }
+        sayfa.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"malzeme-hareket-fisi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
+    }
 }

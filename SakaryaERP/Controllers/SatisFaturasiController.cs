@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -419,5 +420,45 @@ public class SatisFaturasiController : Controller
         }
         zincir.Add(new BelgeZinciriAdimi { Etiket = "Fatura", Metin = fatura.FaturaNo, Aktif = true });
         return zincir;
+    }
+
+    public async Task<IActionResult> Excel()
+    {
+        var (kayitlar, _, _) = await _satisFaturasiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[9], -1, "desc");
+
+        using var workbook = new XLWorkbook();
+        var sayfa = workbook.Worksheets.Add("Satış Faturaları");
+
+        string[] basliklar = ["Fatura No", "Tarih", "Vade Tarihi", "Cari", "Sipariş No", "İrsaliye No", "Durum", "Toplam Tutar"];
+        for (var i = 0; i < basliklar.Length; i++)
+        {
+            sayfa.Cell(1, i + 1).Value = basliklar[i];
+            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
+        }
+
+        var satirNo = 2;
+        foreach (var f in kayitlar)
+        {
+            sayfa.Cell(satirNo, 1).Value = f.FaturaNo;
+            sayfa.Cell(satirNo, 2).Value = f.Tarih;
+            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
+            if (f.VadeTarihi is not null)
+            {
+                sayfa.Cell(satirNo, 3).Value = f.VadeTarihi.Value;
+                sayfa.Cell(satirNo, 3).Style.DateFormat.Format = "dd.MM.yyyy";
+            }
+            sayfa.Cell(satirNo, 4).Value = f.Cari.Unvan;
+            sayfa.Cell(satirNo, 5).Value = f.SatisSiparisi?.SiparisNo ?? "-";
+            sayfa.Cell(satirNo, 6).Value = f.SevkIrsaliyesi?.IrsaliyeNo ?? "-";
+            sayfa.Cell(satirNo, 7).Value = DurumMetni(f.Durum);
+            sayfa.Cell(satirNo, 8).Value = f.Kalemler.Sum(KalemToplami);
+            satirNo++;
+        }
+        sayfa.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"satis-faturasi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 }

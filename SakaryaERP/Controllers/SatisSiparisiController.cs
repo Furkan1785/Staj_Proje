@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -282,5 +283,40 @@ public class SatisSiparisiController : Controller
         }
         zincir.Add(new BelgeZinciriAdimi { Etiket = "Sipariş", Metin = siparis.SiparisNo, Aktif = true });
         return zincir;
+    }
+
+    public async Task<IActionResult> Excel()
+    {
+        var (kayitlar, _, _) = await _satisSiparisiService.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[7], -1, "desc");
+
+        using var workbook = new XLWorkbook();
+        var sayfa = workbook.Worksheets.Add("Satış Siparişleri");
+
+        string[] basliklar = ["Sipariş No", "Tarih", "Cari", "Teklif No", "Durum", "Sevk Durumu", "Toplam Tutar"];
+        for (var i = 0; i < basliklar.Length; i++)
+        {
+            sayfa.Cell(1, i + 1).Value = basliklar[i];
+            sayfa.Cell(1, i + 1).Style.Font.Bold = true;
+        }
+
+        var satirNo = 2;
+        foreach (var s in kayitlar)
+        {
+            sayfa.Cell(satirNo, 1).Value = s.SiparisNo;
+            sayfa.Cell(satirNo, 2).Value = s.Tarih;
+            sayfa.Cell(satirNo, 2).Style.DateFormat.Format = "dd.MM.yyyy";
+            sayfa.Cell(satirNo, 3).Value = s.Cari.Unvan;
+            sayfa.Cell(satirNo, 4).Value = s.SatisTeklifi?.TeklifNo ?? "-";
+            sayfa.Cell(satirNo, 5).Value = DurumMetni(s.Durum);
+            sayfa.Cell(satirNo, 6).Value = SevkDurumuMetni(s, _satisSiparisiService.SevkMiktarlariHesapla(s));
+            sayfa.Cell(satirNo, 7).Value = s.Kalemler.Sum(KalemToplami);
+            satirNo++;
+        }
+        sayfa.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"satis-siparisi-listesi-{DateTime.Today:yyyyMMdd}.xlsx");
     }
 }

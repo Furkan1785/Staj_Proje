@@ -180,10 +180,11 @@ gerektiriyor — bu bir öğrenci projesinin kapsamının doğası gereği dış
 
 ### 4.6. Kullanıcı deneyimi boşlukları (daha önce konuşulan, henüz uygulanmayan)
 
-- **Kaydedilmeden çıkış uyarısı** — `docs/kayit-karti-tasarim-plani.md` Bölüm
-  8.2'de tanımlandı, henüz kodlanmadı.
-- **Zorunlu alan görsel işareti** (kırmızı `*`) — aynı bölümde tanımlandı,
-  henüz kodlanmadı.
+- ~~Kaydedilmeden çıkış uyarısı~~ ve ~~zorunlu alan görsel işareti~~ —
+  **tamamlandı** (`wwwroot/js/site.js` + `wwwroot/css/site.css`, Kademe 1
+  commit'inde eklendi). Bu bölümün eski hali "docs/kayit-karti-tasarim-plani.md
+  Bölüm 8.2" diye bir kaynak gösteriyordu; o doküman incelendiğinde böyle bir
+  bölüm hiç var olmamış — yanlış/uydurma bir atıftı, düzeltildi.
 - **Toplu işlem** (checkbox ile çoklu seçip toplu onaylama/silme) — grid'lerde
   satır bazlı aksiyon var, toplu seçim yok.
 - **Kayıt versiyon karşılaştırma / "kim ne zaman değiştirdi" ekranı** — 4.4'teki
@@ -205,8 +206,8 @@ gerektiriyor — bu bir öğrenci projesinin kapsamının doğası gereği dış
    bir uç nokta, Docker/nginx health check'iyle entegre edilebilir.
 5. **Şifre politikası sıkılaştırma** — min 8 karakter + en az bir rakam/harf
    karışımı zorunluluğu (`Program.cs`'te birkaç satır).
-6. **Kaydedilmeden çıkış uyarısı + zorunlu alan işareti** — zaten
-   `kayit-karti-tasarim-plani.md`'de tanımlı, onaylanırsa uygulanabilir.
+6. ~~Kaydedilmeden çıkış uyarısı + zorunlu alan işareti~~ — **tamamlandı**
+   (bkz. 4.6).
 7. **Basit audit log tablosu** — `AuditLog` (EntityAdi, EntityId, Alan,
    EskiDeger, YeniDeger, KullaniciAdi, Tarih), `DbContext.SaveChangesAsync`
    override'ında `ChangeTracker.Entries()` üzerinden otomatik doldurulur.
