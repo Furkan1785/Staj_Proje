@@ -36,6 +36,7 @@ else
             </div>
             <div class="app-sidebar-nav">
                 <a class="nav-link @(Aktif("Dashboard") ? "active" : "")" asp-controller="Dashboard" asp-action="Index">Anasayfa</a>
+                <a class="nav-link @(Aktif("BelgeTakip") ? "active" : "")" asp-controller="BelgeTakip" asp-action="Index">Belge Takip</a>
 
                 @if (finansGorunur)
                 {

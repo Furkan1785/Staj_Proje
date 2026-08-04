@@ -109,6 +109,14 @@ public class SatisTeklifiService : ISatisTeklifiService
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    public async Task<List<SatisTeklifi>> GetBeklemedeListesiAsync()
+    {
+        return await _unitOfWork.Repository<SatisTeklifi>().QueryTumu()
+            .Include(t => t.Cari)
+            .Where(t => t.Durum == BelgeDurum.Beklemede)
+            .ToListAsync();
+    }
+
     public async Task OnaylaAsync(int id)
     {
         var teklif = await _unitOfWork.Repository<SatisTeklifi>().GetByIdAsync(id)

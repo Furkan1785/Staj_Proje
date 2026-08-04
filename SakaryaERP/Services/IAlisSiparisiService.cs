@@ -13,6 +13,9 @@ public interface IAlisSiparisiService
     Task OnaylaAsync(int id);
     Task IptalEtAsync(int id);
 
+    // Belge takip ekranı: teslim tarihi geçen/yaklaşan siparişlerin tespiti için.
+    Task<List<AlisSiparisi>> GetBeklemedeListesiAsync();
+
     // Onaylanmış alış irsaliyesi kalemlerinden malzeme bazında teslim alınan toplam miktarı hesaplar.
     Dictionary<int, decimal> TeslimMiktarlariHesapla(AlisSiparisi siparis);
 }

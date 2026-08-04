@@ -14,6 +14,10 @@ public class SatisSiparisiFormViewModel
     [Display(Name = "Müşteri")]
     public int? CariId { get; set; }
 
+    [DataType(DataType.Date)]
+    [Display(Name = "Teslim Tarihi")]
+    public DateTime? TeslimTarihi { get; set; }
+
     [StringLength(500, ErrorMessage = "Açıklama en fazla 500 karakter olabilir.")]
     [Display(Name = "Açıklama")]
     public string? Aciklama { get; set; }

@@ -13,6 +13,9 @@ public interface ISatisSiparisiService
     Task OnaylaAsync(int id);
     Task IptalEtAsync(int id);
 
+    // Belge takip ekranı: teslim tarihi geçen/yaklaşan siparişlerin tespiti için.
+    Task<List<SatisSiparisi>> GetBeklemedeListesiAsync();
+
     // Bir teklif için zaten iptal edilmemiş bir sipariş oluşturulmuş mu (tekrar dönüştürmeyi engellemek için).
     Task<bool> AktifSiparisVarMiTeklifIcinAsync(int satisTeklifiId);
 

@@ -110,6 +110,14 @@ public class SatisSiparisiService : ISatisSiparisiService
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
+    public async Task<List<SatisSiparisi>> GetBeklemedeListesiAsync()
+    {
+        return await _unitOfWork.Repository<SatisSiparisi>().QueryTumu()
+            .Include(s => s.Cari)
+            .Where(s => s.Durum == BelgeDurum.Beklemede)
+            .ToListAsync();
+    }
+
     public async Task OnaylaAsync(int id)
     {
         var siparis = await _unitOfWork.Repository<SatisSiparisi>().GetByIdAsync(id)

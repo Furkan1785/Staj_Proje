@@ -130,6 +130,7 @@ public class AlisSiparisiController : Controller
             var siparis = new AlisSiparisi
             {
                 Tarih = vm.Tarih,
+                TeslimTarihi = vm.TeslimTarihi,
                 CariId = vm.CariId!.Value,
                 SubeId = vm.SubeId!.Value,
                 Aciklama = vm.Aciklama
@@ -288,6 +289,7 @@ public class AlisSiparisiController : Controller
             Id = siparis.Id,
             SiparisNo = siparis.SiparisNo,
             Tarih = siparis.Tarih,
+            TeslimTarihi = siparis.TeslimTarihi,
             CariId = siparis.CariId,
             CariUnvan = siparis.Cari.Unvan,
             SubeAdi = siparis.Sube.SubeAdi,

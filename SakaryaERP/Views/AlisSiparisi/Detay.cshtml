@@ -59,6 +59,8 @@
             <dd class="col-sm-4"><partial name="_CariLinki" model="(Model.CariId, Model.CariUnvan)" /></dd>
             <dt class="col-sm-2">Şube</dt>
             <dd class="col-sm-4">@Model.SubeAdi</dd>
+            <dt class="col-sm-2">Teslim Tarihi</dt>
+            <dd class="col-sm-4">@(Model.TeslimTarihi?.ToString("dd.MM.yyyy") ?? "-")</dd>
             <dt class="col-sm-2">Açıklama</dt>
             <dd class="col-sm-10">@(Model.Aciklama ?? "-")</dd>
         </dl>

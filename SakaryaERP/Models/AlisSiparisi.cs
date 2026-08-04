@@ -6,6 +6,7 @@ public class AlisSiparisi : BaseEntity
     public int CariId { get; set; }
     public int SubeId { get; set; }
     public DateTime Tarih { get; set; }
+    public DateTime? TeslimTarihi { get; set; }
     public BelgeDurum Durum { get; set; } = BelgeDurum.Beklemede;
     public string? Aciklama { get; set; }
 

@@ -1,0 +1,61 @@
+@model BelgeTakipViewModel
+@{
+    ViewData["Title"] = "Belge Takip";
+
+    void Tablo(string baslik, string rozetSinifi, List<BelgeTakipSatiriViewModel> satirlar, string kontrolor, string tarihBasligi, bool geciken)
+    {
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>@baslik</span>
+                <span class="badge @rozetSinifi">@satirlar.Count</span>
+            </div>
+            @if (satirlar.Count == 0)
+            {
+                <div class="card-body text-muted">Kayıt bulunmuyor.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Belge No</th>
+                                <th>Cari</th>
+                                <th>@tarihBasligi</th>
+                                <th>@(geciken ? "Geciken Gün" : "Kalan Gün")</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in satirlar)
+                            {
+                                <tr>
+                                    <td>@s.BelgeNo</td>
+                                    <td>@s.CariUnvan</td>
+                                    <td>@s.Tarih.ToString("dd.MM.yyyy")</td>
+                                    <td>@Math.Abs(s.GunFarki)</td>
+                                    <td><a href="@Url.Action("Detay", kontrolor, new { id = s.Id })" class="btn btn-sm btn-outline-secondary">Detay</a></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Belge Takip</h3>
+    <span class="text-muted small">Yaklaşan penceresi: @Model.GunSayisi gün</span>
+</div>
+
+<h5 class="text-danger">Geciken Belgeler</h5>
+@{ Tablo("Geciken Satış Teklifleri", "bg-danger", Model.GecikenTeklifler, "SatisTeklifi", "Geçerlilik Tarihi", true); }
+@{ Tablo("Geciken Satış Siparişleri", "bg-danger", Model.GecikenSatisSiparisleri, "SatisSiparisi", "Teslim Tarihi", true); }
+@{ Tablo("Geciken Alış Siparişleri", "bg-danger", Model.GecikenAlisSiparisleri, "AlisSiparisi", "Teslim Tarihi", true); }
+
+<h5 class="text-warning mt-5">Yaklaşan Belgeler</h5>
+@{ Tablo("Yaklaşan Satış Teklifleri", "bg-warning text-dark", Model.YaklasanTeklifler, "SatisTeklifi", "Geçerlilik Tarihi", false); }
+@{ Tablo("Yaklaşan Satış Siparişleri", "bg-warning text-dark", Model.YaklasanSatisSiparisleri, "SatisSiparisi", "Teslim Tarihi", false); }
+@{ Tablo("Yaklaşan Alış Siparişleri", "bg-warning text-dark", Model.YaklasanAlisSiparisleri, "AlisSiparisi", "Teslim Tarihi", false); }

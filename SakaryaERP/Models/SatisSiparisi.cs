@@ -6,6 +6,7 @@ public class SatisSiparisi : BaseEntity
     public int CariId { get; set; }
     public int? SatisTeklifiId { get; set; }
     public DateTime Tarih { get; set; }
+    public DateTime? TeslimTarihi { get; set; }
     public BelgeDurum Durum { get; set; } = BelgeDurum.Beklemede;
     public string? Aciklama { get; set; }
 

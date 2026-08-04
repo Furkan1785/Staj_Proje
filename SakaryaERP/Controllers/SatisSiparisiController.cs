@@ -129,6 +129,7 @@ public class SatisSiparisiController : Controller
             var siparis = new SatisSiparisi
             {
                 Tarih = vm.Tarih,
+                TeslimTarihi = vm.TeslimTarihi,
                 CariId = vm.CariId!.Value,
                 SatisTeklifiId = vm.SatisTeklifiId,
                 Aciklama = vm.Aciklama
@@ -341,6 +342,7 @@ public class SatisSiparisiController : Controller
             Id = siparis.Id,
             SiparisNo = siparis.SiparisNo,
             Tarih = siparis.Tarih,
+            TeslimTarihi = siparis.TeslimTarihi,
             CariId = siparis.CariId,
             CariUnvan = siparis.Cari.Unvan,
             TeklifNo = siparis.SatisTeklifi?.TeklifNo,

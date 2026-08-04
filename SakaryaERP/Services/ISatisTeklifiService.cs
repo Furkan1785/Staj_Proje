@@ -12,4 +12,7 @@ public interface ISatisTeklifiService
     Task<SatisTeklifi?> GetByIdDetayAsync(int id);
     Task OnaylaAsync(int id);
     Task IptalEtAsync(int id);
+
+    // Belge takip ekranı: geçerlilik tarihi geçen/yaklaşan tekliflerin tespiti için.
+    Task<List<SatisTeklifi>> GetBeklemedeListesiAsync();
 }
