@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -32,7 +34,8 @@ public class SevkIrsaliyesiServiceTests
         baglam.SatisSiparisleri.Add(siparis);
         await baglam.SaveChangesAsync();
 
-        return (baglam, new SevkIrsaliyesiService(unitOfWork), sube, malzeme, siparis);
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        return (baglam, new SevkIrsaliyesiService(unitOfWork, onayYetkisiService), sube, malzeme, siparis);
     }
 
     [Fact]

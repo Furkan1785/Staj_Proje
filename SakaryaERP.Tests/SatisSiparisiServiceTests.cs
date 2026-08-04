@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -7,8 +10,8 @@ namespace SakaryaERP.Tests;
 
 public class SatisSiparisiServiceTests
 {
-    private static async Task<(AppDbContext Baglam, SatisSiparisiService Servis, Cari Cari, Malzeme Malzeme, SatisTeklifi Teklif)>
-        SenaryoKur(BelgeDurum teklifDurumu = BelgeDurum.Onaylandi, DateTime? gecerlilikTarihi = null)
+    private static async Task<(AppDbContext Baglam, UnitOfWork UnitOfWork, Cari Cari, Malzeme Malzeme, SatisTeklifi Teklif)>
+        TemelVeriKur(BelgeDurum teklifDurumu = BelgeDurum.Onaylandi, DateTime? gecerlilikTarihi = null)
     {
         var baglam = TestDbContextFactory.OlusturYeniBaglam();
         var unitOfWork = new UnitOfWork(baglam);
@@ -31,7 +34,14 @@ public class SatisSiparisiServiceTests
         baglam.SatisTeklifleri.Add(teklif);
         await baglam.SaveChangesAsync();
 
-        return (baglam, new SatisSiparisiService(unitOfWork), cari, malzeme, teklif);
+        return (baglam, unitOfWork, cari, malzeme, teklif);
+    }
+
+    private static async Task<(AppDbContext Baglam, SatisSiparisiService Servis, Cari Cari, Malzeme Malzeme, SatisTeklifi Teklif)>
+        SenaryoKur(BelgeDurum teklifDurumu = BelgeDurum.Onaylandi, DateTime? gecerlilikTarihi = null)
+    {
+        var (baglam, unitOfWork, cari, malzeme, teklif) = await TemelVeriKur(teklifDurumu, gecerlilikTarihi);
+        return (baglam, ServisOlustur(unitOfWork, kullaniciAdi: null, rol: null), cari, malzeme, teklif);
     }
 
     private static SatisSiparisi YeniSiparis(int cariId, int? teklifId) => new()
@@ -43,6 +53,16 @@ public class SatisSiparisiServiceTests
 
     private static List<SatisSiparisiKalemi> Kalemler(int malzemeId) =>
         [new SatisSiparisiKalemi { MalzemeId = malzemeId, Miktar = 10, BirimFiyat = 50, KdvOrani = 20, Iskonto = 0 }];
+
+    private static SatisSiparisiService ServisOlustur(UnitOfWork unitOfWork, string? kullaniciAdi, string? rol)
+    {
+        var kimlik = kullaniciAdi is null
+            ? new ClaimsIdentity()
+            : new ClaimsIdentity([new Claim(ClaimTypes.Name, kullaniciAdi), .. rol is null ? [] : new[] { new Claim(ClaimTypes.Role, rol) }], "TestAuth");
+        var accessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(kimlik) } };
+        var onayYetkisiService = new OnayYetkisiService(accessor, new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        return new SatisSiparisiService(unitOfWork, onayYetkisiService);
+    }
 
     [Fact]
     public async Task CreateAsync_OnayliVeSuresiGecmemisTeklif_BasariylaOlusur()
@@ -89,5 +109,52 @@ public class SatisSiparisiServiceTests
         var yeniSiparis = await servis.CreateAsync(YeniSiparis(cari.Id, teklif.Id), Kalemler(malzeme.Id));
 
         Assert.Equal("SS-000002", yeniSiparis.SiparisNo);
+    }
+
+    [Fact]
+    public async Task OnaylaAsync_OlusturanKendiSiparisiniOnaylayamaz_HataFirlatirVeDurumDegismez()
+    {
+        var (baglam, unitOfWork, cari, malzeme, teklif) = await TemelVeriKur();
+        var olusturanServis = ServisOlustur(unitOfWork, kullaniciAdi: "satiseleman1", rol: "Satis");
+        var siparis = await olusturanServis.CreateAsync(YeniSiparis(cari.Id, teklif.Id), Kalemler(malzeme.Id));
+        siparis.CreatedBy = "satiseleman1";
+        await baglam.SaveChangesAsync();
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => olusturanServis.OnaylaAsync(siparis.Id));
+        Assert.Contains("kendi belgesini onaylayamaz", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelSiparis = await baglam.SatisSiparisleri.FindAsync(siparis.Id);
+        Assert.Equal(BelgeDurum.Beklemede, guncelSiparis!.Durum);
+    }
+
+    [Fact]
+    public async Task OnaylaAsync_BaskaKullaniciOnaylarsa_BasariylaOnaylanir()
+    {
+        var (baglam, unitOfWork, cari, malzeme, teklif) = await TemelVeriKur();
+        var olusturanServis = ServisOlustur(unitOfWork, kullaniciAdi: "satiseleman1", rol: "Satis");
+        var siparis = await olusturanServis.CreateAsync(YeniSiparis(cari.Id, teklif.Id), Kalemler(malzeme.Id));
+        siparis.CreatedBy = "satiseleman1";
+        await baglam.SaveChangesAsync();
+
+        var baskaServis = ServisOlustur(unitOfWork, kullaniciAdi: "satiseleman2", rol: "Satis");
+        await baskaServis.OnaylaAsync(siparis.Id);
+
+        var guncelSiparis = await baglam.SatisSiparisleri.FindAsync(siparis.Id);
+        Assert.Equal(BelgeDurum.Onaylandi, guncelSiparis!.Durum);
+    }
+
+    [Fact]
+    public async Task OnaylaAsync_AdminKendiSiparisiniDeOnaylayabilir()
+    {
+        var (baglam, unitOfWork, cari, malzeme, teklif) = await TemelVeriKur();
+        var adminServis = ServisOlustur(unitOfWork, kullaniciAdi: "admin1", rol: "Admin");
+        var siparis = await adminServis.CreateAsync(YeniSiparis(cari.Id, teklif.Id), Kalemler(malzeme.Id));
+        siparis.CreatedBy = "admin1";
+        await baglam.SaveChangesAsync();
+
+        await adminServis.OnaylaAsync(siparis.Id);
+
+        var guncelSiparis = await baglam.SatisSiparisleri.FindAsync(siparis.Id);
+        Assert.Equal(BelgeDurum.Onaylandi, guncelSiparis!.Durum);
     }
 }

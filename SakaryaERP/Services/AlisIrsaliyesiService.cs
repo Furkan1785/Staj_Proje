@@ -8,9 +8,12 @@ public class AlisIrsaliyesiService : IAlisIrsaliyesiService
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public AlisIrsaliyesiService(IUnitOfWork unitOfWork)
+    private readonly IOnayYetkisiService _onayYetkisiService;
+
+    public AlisIrsaliyesiService(IUnitOfWork unitOfWork, IOnayYetkisiService onayYetkisiService)
     {
         _unitOfWork = unitOfWork;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<AlisIrsaliyesi> CreateAsync(AlisIrsaliyesi irsaliye, List<AlisIrsaliyesiKalemi> kalemler)
@@ -144,6 +147,8 @@ public class AlisIrsaliyesiService : IAlisIrsaliyesiService
 
         if (irsaliye.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan irsaliyeler onaylanabilir.");
+
+        _onayYetkisiService.OlusturanOnaylayamazKontrolEt(irsaliye.CreatedBy, "Alış İrsaliyesi");
 
         var malzemeIdleri = irsaliye.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
         var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()

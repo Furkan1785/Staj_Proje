@@ -8,9 +8,12 @@ public class SatisTeklifiService : ISatisTeklifiService
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public SatisTeklifiService(IUnitOfWork unitOfWork)
+    private readonly IOnayYetkisiService _onayYetkisiService;
+
+    public SatisTeklifiService(IUnitOfWork unitOfWork, IOnayYetkisiService onayYetkisiService)
     {
         _unitOfWork = unitOfWork;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<SatisTeklifi> CreateAsync(SatisTeklifi teklif, List<SatisTeklifiKalemi> kalemler)
@@ -112,6 +115,8 @@ public class SatisTeklifiService : ISatisTeklifiService
             ?? throw new InvalidOperationException("Satış teklifi bulunamadı.");
         if (teklif.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan teklifler onaylanabilir.");
+
+        _onayYetkisiService.OlusturanOnaylayamazKontrolEt(teklif.CreatedBy, "Satış Teklifi");
 
         teklif.Durum = BelgeDurum.Onaylandi;
         await _unitOfWork.SaveChangesAsync();

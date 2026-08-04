@@ -32,4 +32,19 @@ public class OnayYetkisiService : IOnayYetkisiService
                 $"{esik.Value.ToString("N0")} TL üstündeki bir {belgeTuru} sadece Admin tarafından onaylanabilir " +
                 $"(bu belge: {tutar.ToString("N0")} TL).");
     }
+
+    public void OlusturanOnaylayamazKontrolEt(string? olusturanKullanici, string belgeTuru)
+    {
+        if (string.IsNullOrEmpty(olusturanKullanici))
+            return;
+
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is null || httpContext.User.IsInRole("Admin"))
+            return;
+
+        var mevcutKullanici = httpContext.User.Identity?.Name;
+        if (string.Equals(mevcutKullanici, olusturanKullanici, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(
+                $"Bu {belgeTuru}'nu oluşturan kişi kendi belgesini onaylayamaz, başka bir yetkili onaylamalı.");
+    }
 }

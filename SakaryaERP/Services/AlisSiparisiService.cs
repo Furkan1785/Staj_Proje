@@ -8,9 +8,12 @@ public class AlisSiparisiService : IAlisSiparisiService
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public AlisSiparisiService(IUnitOfWork unitOfWork)
+    private readonly IOnayYetkisiService _onayYetkisiService;
+
+    public AlisSiparisiService(IUnitOfWork unitOfWork, IOnayYetkisiService onayYetkisiService)
     {
         _unitOfWork = unitOfWork;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<AlisSiparisi> CreateAsync(AlisSiparisi siparis, List<AlisSiparisiKalemi> kalemler)
@@ -107,6 +110,8 @@ public class AlisSiparisiService : IAlisSiparisiService
             ?? throw new InvalidOperationException("Alış siparişi bulunamadı.");
         if (siparis.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan siparişler onaylanabilir.");
+
+        _onayYetkisiService.OlusturanOnaylayamazKontrolEt(siparis.CreatedBy, "Alış Siparişi");
 
         siparis.Durum = BelgeDurum.Onaylandi;
         await _unitOfWork.SaveChangesAsync();

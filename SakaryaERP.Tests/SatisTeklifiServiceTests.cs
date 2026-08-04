@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -19,7 +21,8 @@ public class SatisTeklifiServiceTests
         baglam.MusteriTalepleri.Add(talep);
         await baglam.SaveChangesAsync();
 
-        return (baglam, new SatisTeklifiService(unitOfWork), cari, malzeme, talep);
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        return (baglam, new SatisTeklifiService(unitOfWork, onayYetkisiService), cari, malzeme, talep);
     }
 
     private static List<SatisTeklifiKalemi> Kalemler(int malzemeId) =>

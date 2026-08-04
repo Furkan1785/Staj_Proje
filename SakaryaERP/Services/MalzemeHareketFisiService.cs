@@ -8,9 +8,12 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public MalzemeHareketFisiService(IUnitOfWork unitOfWork)
+    private readonly IOnayYetkisiService _onayYetkisiService;
+
+    public MalzemeHareketFisiService(IUnitOfWork unitOfWork, IOnayYetkisiService onayYetkisiService)
     {
         _unitOfWork = unitOfWork;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<MalzemeHareketFisi> CreateAsync(MalzemeHareketFisi fis, List<MalzemeHareketFisiKalemi> kalemler)
@@ -108,6 +111,8 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
 
         if (fis.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemedeki bir fiş onaylanabilir.");
+
+        _onayYetkisiService.OlusturanOnaylayamazKontrolEt(fis.CreatedBy, "Malzeme Hareket Fişi");
 
         var malzemeIdleri = fis.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
         var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()

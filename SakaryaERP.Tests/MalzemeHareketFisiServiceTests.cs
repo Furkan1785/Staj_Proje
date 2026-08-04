@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -37,7 +39,8 @@ public class MalzemeHareketFisiServiceTests
         baglam.MalzemeHareketFisleri.Add(fis);
         await baglam.SaveChangesAsync();
 
-        return (baglam, new MalzemeHareketFisiService(unitOfWork), malzeme, fis);
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        return (baglam, new MalzemeHareketFisiService(unitOfWork, onayYetkisiService), malzeme, fis);
     }
 
     [Fact]
