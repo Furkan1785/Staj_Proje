@@ -34,6 +34,7 @@
         {
             <a asp-controller="SatisFaturasi" asp-action="Ekle" asp-route-siparisId="@Model.Id" class="btn btn-outline-primary">Fatura Oluştur (İrsaliyesiz)</a>
         }
+        <a asp-action="Pdf" asp-route-id="@Model.Id" class="btn btn-outline-secondary" target="_blank">PDF</a>
         <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
     </div>
 </div>

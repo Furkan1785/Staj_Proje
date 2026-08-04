@@ -112,6 +112,7 @@
                         render: function (id, type, row) {
                             var html = '<div class="d-flex flex-wrap gap-1">';
                             html += '<a href="/AlisSiparisi/Detay/' + id + '" class="btn btn-sm btn-outline-primary">Detay</a>';
+                            html += '<a href="/AlisSiparisi/Pdf/' + id + '" class="btn btn-sm btn-outline-secondary" target="_blank">PDF</a>';
                             if (row.durum === 'Beklemede') {
                                 html += aksiyonFormuOlustur('Onayla', id, 'btn-outline-success', 'Onayla', 'Bu sipariş onaylansın mı?');
                                 html += aksiyonFormuOlustur('IptalEt', id, 'btn-outline-danger', 'İptal Et', 'Bu sipariş iptal edilsin mi?');
