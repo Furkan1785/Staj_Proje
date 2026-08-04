@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +12,18 @@ public class SatisFaturasiServiceTests
 {
     private static async Task<(AppDbContext Baglam, SatisFaturasiService Servis, Cari Cari, Malzeme Malzeme)> SenaryoKur(decimal baslangicBakiye = 100)
     {
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur(baslangicBakiye);
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        return (baglam, new SatisFaturasiService(unitOfWork, onayYetkisiService), cari, malzeme);
+    }
+
+    // Rol/eşik senaryolarında servis, HttpContextAccessor'ı ayarlayan koddan hemen sonra AYNI
+    // metotta (await sınırı geçmeden) inşa edilmeli — aksi halde IHttpContextAccessor'ın
+    // AsyncLocal tabanlı durumu, içinde await barındıran bu paylaşılan kurulum metodundan
+    // döndükten sonra çağırana taşınmaz (ExecutionContext sadece iç içe çağrılara akar, geri
+    // dönüşe değil). Bu yüzden burada sadece ham malzemeleri (unitOfWork dahil) döndürüyoruz.
+    private static async Task<(AppDbContext Baglam, UnitOfWork UnitOfWork, Cari Cari, Malzeme Malzeme)> TemelVeriKur(decimal baslangicBakiye = 100)
+    {
         var baglam = TestDbContextFactory.OlusturYeniBaglam();
         var unitOfWork = new UnitOfWork(baglam);
 
@@ -23,11 +36,20 @@ public class SatisFaturasiServiceTests
             baglam.HesapPlani.Add(new HesapPlani { HesapKodu = kod, HesapAdi = ad, HesapTipi = HesapTipi.Aktif });
 
         await baglam.SaveChangesAsync();
+        return (baglam, unitOfWork, cari, malzeme);
+    }
 
-        var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
-        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), config);
-
-        return (baglam, new SatisFaturasiService(unitOfWork, onayYetkisiService), cari, malzeme);
+    private static SatisFaturasiService ServisOlustur(UnitOfWork unitOfWork, decimal? yuksekTutarEsigi, string? kullaniciRolu)
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(yuksekTutarEsigi is null
+                ? []
+                : new Dictionary<string, string?> { ["OnayAyarlari:YuksekTutarEsigi"] = yuksekTutarEsigi.Value.ToString() })
+            .Build();
+        var kimlik = kullaniciRolu is null ? new ClaimsIdentity() : new ClaimsIdentity([new Claim(ClaimTypes.Role, kullaniciRolu)], "TestAuth");
+        var httpContextAccessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(kimlik) } };
+        var onayYetkisiService = new OnayYetkisiService(httpContextAccessor, config);
+        return new SatisFaturasiService(unitOfWork, onayYetkisiService);
     }
 
     private static SatisFaturasi YeniFatura(int cariId) => new()
@@ -84,5 +106,34 @@ public class SatisFaturasiServiceTests
 
         var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => servis.IptalEtAsync(fatura.Id));
         Assert.Contains("zaten iptal edilmiş", hata.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task IptalEtAsync_OnaylıYuksekTutarliFaturaAdminOlmayanKullanici_HataFirlatirVeBirSeyDegismez()
+    {
+        // Fatura toplamı: 10 * 50 * 1.20 = 600 — onay Admin ile yapılır (Kademe 2 kuralı onayı da
+        // etkiler), iptal denemesi Admin olmayan bir kullanıcıyla yapılır.
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        var adminServis = ServisOlustur(unitOfWork, yuksekTutarEsigi: 500, kullaniciRolu: "Admin");
+        var fatura = await adminServis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+        await adminServis.OnaylaAsync(fatura.Id);
+
+        var satisServis = ServisOlustur(unitOfWork, yuksekTutarEsigi: 500, kullaniciRolu: "Satis");
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => satisServis.IptalEtAsync(fatura.Id));
+        Assert.Contains("sadece Admin", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelFatura = await baglam.SatisFaturalari.FindAsync(fatura.Id);
+        Assert.Equal(BelgeDurum.Onaylandi, guncelFatura!.Durum);
+    }
+
+    [Fact]
+    public async Task IptalEtAsync_OnaylıYuksekTutarliFaturaAdminKullanici_BasariylaIptalOlur()
+    {
+        var (_, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        var servis = ServisOlustur(unitOfWork, yuksekTutarEsigi: 500, kullaniciRolu: "Admin");
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+        await servis.OnaylaAsync(fatura.Id);
+
+        await servis.IptalEtAsync(fatura.Id);
     }
 }

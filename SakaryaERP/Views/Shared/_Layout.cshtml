@@ -55,11 +55,14 @@ else
                 <a class="nav-link" asp-controller="StokRaporu" asp-action="KritikStok">Kritik Stok Listesi</a>
                 <a class="nav-link" asp-controller="StokRaporu" asp-action="MalzemeGecmisi">Malzeme Hareket Geçmişi</a>
 
-                <div class="nav-section-title">Satınalma</div>
-                <a class="nav-link @(Aktif("AlisSiparisi") ? "active" : "")" asp-controller="AlisSiparisi" asp-action="Index">Alış Siparişleri</a>
-                <a class="nav-link @(Aktif("AlisIrsaliyesi") ? "active" : "")" asp-controller="AlisIrsaliyesi" asp-action="Index">Alış İrsaliyeleri</a>
-                <a class="nav-link @(Aktif("AlisFaturasi") ? "active" : "")" asp-controller="AlisFaturasi" asp-action="Index">Alış Faturaları</a>
-                <a class="nav-link" asp-controller="SatinalmaRaporu" asp-action="Ozet">Satınalma Özet Raporu</a>
+                @if (finansGorunur)
+                {
+                    <div class="nav-section-title">Satınalma</div>
+                    <a class="nav-link @(Aktif("AlisSiparisi") ? "active" : "")" asp-controller="AlisSiparisi" asp-action="Index">Alış Siparişleri</a>
+                    <a class="nav-link @(Aktif("AlisIrsaliyesi") ? "active" : "")" asp-controller="AlisIrsaliyesi" asp-action="Index">Alış İrsaliyeleri</a>
+                    <a class="nav-link @(Aktif("AlisFaturasi") ? "active" : "")" asp-controller="AlisFaturasi" asp-action="Index">Alış Faturaları</a>
+                    <a class="nav-link" asp-controller="SatinalmaRaporu" asp-action="Ozet">Satınalma Özet Raporu</a>
+                }
 
                 @if (satisGorunur)
                 {

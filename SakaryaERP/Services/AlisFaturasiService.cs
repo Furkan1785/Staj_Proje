@@ -234,6 +234,10 @@ public class AlisFaturasiService : IAlisFaturasiService
             return;
         }
 
+        // Onaylanmış yüksek tutarlı bir faturayı geri almak, onaylamak kadar hassas bir
+        // finansal işlem — aynı Admin-only eşiğine tabi olsun.
+        _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(KalemToplami), "Alış Faturası İptali");
+
         // Onaylanmış fatura: onayda yapılan stok/cari/muhasebe etkisini tek transaction
         // içinde ters yönde geri al (ya hep ya hiç).
         await using var transaction = await _unitOfWork.BeginTransactionAsync();
