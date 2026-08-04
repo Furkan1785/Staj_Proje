@@ -40,6 +40,9 @@ public class CariService : ICariService
         var mevcut = await _cariRepository.GetByIdAsync(cari.Id)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
 
+        if (cari.CariTipi != mevcut.CariTipi)
+            await TipDaraltmaKontrolEtAsync(mevcut.Id, mevcut.CariTipi, cari.CariTipi);
+
         // Bakiye/CreatedAt gibi alanlar forma hiç gelmediği için, mevcut (tracked)
         // entity üzerinde sadece düzenlenebilir alanları güncelliyoruz; aksi halde
         // reconstruct edilmiş nesneyi Update() ile kaydetmek Bakiye'yi sıfırlardı.
@@ -53,6 +56,37 @@ public class CariService : ICariService
         mevcut.KrediLimiti = cari.KrediLimiti;
 
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    // Bir carinin tipi, üzerinde zaten var olan belgelerle uyumsuz hale getirilemez —
+    // aksi halde o cari için sonraki satış/alış belgesi oluşturma işlemleri (CariTipi
+    // kontrolü nedeniyle) başarısız olur ama var olan geçmiş belgeler ortada kalır.
+    private async Task TipDaraltmaKontrolEtAsync(int cariId, CariTipi eskiTip, CariTipi yeniTip)
+    {
+        var musteriRoluKayboluyor = eskiTip is CariTipi.Musteri or CariTipi.HerIkisi && yeniTip == CariTipi.Tedarikci;
+        if (musteriRoluKayboluyor)
+        {
+            var satisBelgesiVarMi = await _unitOfWork.Repository<SatisSiparisi>().QueryTumu().AnyAsync(s => s.CariId == cariId)
+                || await _unitOfWork.Repository<SatisFaturasi>().QueryTumu().AnyAsync(f => f.CariId == cariId)
+                || await _unitOfWork.Repository<SatisTeklifi>().QueryTumu().AnyAsync(t => t.CariId == cariId)
+                || await _unitOfWork.Repository<MusteriTalebi>().QueryTumu().AnyAsync(t => t.CariId == cariId)
+                || await _unitOfWork.Repository<CekSenet>().QueryTumu().AnyAsync(c => c.CariId == cariId);
+            if (satisBelgesiVarMi)
+                throw new InvalidOperationException(
+                    "Bu carinin satış belgesi (talep/teklif/sipariş/fatura/çek-senet) bulunduğu için tipi " +
+                    "'Tedarikçi' olarak daraltılamaz.");
+        }
+
+        var tedarikciRoluKayboluyor = eskiTip is CariTipi.Tedarikci or CariTipi.HerIkisi && yeniTip == CariTipi.Musteri;
+        if (tedarikciRoluKayboluyor)
+        {
+            var alisBelgesiVarMi = await _unitOfWork.Repository<AlisSiparisi>().QueryTumu().AnyAsync(s => s.CariId == cariId)
+                || await _unitOfWork.Repository<AlisIrsaliyesi>().QueryTumu().AnyAsync(i => i.CariId == cariId)
+                || await _unitOfWork.Repository<AlisFaturasi>().QueryTumu().AnyAsync(f => f.CariId == cariId);
+            if (alisBelgesiVarMi)
+                throw new InvalidOperationException(
+                    "Bu carinin alış belgesi (sipariş/irsaliye/fatura) bulunduğu için tipi 'Müşteri' olarak daraltılamaz.");
+        }
     }
 
     public async Task PasifYapAsync(int id)

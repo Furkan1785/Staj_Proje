@@ -50,6 +50,20 @@ public class SubeController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    public async Task<IActionResult> Detay(int id)
+    {
+        var sube = await _subeService.GetByIdAsync(id);
+        if (sube is null) return NotFound();
+
+        return View(new SubeListItemViewModel
+        {
+            Id = sube.Id,
+            SubeAdi = sube.SubeAdi,
+            Adres = sube.Adres,
+            IsDeleted = sube.IsDeleted
+        });
+    }
+
     public async Task<IActionResult> Duzenle(int id)
     {
         var sube = await _subeService.GetByIdAsync(id);

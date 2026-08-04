@@ -319,6 +319,7 @@ public class AlisSiparisiController : Controller
             Aciklama = siparis.Aciklama,
             Durum = siparis.Durum,
             DurumText = DurumMetni(siparis.Durum),
+            Zincir = [new BelgeZinciriAdimi { Etiket = "Sipariş", Metin = siparis.SiparisNo, Aktif = true }],
             Kalemler = siparis.Kalemler.Select(k =>
             {
                 var teslimAlinan = Math.Min(teslimMiktarlari.GetValueOrDefault(k.MalzemeId), k.Miktar);

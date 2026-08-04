@@ -125,6 +125,22 @@ public class SatisTeklifiService : ISatisTeklifiService
             throw new InvalidOperationException("Sadece beklemede olan teklifler iptal edilebilir.");
 
         teklif.Durum = BelgeDurum.Iptal;
+
+        // Teklif bir talepten türediyse ve bu talepten başka aktif (iptal olmayan) bir
+        // teklif kalmadıysa, talep "Tamamlandı" kilidinde kalıp yeniden teklif
+        // üretilememesin diye "İşleniyor"a geri döner.
+        if (teklif.MusteriTalebiId is not null)
+        {
+            var talep = await _unitOfWork.Repository<MusteriTalebi>().GetByIdAsync(teklif.MusteriTalebiId.Value);
+            if (talep is not null && talep.Durum == TalepDurum.Tamamlandi)
+            {
+                var baskaAktifTeklifVarMi = await _unitOfWork.Repository<SatisTeklifi>().QueryTumu()
+                    .AnyAsync(t => t.MusteriTalebiId == talep.Id && t.Id != teklif.Id && t.Durum != BelgeDurum.Iptal);
+                if (!baskaAktifTeklifVarMi)
+                    talep.Durum = TalepDurum.Isleniyor;
+            }
+        }
+
         await _unitOfWork.SaveChangesAsync();
     }
 }
