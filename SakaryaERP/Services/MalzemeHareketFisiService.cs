@@ -159,7 +159,7 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
         _ => 0
     };
 
-    public async Task<List<MalzemeHareketFisiKalemi>> GetMalzemeGecmisiAsync(int malzemeId, DateTime? baslangic, DateTime? bitis)
+    public async Task<List<MalzemeHareketFisiKalemi>> GetMalzemeGecmisiAsync(int malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId = null)
     {
         var query = _unitOfWork.Repository<MalzemeHareketFisiKalemi>().QueryTumu()
             .Include(k => k.MalzemeHareketFisi)
@@ -170,6 +170,8 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
             query = query.Where(k => k.MalzemeHareketFisi.Tarih >= baslangic);
         if (bitis is not null)
             query = query.Where(k => k.MalzemeHareketFisi.Tarih <= bitis);
+        if (subeId is not null)
+            query = query.Where(k => k.MalzemeHareketFisi.SubeId == subeId);
 
         return await query.OrderBy(k => k.MalzemeHareketFisi.Tarih).ThenBy(k => k.Id).ToListAsync();
     }

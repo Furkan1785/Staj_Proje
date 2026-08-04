@@ -6,19 +6,25 @@
 <h3 class="mb-4">Malzeme Hareket Geçmişi</h3>
 
 <form method="get" asp-action="MalzemeGecmisi" class="row g-3 align-items-end p-3 border rounded bg-white mb-4">
-    <div class="col-md-5">
+    <div class="col-md-4">
         <label class="form-label">Malzeme</label>
         <select name="malzemeId" class="form-select" asp-items="Model.MalzemeListesi">
             <option value="">Seçiniz</option>
         </select>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label">Başlangıç Tarihi</label>
         <input type="date" name="baslangic" class="form-control" value="@Model.Baslangic?.ToString("yyyy-MM-dd")" />
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label">Bitiş Tarihi</label>
         <input type="date" name="bitis" class="form-control" value="@Model.Bitis?.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Şube</label>
+        <select asp-for="SubeId" class="form-select" asp-items="Model.SubeListesi">
+            <option value="">Tüm Şubeler</option>
+        </select>
     </div>
     <div class="col-md-1">
         <button type="submit" class="btn btn-primary w-100">Göster</button>

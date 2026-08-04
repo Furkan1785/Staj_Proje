@@ -12,11 +12,13 @@ public class StokRaporuController : Controller
 {
     private readonly IMalzemeService _malzemeService;
     private readonly IMalzemeHareketFisiService _malzemeHareketFisiService;
+    private readonly ISubeService _subeService;
 
-    public StokRaporuController(IMalzemeService malzemeService, IMalzemeHareketFisiService malzemeHareketFisiService)
+    public StokRaporuController(IMalzemeService malzemeService, IMalzemeHareketFisiService malzemeHareketFisiService, ISubeService subeService)
     {
         _malzemeService = malzemeService;
         _malzemeHareketFisiService = malzemeHareketFisiService;
+        _subeService = subeService;
     }
 
     public async Task<IActionResult> AnlikDurum()
@@ -31,12 +33,15 @@ public class StokRaporuController : Controller
         return View(malzemeler.Select(MalzemeyiVmYap).ToList());
     }
 
-    public async Task<IActionResult> MalzemeGecmisi(int? malzemeId, DateTime? baslangic, DateTime? bitis)
+    public async Task<IActionResult> MalzemeGecmisi(int? malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId)
     {
-        var vm = new MalzemeGecmisiViewModel { MalzemeId = malzemeId, Baslangic = baslangic, Bitis = bitis };
+        var vm = new MalzemeGecmisiViewModel { MalzemeId = malzemeId, Baslangic = baslangic, Bitis = bitis, SubeId = subeId };
 
         var malzemeler = await _malzemeService.GetTumListeAsync();
         vm.MalzemeListesi = malzemeler.Select(m => new SelectListItem($"{m.MalzemeKodu} - {m.MalzemeAdi}", m.Id.ToString()));
+
+        var subeler = await _subeService.GetAllAsync();
+        vm.SubeListesi = subeler.Where(s => !s.IsDeleted).Select(s => new SelectListItem(s.SubeAdi, s.Id.ToString()));
 
         if (malzemeId is not null)
         {
@@ -47,7 +52,7 @@ public class StokRaporuController : Controller
             vm.Birim = malzeme.Birim;
             vm.GuncelBakiye = malzeme.Bakiye;
 
-            var kalemler = await _malzemeHareketFisiService.GetMalzemeGecmisiAsync(malzemeId.Value, baslangic, bitis);
+            var kalemler = await _malzemeHareketFisiService.GetMalzemeGecmisiAsync(malzemeId.Value, baslangic, bitis, subeId);
             vm.Satirlar = kalemler.Select(k => new MalzemeGecmisiSatiriViewModel
             {
                 Tarih = k.MalzemeHareketFisi.Tarih,

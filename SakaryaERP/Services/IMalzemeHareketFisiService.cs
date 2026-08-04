@@ -16,5 +16,5 @@ public interface IMalzemeHareketFisiService
 
     // Sadece onaylanmış fişlerin kalemleri — bekleyen bir fiş henüz bakiyeye
     // yansımadığı için "hareket geçmişi" sayılmaz.
-    Task<List<MalzemeHareketFisiKalemi>> GetMalzemeGecmisiAsync(int malzemeId, DateTime? baslangic, DateTime? bitis);
+    Task<List<MalzemeHareketFisiKalemi>> GetMalzemeGecmisiAsync(int malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId = null);
 }

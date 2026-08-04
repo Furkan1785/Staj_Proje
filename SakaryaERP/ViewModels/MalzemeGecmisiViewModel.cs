@@ -7,7 +7,9 @@ public class MalzemeGecmisiViewModel
     public int? MalzemeId { get; set; }
     public DateTime? Baslangic { get; set; }
     public DateTime? Bitis { get; set; }
+    public int? SubeId { get; set; }
     public IEnumerable<SelectListItem> MalzemeListesi { get; set; } = [];
+    public IEnumerable<SelectListItem> SubeListesi { get; set; } = [];
 
     public string? MalzemeAdi { get; set; }
     public string? Birim { get; set; }
