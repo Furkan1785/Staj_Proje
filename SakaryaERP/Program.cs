@@ -135,6 +135,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseStatusCodePagesWithReExecute("/Home/DurumKodu/{0}");
 
 if (httpsYonlendirmeAktif)
