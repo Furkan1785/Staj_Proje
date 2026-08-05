@@ -84,4 +84,10 @@ public class OnayYetkisiService : IOnayYetkisiService
         var kullaniciSubeId = MevcutKullaniciSubeId();
         return kullaniciSubeId is null || kullaniciSubeId == belgeSubeId;
     }
+
+    public void SubeErisimKontrolEt(int? belgeSubeId, string hataMesaji)
+    {
+        if (!SubeErisimVarMi(belgeSubeId))
+            throw new InvalidOperationException(hataMesaji);
+    }
 }

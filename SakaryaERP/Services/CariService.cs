@@ -45,8 +45,7 @@ public class CariService : ICariService
 
         var mevcut = await _cariRepository.GetByIdAsync(cari.Id)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(mevcut.SubeId))
-            throw new InvalidOperationException("Bu cari başka bir şubeye ait, düzenleyemezsiniz.");
+        _onayYetkisiService.SubeErisimKontrolEt(mevcut.SubeId, "Bu cari başka bir şubeye ait, düzenleyemezsiniz.");
 
         if (cari.CariTipi != mevcut.CariTipi)
             await TipDaraltmaKontrolEtAsync(mevcut.Id, mevcut.CariTipi, cari.CariTipi);
@@ -101,8 +100,7 @@ public class CariService : ICariService
     {
         var cari = await _cariRepository.GetByIdAsync(id)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(cari.SubeId))
-            throw new InvalidOperationException("Bu cari başka bir şubeye ait, pasif yapamazsınız.");
+        _onayYetkisiService.SubeErisimKontrolEt(cari.SubeId, "Bu cari başka bir şubeye ait, pasif yapamazsınız.");
         if (cari.Bakiye != 0)
             throw new InvalidOperationException(
                 $"Bu carinin kapanmamış bir bakiyesi var ({cari.Bakiye.ToString("N2")} TL), pasif yapılamaz.");
@@ -115,8 +113,7 @@ public class CariService : ICariService
     {
         var cari = await _cariRepository.GetByIdTumuAsync(id)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(cari.SubeId))
-            throw new InvalidOperationException("Bu cari başka bir şubeye ait, aktif yapamazsınız.");
+        _onayYetkisiService.SubeErisimKontrolEt(cari.SubeId, "Bu cari başka bir şubeye ait, aktif yapamazsınız.");
 
         cari.IsDeleted = false;
         await _unitOfWork.SaveChangesAsync();

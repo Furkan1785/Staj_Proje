@@ -27,4 +27,8 @@ public interface IOnayYetkisiService
     // (merkez rolü) da her şubeye erişebilir. Aksi halde kullanıcının şubesi
     // belgenin şubesiyle eşleşmelidir.
     bool SubeErisimVarMi(int? belgeSubeId);
+
+    // SubeErisimVarMi'yi çağırıp false ise hataMesaji ile InvalidOperationException fırlatır —
+    // servislerdeki tekrarlanan "if (!SubeErisimVarMi(...)) throw" bloklarını tekilleştirmek için.
+    void SubeErisimKontrolEt(int? belgeSubeId, string hataMesaji);
 }

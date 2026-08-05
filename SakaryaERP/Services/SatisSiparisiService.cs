@@ -124,8 +124,7 @@ public class SatisSiparisiService : ISatisSiparisiService
     {
         var siparis = await _unitOfWork.Repository<SatisSiparisi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Satış siparişi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(siparis.SubeId))
-            throw new InvalidOperationException("Bu sipariş başka bir şubeye ait, onaylayamazsınız.");
+        _onayYetkisiService.SubeErisimKontrolEt(siparis.SubeId, "Bu sipariş başka bir şubeye ait, onaylayamazsınız.");
         if (siparis.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan siparişler onaylanabilir.");
 
@@ -139,8 +138,7 @@ public class SatisSiparisiService : ISatisSiparisiService
     {
         var siparis = await _unitOfWork.Repository<SatisSiparisi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Satış siparişi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(siparis.SubeId))
-            throw new InvalidOperationException("Bu sipariş başka bir şubeye ait, iptal edemezsiniz.");
+        _onayYetkisiService.SubeErisimKontrolEt(siparis.SubeId, "Bu sipariş başka bir şubeye ait, iptal edemezsiniz.");
         if (siparis.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan siparişler iptal edilebilir.");
 

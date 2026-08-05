@@ -104,8 +104,7 @@ public class CariFisiService : ICariFisiService
     {
         var fis = await _unitOfWork.Repository<CariFisi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Cari fişi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(fis.SubeId))
-            throw new InvalidOperationException("Bu fiş başka bir şubeye ait, iptal edemezsiniz.");
+        _onayYetkisiService.SubeErisimKontrolEt(fis.SubeId, "Bu fiş başka bir şubeye ait, iptal edemezsiniz.");
 
         if (fis.IsDeleted)
             throw new InvalidOperationException("Bu fiş zaten iptal edilmiş.");
@@ -201,8 +200,7 @@ public class CariFisiService : ICariFisiService
     {
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(cariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(cari.SubeId))
-            throw new InvalidOperationException("Bu cari başka bir şubeye ait, ekstresini görüntüleyemezsiniz.");
+        _onayYetkisiService.SubeErisimKontrolEt(cari.SubeId, "Bu cari başka bir şubeye ait, ekstresini görüntüleyemezsiniz.");
 
         var tumFisler = await _unitOfWork.Repository<CariFisi>().QueryTumu()
             .Where(f => f.CariId == cariId && !f.IsDeleted)

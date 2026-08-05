@@ -94,8 +94,7 @@ public class MusteriTalebiService : IMusteriTalebiService
     {
         var talep = await _unitOfWork.Repository<MusteriTalebi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Müşteri talebi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(talep.SubeId))
-            throw new InvalidOperationException("Bu talep başka bir şubeye ait, işleme alamazsınız.");
+        _onayYetkisiService.SubeErisimKontrolEt(talep.SubeId, "Bu talep başka bir şubeye ait, işleme alamazsınız.");
         if (talep.Durum != TalepDurum.Yeni)
             throw new InvalidOperationException("Sadece yeni talepler işleme alınabilir.");
 
@@ -107,8 +106,7 @@ public class MusteriTalebiService : IMusteriTalebiService
     {
         var talep = await _unitOfWork.Repository<MusteriTalebi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Müşteri talebi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(talep.SubeId))
-            throw new InvalidOperationException("Bu talep başka bir şubeye ait, iptal edemezsiniz.");
+        _onayYetkisiService.SubeErisimKontrolEt(talep.SubeId, "Bu talep başka bir şubeye ait, iptal edemezsiniz.");
         if (talep.Durum is not (TalepDurum.Yeni or TalepDurum.Isleniyor))
             throw new InvalidOperationException("Sadece yeni veya işlemedeki talepler iptal edilebilir.");
 

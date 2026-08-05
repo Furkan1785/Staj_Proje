@@ -123,8 +123,7 @@ public class SatisTeklifiService : ISatisTeklifiService
     {
         var teklif = await _unitOfWork.Repository<SatisTeklifi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Satış teklifi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(teklif.SubeId))
-            throw new InvalidOperationException("Bu teklif başka bir şubeye ait, onaylayamazsınız.");
+        _onayYetkisiService.SubeErisimKontrolEt(teklif.SubeId, "Bu teklif başka bir şubeye ait, onaylayamazsınız.");
         if (teklif.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan teklifler onaylanabilir.");
 
@@ -138,8 +137,7 @@ public class SatisTeklifiService : ISatisTeklifiService
     {
         var teklif = await _unitOfWork.Repository<SatisTeklifi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Satış teklifi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(teklif.SubeId))
-            throw new InvalidOperationException("Bu teklif başka bir şubeye ait, iptal edemezsiniz.");
+        _onayYetkisiService.SubeErisimKontrolEt(teklif.SubeId, "Bu teklif başka bir şubeye ait, iptal edemezsiniz.");
         if (teklif.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan teklifler iptal edilebilir.");
 

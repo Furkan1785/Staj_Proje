@@ -151,8 +151,7 @@ public class SevkIrsaliyesiService : ISevkIrsaliyesiService
             .Include(i => i.Kalemler)
             .FirstOrDefaultAsync(i => i.Id == id)
             ?? throw new InvalidOperationException("Sevk irsaliyesi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(irsaliye.SubeId))
-            throw new InvalidOperationException("Bu irsaliye başka bir şubeye ait, onaylayamazsınız.");
+        _onayYetkisiService.SubeErisimKontrolEt(irsaliye.SubeId, "Bu irsaliye başka bir şubeye ait, onaylayamazsınız.");
 
         if (irsaliye.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan irsaliyeler onaylanabilir.");
@@ -183,8 +182,7 @@ public class SevkIrsaliyesiService : ISevkIrsaliyesiService
     {
         var irsaliye = await _unitOfWork.Repository<SevkIrsaliyesi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Sevk irsaliyesi bulunamadı.");
-        if (!_onayYetkisiService.SubeErisimVarMi(irsaliye.SubeId))
-            throw new InvalidOperationException("Bu irsaliye başka bir şubeye ait, iptal edemezsiniz.");
+        _onayYetkisiService.SubeErisimKontrolEt(irsaliye.SubeId, "Bu irsaliye başka bir şubeye ait, iptal edemezsiniz.");
 
         if (irsaliye.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan irsaliyeler iptal edilebilir.");
