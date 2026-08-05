@@ -145,6 +145,7 @@ public class AlisFaturasiController : Controller
             var fatura = new AlisFaturasi
             {
                 Tarih = vm.Tarih,
+                VadeTarihi = vm.VadeTarihi,
                 CariId = vm.CariId!.Value,
                 AlisIrsaliyesiId = vm.AlisIrsaliyesiId,
                 Aciklama = vm.Aciklama,
@@ -286,6 +287,7 @@ public class AlisFaturasiController : Controller
             Id = fatura.Id,
             FaturaNo = fatura.FaturaNo,
             Tarih = fatura.Tarih,
+            VadeTarihi = fatura.VadeTarihi,
             CariId = fatura.CariId,
             CariUnvan = fatura.Cari.Unvan,
             SiparisNo = fatura.AlisSiparisi?.SiparisNo,

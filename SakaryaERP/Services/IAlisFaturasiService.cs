@@ -19,6 +19,9 @@ public interface IAlisFaturasiService
     // malzemeye ait kalemleri SQL'de filtreleyip en yeni N tanesini getirir.
     Task<List<AlisFaturasiKalemi>> GetMalzemeSonAlislariAsync(int malzemeId, int adet);
 
+    // Belge Takip ekranı için: vadesi belirtilen tarihe kadar olan (geçmiş + yaklaşan) onaylı faturalar.
+    Task<List<AlisFaturasi>> GetVadesiYaklasanListesiAsync(DateTime yaklasmaSiniri);
+
     // Onaylandığında cariye alacak hareketi (CariFisi) eklenir ve Cari.Bakiye güncellenir (tek transaction).
     Task OnaylaAsync(int id);
     Task IptalEtAsync(int id);

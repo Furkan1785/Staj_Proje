@@ -20,6 +20,10 @@ public interface ISatisFaturasiService
     // malzemeye ait kalemleri SQL'de filtreleyip en yeni N tanesini getirir.
     Task<List<SatisFaturasiKalemi>> GetMalzemeSonSatislariAsync(int malzemeId, int adet);
 
+    // Belge Takip ekranı için: vadesi belirtilen tarihe kadar olan (geçmiş + yaklaşan) onaylı
+    // faturalar. Sadece vade tarihi bugünden ileride olmayan/eşik içindeki faturalar SQL'de filtrelenir.
+    Task<List<SatisFaturasi>> GetVadesiYaklasanListesiAsync(DateTime yaklasmaSiniri);
+
     // Onaylandığında: irsaliyeden gelmiyorsa stok düşülür (negatif stok kontrolüyle),
     // her durumda cariye borç hareketi (CariFisi) eklenir — tek transaction.
     Task OnaylaAsync(int id);

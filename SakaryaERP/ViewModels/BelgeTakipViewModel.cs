@@ -10,6 +10,10 @@ public class BelgeTakipViewModel
     public List<BelgeTakipSatiriViewModel> YaklasanSatisSiparisleri { get; set; } = [];
     public List<BelgeTakipSatiriViewModel> GecikenAlisSiparisleri { get; set; } = [];
     public List<BelgeTakipSatiriViewModel> YaklasanAlisSiparisleri { get; set; } = [];
+    public List<BelgeTakipSatiriViewModel> GecikenSatisFaturalari { get; set; } = [];
+    public List<BelgeTakipSatiriViewModel> YaklasanSatisFaturalari { get; set; } = [];
+    public List<BelgeTakipSatiriViewModel> GecikenAlisFaturalari { get; set; } = [];
+    public List<BelgeTakipSatiriViewModel> YaklasanAlisFaturalari { get; set; } = [];
 }
 
 public class BelgeTakipSatiriViewModel

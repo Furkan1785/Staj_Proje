@@ -7,6 +7,7 @@ public class AlisFaturasi : BaseEntity
     public int? AlisSiparisiId { get; set; }
     public int? AlisIrsaliyesiId { get; set; }
     public DateTime Tarih { get; set; }
+    public DateTime? VadeTarihi { get; set; }
     public BelgeDurum Durum { get; set; } = BelgeDurum.Beklemede;
     public string? Aciklama { get; set; }
 

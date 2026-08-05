@@ -15,17 +15,23 @@ public class BelgeTakipController : Controller
     private readonly ISatisTeklifiService _satisTeklifiService;
     private readonly ISatisSiparisiService _satisSiparisiService;
     private readonly IAlisSiparisiService _alisSiparisiService;
+    private readonly ISatisFaturasiService _satisFaturasiService;
+    private readonly IAlisFaturasiService _alisFaturasiService;
     private readonly IConfiguration _configuration;
 
     public BelgeTakipController(
         ISatisTeklifiService satisTeklifiService,
         ISatisSiparisiService satisSiparisiService,
         IAlisSiparisiService alisSiparisiService,
+        ISatisFaturasiService satisFaturasiService,
+        IAlisFaturasiService alisFaturasiService,
         IConfiguration configuration)
     {
         _satisTeklifiService = satisTeklifiService;
         _satisSiparisiService = satisSiparisiService;
         _alisSiparisiService = alisSiparisiService;
+        _satisFaturasiService = satisFaturasiService;
+        _alisFaturasiService = alisFaturasiService;
         _configuration = configuration;
     }
 
@@ -38,6 +44,8 @@ public class BelgeTakipController : Controller
         var teklifler = await _satisTeklifiService.GetBeklemedeListesiAsync();
         var satisSiparisleri = await _satisSiparisiService.GetBeklemedeListesiAsync();
         var alisSiparisleri = await _alisSiparisiService.GetBeklemedeListesiAsync();
+        var satisFaturalari = await _satisFaturasiService.GetVadesiYaklasanListesiAsync(yaklasmaSiniri);
+        var alisFaturalari = await _alisFaturasiService.GetVadesiYaklasanListesiAsync(yaklasmaSiniri);
 
         var vm = new BelgeTakipViewModel { GunSayisi = gunSayisi };
 
@@ -81,6 +89,34 @@ public class BelgeTakipController : Controller
             };
             if (satir.Tarih.Date < bugun) vm.GecikenAlisSiparisleri.Add(satir);
             else if (satir.Tarih.Date <= yaklasmaSiniri) vm.YaklasanAlisSiparisleri.Add(satir);
+        }
+
+        foreach (var f in satisFaturalari.OrderBy(f => f.VadeTarihi))
+        {
+            var satir = new BelgeTakipSatiriViewModel
+            {
+                Id = f.Id,
+                BelgeNo = f.FaturaNo,
+                CariUnvan = f.Cari.Unvan,
+                Tarih = f.VadeTarihi!.Value,
+                GunFarki = (f.VadeTarihi.Value.Date - bugun).Days
+            };
+            if (satir.Tarih.Date < bugun) vm.GecikenSatisFaturalari.Add(satir);
+            else vm.YaklasanSatisFaturalari.Add(satir);
+        }
+
+        foreach (var f in alisFaturalari.OrderBy(f => f.VadeTarihi))
+        {
+            var satir = new BelgeTakipSatiriViewModel
+            {
+                Id = f.Id,
+                BelgeNo = f.FaturaNo,
+                CariUnvan = f.Cari.Unvan,
+                Tarih = f.VadeTarihi!.Value,
+                GunFarki = (f.VadeTarihi.Value.Date - bugun).Days
+            };
+            if (satir.Tarih.Date < bugun) vm.GecikenAlisFaturalari.Add(satir);
+            else vm.YaklasanAlisFaturalari.Add(satir);
         }
 
         return View(vm);

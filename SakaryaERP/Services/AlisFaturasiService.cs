@@ -152,6 +152,14 @@ public class AlisFaturasiService : IAlisFaturasiService
         return await query.ToListAsync();
     }
 
+    public async Task<List<AlisFaturasi>> GetVadesiYaklasanListesiAsync(DateTime yaklasmaSiniri)
+    {
+        return await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+            .Include(f => f.Cari)
+            .Where(f => f.Durum == BelgeDurum.Onaylandi && f.VadeTarihi != null && f.VadeTarihi <= yaklasmaSiniri)
+            .ToListAsync();
+    }
+
     public async Task<List<AlisFaturasiKalemi>> GetMalzemeSonAlislariAsync(int malzemeId, int adet)
     {
         return await _unitOfWork.Repository<AlisFaturasiKalemi>().QueryTumu()

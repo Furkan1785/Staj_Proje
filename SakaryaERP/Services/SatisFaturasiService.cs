@@ -190,6 +190,14 @@ public class SatisFaturasiService : ISatisFaturasiService
         return await query.ToListAsync();
     }
 
+    public async Task<List<SatisFaturasi>> GetVadesiYaklasanListesiAsync(DateTime yaklasmaSiniri)
+    {
+        return await _unitOfWork.Repository<SatisFaturasi>().QueryTumu()
+            .Include(f => f.Cari)
+            .Where(f => f.Durum == BelgeDurum.Onaylandi && f.VadeTarihi != null && f.VadeTarihi <= yaklasmaSiniri)
+            .ToListAsync();
+    }
+
     public async Task<List<SatisFaturasiKalemi>> GetMalzemeSonSatislariAsync(int malzemeId, int adet)
     {
         return await _unitOfWork.Repository<SatisFaturasiKalemi>().QueryTumu()

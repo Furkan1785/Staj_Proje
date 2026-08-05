@@ -10,6 +10,10 @@ public class AlisFaturasiFormViewModel
     [Display(Name = "Tarih")]
     public DateTime Tarih { get; set; } = DateTime.Today;
 
+    [DataType(DataType.Date)]
+    [Display(Name = "Vade Tarihi")]
+    public DateTime? VadeTarihi { get; set; } = DateTime.Today.AddDays(30);
+
     [Required(ErrorMessage = "Tedarikçi seçilmelidir.")]
     [Display(Name = "Tedarikçi")]
     public int? CariId { get; set; }
