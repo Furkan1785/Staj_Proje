@@ -48,6 +48,24 @@ public class OnayYetkisiService : IOnayYetkisiService
                 $"Bu {belgeTuru}'nu oluşturan kişi kendi belgesini onaylayamaz, başka bir yetkili onaylamalı.");
     }
 
+    public void KrediLimitiKontrolEt(decimal mevcutBakiye, decimal krediLimiti, decimal ekTutar, string cariUnvan)
+    {
+        if (krediLimiti <= 0)
+            return;
+
+        var yeniBakiye = mevcutBakiye + ekTutar;
+        if (yeniBakiye <= krediLimiti)
+            return;
+
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is null || httpContext.User.IsInRole("Admin"))
+            return;
+
+        throw new InvalidOperationException(
+            $"{cariUnvan} için kredi limiti ({krediLimiti.ToString("N0")} TL) aşılıyor " +
+            $"(bu işlem sonrası bakiye: {yeniBakiye.ToString("N0")} TL). Sadece Admin onaylayabilir.");
+    }
+
     public int? MevcutKullaniciSubeId()
     {
         var subeIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("SubeId")?.Value;

@@ -191,6 +191,60 @@ public class SatisFaturasiServiceTests
     }
 
     [Fact]
+    public async Task OnaylaAsync_KrediLimitiAsiliyorAdminOlmayanKullanici_HataFirlatirVeBirSeyDegismez()
+    {
+        // Fatura toplamı: 10 * 50 * 1.20 = 600. Cari bakiyesi 500, limit 1000 — 500 + 600 = 1100 > 1000.
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        cari.Bakiye = 500;
+        cari.KrediLimiti = 1000;
+        await baglam.SaveChangesAsync();
+
+        var servis = ServisOlustur(unitOfWork, yuksekTutarEsigi: null, kullaniciRolu: "Satis");
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => servis.OnaylaAsync(fatura.Id));
+        Assert.Contains("kredi limiti", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelFatura = await baglam.SatisFaturalari.FindAsync(fatura.Id);
+        Assert.Equal(BelgeDurum.Beklemede, guncelFatura!.Durum);
+    }
+
+    [Fact]
+    public async Task OnaylaAsync_KrediLimitiAsiliyorAdminKullanici_BasariylaOnaylanir()
+    {
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        cari.Bakiye = 500;
+        cari.KrediLimiti = 1000;
+        await baglam.SaveChangesAsync();
+
+        var servis = ServisOlustur(unitOfWork, yuksekTutarEsigi: null, kullaniciRolu: "Admin");
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+
+        await servis.OnaylaAsync(fatura.Id);
+
+        var guncelFatura = await baglam.SatisFaturalari.FindAsync(fatura.Id);
+        Assert.Equal(BelgeDurum.Onaylandi, guncelFatura!.Durum);
+    }
+
+    [Fact]
+    public async Task OnaylaAsync_KrediLimitiTanimlanmamis_KontrolUygulanmaz()
+    {
+        // KrediLimiti <= 0 "limit yok" anlamına gelir (mevcut demo verisinde varsayılan).
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        cari.Bakiye = 1_000_000;
+        cari.KrediLimiti = 0;
+        await baglam.SaveChangesAsync();
+
+        var servis = ServisOlustur(unitOfWork, yuksekTutarEsigi: null, kullaniciRolu: "Satis");
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+
+        await servis.OnaylaAsync(fatura.Id);
+
+        var guncelFatura = await baglam.SatisFaturalari.FindAsync(fatura.Id);
+        Assert.Equal(BelgeDurum.Onaylandi, guncelFatura!.Durum);
+    }
+
+    [Fact]
     public async Task OnaylaAsync_FarkliSubedekiSatisKullanicisi_HataFirlatirVeBirSeyDegismez()
     {
         var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();

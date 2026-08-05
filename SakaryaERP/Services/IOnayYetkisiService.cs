@@ -12,6 +12,12 @@ public interface IOnayYetkisiService
     // tarafından oluşturulmuş) kontrol uygulanmaz.
     void OlusturanOnaylayamazKontrolEt(string? olusturanKullanici, string belgeTuru);
 
+    // Kredi limiti kontrolü: bir satış faturası onaylandığında carinin bakiyesi (bize olan
+    // borcu) KrediLimiti'ni aşacaksa Admin dışı kullanıcı engellenir. KrediLimiti <= 0 "limit
+    // tanımlanmamış/limitsiz" anlamına gelir (mevcut demo verisinde birçok cari için durum bu),
+    // bu yüzden sadece pozitif bir limit varsa kontrol uygulanır.
+    void KrediLimitiKontrolEt(decimal mevcutBakiye, decimal krediLimiti, decimal ekTutar, string cariUnvan);
+
     // Giriş yapmış kullanıcının şubesi (login claim'inden okunur, DB'ye gitmez).
     // Kullanıcının şubesi yoksa (Admin/Muhasebe gibi merkez rolleri) null döner.
     int? MevcutKullaniciSubeId();

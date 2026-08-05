@@ -177,6 +177,8 @@ public class SatisFaturasiService : ISatisFaturasiService
 
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        _onayYetkisiService.KrediLimitiKontrolEt(
+            cari.Bakiye, cari.KrediLimiti, fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami), cari.Unvan);
 
         var malzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
         var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
