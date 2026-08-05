@@ -18,9 +18,17 @@ public class MizanService : IMizanService
     {
         var araligBaslangic = baslangic ?? new DateTime(DateTime.Today.Year, 1, 1);
         var araligBitis = bitis ?? DateTime.Today;
+        if (araligBaslangic > araligBitis)
+            throw new InvalidOperationException("Başlangıç tarihi bitiş tarihinden sonra olamaz.");
 
+        // QueryTumu() global soft-delete filtresini atlar (IgnoreQueryFilters) — SatisFaturasi/
+        // AlisFaturasi iptal edildiğinde MuhasebeFisi soft-delete edilir (bkz. IptalEtAsync);
+        // bunlar mizana dahil edilmemeli, aksi halde iptal edilmiş bir faturanın yevmiye kaydı
+        // hâlâ Borç/Alacak toplamlarını şişirir (her iki taraf da eşit şiştiği için "Borç=Alacak"
+        // denge kontrolü bu hatayı gizler).
         var satirlar = await _unitOfWork.Repository<MuhasebeFisiKalemi>().QueryTumu()
-            .Where(k => k.MuhasebeFisi.Tarih >= araligBaslangic && k.MuhasebeFisi.Tarih <= araligBitis)
+            .Where(k => !k.MuhasebeFisi.IsDeleted
+                && k.MuhasebeFisi.Tarih >= araligBaslangic && k.MuhasebeFisi.Tarih <= araligBitis)
             .GroupBy(k => new { k.HesapPlani.HesapKodu, k.HesapPlani.HesapAdi })
             .Select(g => new MizanSatiriViewModel
             {

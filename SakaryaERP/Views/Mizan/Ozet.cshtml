@@ -7,6 +7,11 @@
     <h3 class="mb-0">Mizan</h3>
 </div>
 
+@if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger">@TempData["Hata"]</div>
+}
+
 <div class="card mb-4">
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">

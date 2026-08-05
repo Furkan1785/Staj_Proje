@@ -79,4 +79,52 @@ public class MizanServiceTests
 
         Assert.Empty(vm.Satirlar);
     }
+
+    [Fact]
+    public async Task GetMizanAsync_IptalEdilmisFaturaninYevmiyeKaydi_MizanaDahilEdilmez()
+    {
+        var baglam = TestDbContextFactory.OlusturYeniBaglam();
+        var unitOfWork = new UnitOfWork(baglam);
+
+        var alicilar = new HesapPlani { HesapKodu = "120", HesapAdi = "Alıcılar", HesapTipi = HesapTipi.Aktif };
+        baglam.HesapPlani.Add(alicilar);
+        await baglam.SaveChangesAsync();
+
+        // İptal edilen bir faturanın yevmiye kaydı SatisFaturasiService.IptalEtAsync tarafından
+        // soft-delete edilir (IsDeleted=true) — CariFisi/MuhasebeFisi silinmez, sadece işaretlenir.
+        // Önce normal ekleyip sonra ayrı bir SaveChangesAsync ile işaretliyoruz: AppDbContext.
+        // SaveChangesAsync, Added durumundaki kayıtlarda IsDeleted'i baştan false'a sıfırlıyor
+        // (yanlışlıkla silinmiş kayıt oluşturulmasını engellemek için), bu yüzden Add sırasında
+        // IsDeleted=true vermek gerçek senaryoyu simüle etmez.
+        var fis = new MuhasebeFisi
+        {
+            FisNo = "MF-000001",
+            Tarih = new DateTime(2026, 3, 10),
+            Kalemler = [new MuhasebeFisiKalemi { HesapPlaniId = alicilar.Id, Borc = 600, Alacak = 0 }]
+        };
+        baglam.MuhasebeFisleri.Add(fis);
+        await baglam.SaveChangesAsync();
+
+        fis.IsDeleted = true;
+        baglam.MuhasebeFisleri.Update(fis);
+        await baglam.SaveChangesAsync();
+
+        var servis = new MizanService(unitOfWork);
+        var vm = await servis.GetMizanAsync(new DateTime(2026, 3, 1), new DateTime(2026, 3, 31));
+
+        Assert.Empty(vm.Satirlar);
+    }
+
+    [Fact]
+    public async Task GetMizanAsync_BaslangicBitistenSonraysa_HataFirlatir()
+    {
+        var baglam = TestDbContextFactory.OlusturYeniBaglam();
+        var unitOfWork = new UnitOfWork(baglam);
+        var servis = new MizanService(unitOfWork);
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => servis.GetMizanAsync(new DateTime(2026, 12, 31), new DateTime(2026, 1, 1)));
+
+        Assert.Contains("başlangıç", hata.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }

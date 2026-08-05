@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SakaryaERP.Services;
+using SakaryaERP.ViewModels;
 
 namespace SakaryaERP.Controllers;
 
@@ -18,7 +19,15 @@ public class MizanController : Controller
 
     public async Task<IActionResult> Ozet(DateTime? baslangic, DateTime? bitis)
     {
-        var vm = await _mizanService.GetMizanAsync(baslangic, bitis);
-        return View(vm);
+        try
+        {
+            var vm = await _mizanService.GetMizanAsync(baslangic, bitis);
+            return View(vm);
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+            return View(new MizanViewModel { Baslangic = baslangic ?? DateTime.Today, Bitis = bitis ?? DateTime.Today });
+        }
     }
 }

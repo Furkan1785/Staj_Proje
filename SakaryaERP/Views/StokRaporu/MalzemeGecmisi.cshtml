@@ -72,7 +72,7 @@
                 @if (Model.Satirlar.Count == 0)
                 {
                     <tr>
-                        <td colspan="8" class="text-center text-muted">Bu tarih aralığında onaylanmış hareket bulunamadı.</td>
+                        <td colspan="@(Model.KumulatifBakiyeGosterilebilir ? 8 : 7)" class="text-center text-muted">Bu tarih aralığında onaylanmış hareket bulunamadı.</td>
                     </tr>
                 }
                 @foreach (var s in Model.Satirlar)
