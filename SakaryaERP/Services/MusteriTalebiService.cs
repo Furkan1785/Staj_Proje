@@ -19,6 +19,7 @@ public class MusteriTalebiService : IMusteriTalebiService
     {
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(talep.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cari.SubeId, "Bu cari başka bir şubeye ait, müşteri talebi açamazsınız.");
         if (cari.CariTipi != CariTipi.Musteri && cari.CariTipi != CariTipi.HerIkisi)
             throw new InvalidOperationException("Müşteri talebi sadece müşteri olarak işaretli bir cariye açılabilir.");
 

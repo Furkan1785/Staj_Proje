@@ -26,6 +26,7 @@ public class AlisIrsaliyesiService : IAlisIrsaliyesiService
 
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(irsaliye.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cari.SubeId, "Bu cari başka bir şubeye ait, alış irsaliyesi açamazsınız.");
         if (cari.CariTipi != CariTipi.Tedarikci && cari.CariTipi != CariTipi.HerIkisi)
             throw new InvalidOperationException("Alış irsaliyesi sadece tedarikçi olarak işaretli bir cariye açılabilir.");
 

@@ -26,6 +26,7 @@ public class SatisTeklifiService : ISatisTeklifiService
 
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(teklif.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cari.SubeId, "Bu cari başka bir şubeye ait, satış teklifi açamazsınız.");
         if (cari.CariTipi != CariTipi.Musteri && cari.CariTipi != CariTipi.HerIkisi)
             throw new InvalidOperationException("Satış teklifi sadece müşteri olarak işaretli bir cariye açılabilir.");
 
@@ -40,6 +41,7 @@ public class SatisTeklifiService : ISatisTeklifiService
         {
             talep = await _unitOfWork.Repository<MusteriTalebi>().GetByIdAsync(teklif.MusteriTalebiId.Value)
                 ?? throw new InvalidOperationException("Müşteri talebi bulunamadı.");
+            _onayYetkisiService.SubeErisimKontrolEt(talep.SubeId, "Bu müşteri talebi başka bir şubeye ait, teklif oluşturamazsınız.");
             if (talep.Durum is not (TalepDurum.Yeni or TalepDurum.Isleniyor))
                 throw new InvalidOperationException("Sadece yeni veya işlemedeki bir talepten teklif oluşturulabilir.");
         }

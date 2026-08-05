@@ -255,6 +255,24 @@ public class SatisFaturasiServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_BaskaSubeyeAitCariyeFaturaAcilmayaCalisilir_HataFirlatir()
+    {
+        var (_, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
+
+        // Cari, Bursa şubesindeki bir kullanıcı tarafından oluşturulmuş olsun.
+        var bursaServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("bursa@test.com", "Satis", subeId: 1), config));
+        // (Test kurulumunda cari zaten şubesiz oluşturuluyor; SubeId'sini elle Bursa'ya ait yapalım.)
+        cari.SubeId = 1;
+
+        var izmirServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("izmir@test.com", "Satis", subeId: 2), config));
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => izmirServis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id)));
+
+        Assert.Contains("başka bir şubeye ait", hata.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task GetByIdDetayAsync_FarkliSubedekiSatisKullanicisi_NullDoner()
     {
         var (_, unitOfWork, cari, malzeme) = await TemelVeriKur();
