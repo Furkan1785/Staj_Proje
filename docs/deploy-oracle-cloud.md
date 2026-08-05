@@ -53,8 +53,17 @@ sudo netfilter-persistent save
 git clone <repo-url> sakaryaerp
 cd sakaryaerp
 cp .env.example .env
-nano .env   # POSTGRES_PASSWORD'ü güçlü bir şifreyle değiştir; SMTP bilgilerin varsa doldur
+nano .env   # POSTGRES_PASSWORD'ü güçlü bir şifreyle değiştir; SMTP bilgilerin varsa doldur;
+            # APP_BASE_URL=http://<PUBLIC_IP> satırını ekle (aşağıdaki not) — eklenmezse
+            # docker compose up net bir hatayla durur.
 ```
+
+**Önemli — `APP_BASE_URL`:** Şifre sıfırlama e-postasındaki link, güvenlik nedeniyle
+gelen isteğin Host header'ından değil bu değerden kurulur (bkz. `AccountController`
+— `AllowedHosts: "*"` olduğu için Host header'a güvenmek bir saldırganın sıfırlama
+linkini kendi sunucusuna yönlendirip hesap ele geçirmesine izin verirdi). `.env`'e
+`APP_BASE_URL=http://<PUBLIC_IP>` (domain alındığında `https://domain.com` olarak
+güncellenmeli) eklenmeden `docker compose up` başlamaz.
 
 ## 5. Ayağa kaldırma
 
