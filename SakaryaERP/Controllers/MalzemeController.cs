@@ -330,11 +330,28 @@ public class MalzemeController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequestSizeLimit(5 * 1024 * 1024)]
     public async Task<IActionResult> IceAktar(IFormFile dosya)
     {
         if (dosya is null || dosya.Length == 0)
         {
             ModelState.AddModelError("", "Lütfen bir Excel dosyası (.xlsx) seçin.");
+            return View(new MalzemeIceAktarViewModel());
+        }
+
+        // Sıkıştırılmış bir .xlsx açıldığında bellekte katbekat büyüyebilir (zip-bomb); dosya
+        // boyutunu ve uzantısını/içerik tipini kontrol etmeden XLWorkbook'a vermek DoS riski taşır.
+        const long maksimumBoyutBayt = 5 * 1024 * 1024;
+        if (dosya.Length > maksimumBoyutBayt)
+        {
+            ModelState.AddModelError("", "Dosya boyutu 5 MB'ı aşamaz.");
+            return View(new MalzemeIceAktarViewModel());
+        }
+
+        var uzanti = Path.GetExtension(dosya.FileName);
+        if (!string.Equals(uzanti, ".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError("", "Sadece .xlsx uzantılı dosyalar kabul edilir.");
             return View(new MalzemeIceAktarViewModel());
         }
 
