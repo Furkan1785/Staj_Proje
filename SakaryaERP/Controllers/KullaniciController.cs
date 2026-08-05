@@ -202,6 +202,10 @@ public class KullaniciController : Controller
 
         await _userManager.SetLockoutEnabledAsync(kullanici, true);
         await _userManager.SetLockoutEndDateAsync(kullanici, DateTimeOffset.MaxValue);
+        // Lockout tek başına açık oturumdaki cookie'yi geçersiz kılmaz (SecurityStampValidator
+        // sadece stamp eşleşmesine bakar) — stamp'i döndürerek kullanıcının mevcut oturumunun
+        // bir sonraki doğrulamada (bkz. Program.cs ValidationInterval) düşmesini sağlıyoruz.
+        await _userManager.UpdateSecurityStampAsync(kullanici);
 
         TempData["Basari"] = "Kullanıcı pasif yapıldı.";
         return RedirectToAction(nameof(Index));

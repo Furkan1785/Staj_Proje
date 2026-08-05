@@ -53,6 +53,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
 });
 
+// Varsayılan 30 dakika yerine 5 dakika: bir kullanıcı pasif yapıldığında (security stamp
+// döndürülünce) mevcut oturumunun düşmesi için beklenen azami süre.
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+{
+    options.ValidationInterval = TimeSpan.FromMinutes(5);
+});
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICariRepository, CariRepository>();
 builder.Services.AddScoped<ICariService, CariService>();
