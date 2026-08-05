@@ -109,4 +109,55 @@ public class MalzemeHareketFisiServiceTests
 
         Assert.Contains("beklemede", hata.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task GetSayfaliListeAsync_SubeliKullanici_SadeceKendiSubesininFislerini_ListelerVeExcelExportEsasAlir()
+    {
+        var baglam = TestDbContextFactory.OlusturYeniBaglam();
+        var unitOfWork = new UnitOfWork(baglam);
+
+        var subeA = new Sube { SubeAdi = "A Şubesi" };
+        var subeB = new Sube { SubeAdi = "B Şubesi" };
+        var malzeme = new Malzeme { MalzemeKodu = "M001", MalzemeAdi = "Test Malzemesi", Birim = "Adet" };
+        baglam.Subeler.AddRange(subeA, subeB);
+        baglam.Malzemeler.Add(malzeme);
+        await baglam.SaveChangesAsync();
+
+        baglam.MalzemeHareketFisleri.AddRange(
+            new MalzemeHareketFisi
+            {
+                FisNo = "MH-000001", Tarih = DateTime.Today, HareketTipi = HareketTipi.Giris, SubeId = subeA.Id,
+                Kalemler = [new MalzemeHareketFisiKalemi { MalzemeId = malzeme.Id, Miktar = 1 }]
+            },
+            new MalzemeHareketFisi
+            {
+                FisNo = "MH-000002", Tarih = DateTime.Today, HareketTipi = HareketTipi.Giris, SubeId = subeB.Id,
+                Kalemler = [new MalzemeHareketFisiKalemi { MalzemeId = malzeme.Id, Miktar = 1 }]
+            });
+        await baglam.SaveChangesAsync();
+
+        var httpContext = new HttpContextAccessor
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+                    [
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Satis"),
+                        new System.Security.Claims.Claim("SubeId", subeA.Id.ToString())
+                    ], "TestAuth"))
+            }
+        };
+        var onayYetkisiService = new OnayYetkisiService(httpContext, new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        var servis = new MalzemeHareketFisiService(unitOfWork, onayYetkisiService);
+
+        // Excel export da aynı metodu (int.MaxValue sayfa boyutuyla) kullanıyor, bu yüzden
+        // tek bir test hem DataTables listesini hem export'u kapsıyor.
+        var (kayitlar, toplamKayit, filtrelenmisKayit) = await servis.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[6], -1, "desc");
+
+        var kayitListesi = kayitlar.ToList();
+        Assert.Single(kayitListesi);
+        Assert.Equal("MH-000001", kayitListesi[0].FisNo);
+        Assert.Equal(1, toplamKayit);
+        Assert.Equal(1, filtrelenmisKayit);
+    }
 }

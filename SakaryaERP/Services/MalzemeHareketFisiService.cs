@@ -52,6 +52,13 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
             .Include(f => f.Kalemler)
             .Where(f => !f.IsDeleted);
 
+        // Şubeye bağlı kullanıcı liste/Excel export'ta da sadece kendi şubesinin fişlerini
+        // görmeli — Detay ekranı zaten SubeErisimVarMi ile kapalıydı ama bu sayfalı liste ayrı
+        // bir sorgu olduğu için o kontrolden geçmiyordu. SubeId bu belgede zorunlu (non-null).
+        var etkinSubeId = _onayYetkisiService.EfektifSube(null);
+        if (etkinSubeId is not null)
+            query = query.Where(f => f.SubeId == etkinSubeId);
+
         var toplamKayit = await query.CountAsync();
 
         if (!string.IsNullOrWhiteSpace(genelArama))

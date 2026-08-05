@@ -60,6 +60,13 @@ public class AlisSiparisiService : IAlisSiparisiService
             .Include(s => s.AlisIrsaliyeleri).ThenInclude(i => i.Kalemler)
             .Where(s => !s.IsDeleted);
 
+        // Şubeye bağlı kullanıcı liste/Excel export'ta da sadece kendi şubesinin siparişlerini
+        // görmeli — Detay ekranı zaten SubeErisimVarMi ile kapalıydı ama bu sayfalı liste ayrı
+        // bir sorgu olduğu için o kontrolden geçmiyordu. SubeId bu belgede zorunlu (non-null).
+        var etkinSubeId = _onayYetkisiService.EfektifSube(null);
+        if (etkinSubeId is not null)
+            query = query.Where(s => s.SubeId == etkinSubeId);
+
         var toplamKayit = await query.CountAsync();
 
         if (!string.IsNullOrWhiteSpace(genelArama))

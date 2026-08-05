@@ -73,6 +73,13 @@ public class CekSenetService : ICekSenetService
             .Include(c => c.Cari)
             .Where(c => !c.IsDeleted);
 
+        // Şubeye bağlı kullanıcı liste/Excel export'ta da sadece kendi şubesinin (veya şubesiz
+        // eski kayıtların) çek/senetlerini görmeli — Detay ekranı zaten SubeErisimVarMi ile
+        // kapalıydı ama bu sayfalı liste ayrı bir sorgu olduğu için o kontrolden geçmiyordu.
+        var etkinSubeId = _onayYetkisiService.EfektifSube(null);
+        if (etkinSubeId is not null)
+            query = query.Where(c => c.SubeId == null || c.SubeId == etkinSubeId);
+
         var toplamKayit = await query.CountAsync();
 
         if (!string.IsNullOrWhiteSpace(genelArama))

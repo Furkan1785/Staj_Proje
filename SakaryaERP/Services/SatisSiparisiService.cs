@@ -70,6 +70,13 @@ public class SatisSiparisiService : ISatisSiparisiService
             .Include(s => s.SevkIrsaliyeleri).ThenInclude(i => i.Kalemler)
             .Where(s => !s.IsDeleted);
 
+        // Şubeye bağlı kullanıcı liste/Excel export'ta da sadece kendi şubesinin (veya şubesiz
+        // eski kayıtların) siparişlerini görmeli — Detay ekranı zaten SubeErisimVarMi ile
+        // kapalıydı ama bu sayfalı liste ayrı bir sorgu olduğu için o kontrolden geçmiyordu.
+        var etkinSubeId = _onayYetkisiService.EfektifSube(null);
+        if (etkinSubeId is not null)
+            query = query.Where(s => s.SubeId == null || s.SubeId == etkinSubeId);
+
         var toplamKayit = await query.CountAsync();
 
         if (!string.IsNullOrWhiteSpace(genelArama))

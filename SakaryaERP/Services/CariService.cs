@@ -123,6 +123,14 @@ public class CariService : ICariService
         int start, int length, string? genelArama, string?[] sutunAramalari, int siralamaSutunu, string siralamaYonu)
     {
         var query = _cariRepository.QueryTumu();
+
+        // Şubeye bağlı kullanıcı liste/Excel export'ta da sadece kendi şubesinin (veya şubesiz
+        // eski kayıtların) carilerini görmeli — Detay ekranı zaten SubeErisimVarMi ile
+        // kapalıydı ama bu sayfalı liste ayrı bir sorgu olduğu için o kontrolden geçmiyordu.
+        var etkinSubeId = _onayYetkisiService.EfektifSube(null);
+        if (etkinSubeId is not null)
+            query = query.Where(c => c.SubeId == null || c.SubeId == etkinSubeId);
+
         var toplamKayit = await query.CountAsync();
 
         if (!string.IsNullOrWhiteSpace(genelArama))

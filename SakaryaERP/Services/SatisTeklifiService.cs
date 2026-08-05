@@ -71,6 +71,13 @@ public class SatisTeklifiService : ISatisTeklifiService
             .Include(t => t.Kalemler)
             .Where(t => !t.IsDeleted);
 
+        // Şubeye bağlı kullanıcı liste/Excel export'ta da sadece kendi şubesinin (veya şubesiz
+        // eski kayıtların) tekliflerini görmeli — Detay ekranı zaten SubeErisimVarMi ile
+        // kapalıydı ama bu sayfalı liste ayrı bir sorgu olduğu için o kontrolden geçmiyordu.
+        var etkinSubeId = _onayYetkisiService.EfektifSube(null);
+        if (etkinSubeId is not null)
+            query = query.Where(t => t.SubeId == null || t.SubeId == etkinSubeId);
+
         var toplamKayit = await query.CountAsync();
 
         if (!string.IsNullOrWhiteSpace(genelArama))

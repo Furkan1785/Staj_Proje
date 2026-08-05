@@ -120,4 +120,42 @@ public class CariServiceTests
         var guncelCari = await baglam.Cariler.IgnoreQueryFilters().FirstAsync(c => c.Id == cari.Id);
         Assert.True(guncelCari.IsDeleted);
     }
+
+    [Fact]
+    public async Task GetSayfaliListeAsync_SubeliKullanici_KendiSubesiniVeSubesizEskiKayitlariGorurBaskaSubeyiGormez()
+    {
+        var baglam = TestDbContextFactory.OlusturYeniBaglam();
+        var unitOfWork = new UnitOfWork(baglam);
+
+        var subeA = new Cari { CariKodu = "C001", Unvan = "A Şubesi Carisi", CariTipi = CariTipi.Musteri, SubeId = 1 };
+        var subeB = new Cari { CariKodu = "C002", Unvan = "B Şubesi Carisi", CariTipi = CariTipi.Musteri, SubeId = 2 };
+        var eskiKayit = new Cari { CariKodu = "C003", Unvan = "Eski Kayıt", CariTipi = CariTipi.Musteri, SubeId = null };
+        baglam.Cariler.AddRange(subeA, subeB, eskiKayit);
+        await baglam.SaveChangesAsync();
+
+        var httpContext = new HttpContextAccessor
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+                    [
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Satis"),
+                        new System.Security.Claims.Claim("SubeId", "1")
+                    ], "TestAuth"))
+            }
+        };
+        var onayYetkisiService = new OnayYetkisiService(httpContext, new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        var servis = new CariService(new CariRepository(baglam), unitOfWork, onayYetkisiService);
+
+        // Excel export da aynı metodu (int.MaxValue sayfa boyutuyla) kullanıyor, bu yüzden
+        // tek bir test hem DataTables listesini hem export'u kapsıyor.
+        var (kayitlar, toplamKayit, filtrelenmisKayit) = await servis.GetSayfaliListeAsync(0, int.MaxValue, null, new string?[7], -1, "desc");
+
+        var kodlar = kayitlar.Select(c => c.CariKodu).ToList();
+        Assert.Contains("C001", kodlar);
+        Assert.Contains("C003", kodlar);
+        Assert.DoesNotContain("C002", kodlar);
+        Assert.Equal(2, toplamKayit);
+        Assert.Equal(2, filtrelenmisKayit);
+    }
 }
