@@ -1,0 +1,77 @@
+@model MizanViewModel
+@{
+    ViewData["Title"] = "Mizan";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Mizan</h3>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-auto">
+                <label class="form-label">Başlangıç</label>
+                <input type="date" name="baslangic" class="form-control" value="@Model.Baslangic.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-auto">
+                <label class="form-label">Bitiş</label>
+                <input type="date" name="bitis" class="form-control" value="@Model.Bitis.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Filtrele</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Satirlar.Count == 0)
+{
+    <div class="alert alert-info">Seçilen tarih aralığında yevmiye kaydı bulunmuyor.</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-header">Hesap Bazında Borç / Alacak / Bakiye</div>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Hesap Kodu</th>
+                        <th>Hesap Adı</th>
+                        <th class="text-end">Toplam Borç</th>
+                        <th class="text-end">Toplam Alacak</th>
+                        <th class="text-end">Borç Bakiyesi</th>
+                        <th class="text-end">Alacak Bakiyesi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.Satirlar)
+                    {
+                        <tr>
+                            <td>@s.HesapKodu</td>
+                            <td>@s.HesapAdi</td>
+                            <td class="text-end">@s.ToplamBorc.ToString("N2")</td>
+                            <td class="text-end">@s.ToplamAlacak.ToString("N2")</td>
+                            <td class="text-end">@(s.BorcBakiyesi > 0 ? s.BorcBakiyesi.ToString("N2") : "")</td>
+                            <td class="text-end">@(s.AlacakBakiyesi > 0 ? s.AlacakBakiyesi.ToString("N2") : "")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="table-light">
+                        <td colspan="2" class="text-end"><strong>Toplam</strong></td>
+                        <td class="text-end"><strong>@Model.ToplamBorc.ToString("N2")</strong></td>
+                        <td class="text-end"><strong>@Model.ToplamAlacak.ToString("N2")</strong></td>
+                        <td class="text-end"><strong>@Model.ToplamBorcBakiyesi.ToString("N2")</strong></td>
+                        <td class="text-end"><strong>@Model.ToplamAlacakBakiyesi.ToString("N2")</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    @if (Model.ToplamBorc != Model.ToplamAlacak)
+    {
+        <div class="alert alert-danger mt-3">Toplam Borç ile Toplam Alacak eşit değil — bu, veri tutarlılığında bir sorun olduğuna işaret eder.</div>
+    }
+}

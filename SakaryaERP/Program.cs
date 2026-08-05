@@ -83,6 +83,7 @@ builder.Services.AddScoped<ISatisFaturasiService, SatisFaturasiService>();
 builder.Services.AddScoped<IHesapPlaniService, HesapPlaniService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IMizanService, MizanService>();
 builder.Services.AddScoped<IOnayYetkisiService, OnayYetkisiService>();
 builder.Services.AddScoped<IAdminEmailProvider, IdentityAdminEmailProvider>();
 builder.Services.AddScoped<IBildirimService, BildirimService>();
