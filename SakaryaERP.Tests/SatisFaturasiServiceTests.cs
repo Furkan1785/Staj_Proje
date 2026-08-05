@@ -99,6 +99,21 @@ public class SatisFaturasiServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_FaturaTarihiIrsaliyedenOnce_HataFirlatir()
+    {
+        var (baglam, servis, cari, malzeme) = await SenaryoKur();
+        var irsaliye = await OnaylanmisIrsaliyeOlustur(baglam, cari.Id, malzeme.Id, sevkMiktari: 5);
+
+        var fatura = YeniFatura(cari.Id);
+        fatura.SevkIrsaliyesiId = irsaliye.Id;
+        fatura.Tarih = irsaliye.Tarih.AddDays(-1);
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => servis.CreateAsync(fatura, Kalemler(malzeme.Id, miktar: 5)));
+
+        Assert.Contains("irsaliyesi tarihinden önce olamaz", hata.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task CreateAsync_IrsaliyedekiMiktarKadarFaturalanir_BasariylaOlusturulur()
     {
         var (baglam, servis, cari, malzeme) = await SenaryoKur();

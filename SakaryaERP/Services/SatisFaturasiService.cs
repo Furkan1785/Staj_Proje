@@ -45,6 +45,9 @@ public class SatisFaturasiService : ISatisFaturasiService
             if (irsaliye.Durum != BelgeDurum.Onaylandi)
                 throw new InvalidOperationException("Fatura sadece onaylanmış bir irsaliyeden oluşturulabilir.");
 
+            if (fatura.Tarih < irsaliye.Tarih)
+                throw new InvalidOperationException("Fatura tarihi, sevk irsaliyesi tarihinden önce olamaz.");
+
             if (await AktifFaturaVarMiIrsaliyeIcinAsync(irsaliye.Id))
                 throw new InvalidOperationException("Bu irsaliye için zaten bir fatura oluşturulmuş.");
 
@@ -71,6 +74,9 @@ public class SatisFaturasiService : ISatisFaturasiService
 
             if (siparis.Durum != BelgeDurum.Onaylandi)
                 throw new InvalidOperationException("Fatura sadece onaylanmış bir siparişten oluşturulabilir.");
+
+            if (fatura.Tarih < siparis.Tarih)
+                throw new InvalidOperationException("Fatura tarihi, satış siparişi tarihinden önce olamaz.");
 
             if (await AktifFaturaVarMiSiparisIcinAsync(siparis.Id))
                 throw new InvalidOperationException("Bu sipariş için zaten bir fatura oluşturulmuş.");

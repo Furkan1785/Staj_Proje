@@ -45,6 +45,9 @@ public class AlisFaturasiService : IAlisFaturasiService
             if (irsaliye.Durum != BelgeDurum.Onaylandi)
                 throw new InvalidOperationException("Fatura sadece onaylanmış bir irsaliyeden oluşturulabilir.");
 
+            if (fatura.Tarih < irsaliye.Tarih)
+                throw new InvalidOperationException("Fatura tarihi, alış irsaliyesi tarihinden önce olamaz.");
+
             if (await AktifFaturaVarMiAsync(irsaliye.Id))
                 throw new InvalidOperationException("Bu irsaliye için zaten bir fatura oluşturulmuş.");
 
