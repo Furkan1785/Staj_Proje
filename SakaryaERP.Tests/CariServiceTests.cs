@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
 using SakaryaERP.Data.Repositories;
@@ -93,5 +94,30 @@ public class CariServiceTests
 
         var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
         Assert.Equal(CariTipi.HerIkisi, guncelCari!.CariTipi);
+    }
+
+    [Fact]
+    public async Task PasifYapAsync_BakiyesiSifirOlmayanCari_HataFirlatirVeBirSeyDegismez()
+    {
+        var (baglam, servis, cari) = SenaryoKur(CariTipi.Musteri);
+        cari.Bakiye = 500;
+        await baglam.SaveChangesAsync();
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => servis.PasifYapAsync(cari.Id));
+        Assert.Contains("kapanmamış bir bakiyesi", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
+        Assert.False(guncelCari!.IsDeleted);
+    }
+
+    [Fact]
+    public async Task PasifYapAsync_BakiyesiSifirCari_BasariylaPasifYapilir()
+    {
+        var (baglam, servis, cari) = SenaryoKur(CariTipi.Musteri);
+
+        await servis.PasifYapAsync(cari.Id);
+
+        var guncelCari = await baglam.Cariler.IgnoreQueryFilters().FirstAsync(c => c.Id == cari.Id);
+        Assert.True(guncelCari.IsDeleted);
     }
 }

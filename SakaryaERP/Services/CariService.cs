@@ -103,6 +103,9 @@ public class CariService : ICariService
             ?? throw new InvalidOperationException("Cari bulunamadı.");
         if (!_onayYetkisiService.SubeErisimVarMi(cari.SubeId))
             throw new InvalidOperationException("Bu cari başka bir şubeye ait, pasif yapamazsınız.");
+        if (cari.Bakiye != 0)
+            throw new InvalidOperationException(
+                $"Bu carinin kapanmamış bir bakiyesi var ({cari.Bakiye.ToString("N2")} TL), pasif yapılamaz.");
 
         _cariRepository.SoftDelete(cari);
         await _unitOfWork.SaveChangesAsync();
