@@ -62,6 +62,21 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
             modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
         }
 
+        // Eş zamanlı iki isteğin aynı satırı (ör. Malzeme.Bakiye, Cari.Bakiye) birbirinin üstüne
+        // yazmasını (lost update) engellemek için Postgres'in kendi sistem sütunu xmin'i concurrency
+        // token olarak kullanıyoruz — ayrı bir RowVersion kolonu/migration'a gerek kalmadan, satır her
+        // güncellendiğinde otomatik değişir. Çakışma olursa SaveChangesAsync DbUpdateConcurrencyException
+        // fırlatır (bkz. stok/bakiye değiştiren Onayla metotlarındaki yakalama).
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+            .Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType)))
+        {
+            modelBuilder.Entity(entityType.ClrType)
+                .Property<uint>("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate()
+                .IsConcurrencyToken();
+        }
+
         // Npgsql, DateTime.Kind'a göre sütun tipini zorluyor: "with time zone" sadece Kind=Utc,
         // "without time zone" sadece Kind=Unspecified kabul ediyor. Uygulama tek saat diliminde (TR)
         // çalıştığından tüm DateTime sütunlarını "without time zone" yapıp, hangi Kind ile gelirse gelsin
