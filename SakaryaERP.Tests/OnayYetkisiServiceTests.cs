@@ -15,11 +15,12 @@ public class OnayYetkisiServiceTests
                 : new Dictionary<string, string?> { ["OnayAyarlari:YuksekTutarEsigi"] = esik.Value.ToString() })
             .Build();
 
-    private static IHttpContextAccessor HttpContextOlustur(string? rol, int? subeId = null)
+    private static IHttpContextAccessor HttpContextOlustur(string? rol, int? subeId = null, string? kullaniciAdi = null)
     {
         List<Claim> claimler = [];
         if (rol is not null) claimler.Add(new Claim(ClaimTypes.Role, rol));
         if (subeId is not null) claimler.Add(new Claim("SubeId", subeId.Value.ToString()));
+        if (kullaniciAdi is not null) claimler.Add(new Claim(ClaimTypes.Name, kullaniciAdi));
         var kimlik = claimler.Count == 0 ? new ClaimsIdentity() : new ClaimsIdentity(claimler, "TestAuth");
         var context = new DefaultHttpContext { User = new ClaimsPrincipal(kimlik) };
         return new HttpContextAccessor { HttpContext = context };
@@ -131,5 +132,46 @@ public class OnayYetkisiServiceTests
         var servis = new OnayYetkisiService(HttpContextOlustur("Muhasebe"), YapilandirmaOlustur(null));
 
         Assert.Null(servis.MevcutKullaniciSubeId());
+    }
+
+    [Fact]
+    public void OlusturanOnaylayamazKontrolEt_OlusturanKendiOnaylamayaCalisir_HataFirlatir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", kullaniciAdi: "satis@test.com"), YapilandirmaOlustur(null));
+
+        var hata = Assert.Throws<InvalidOperationException>(
+            () => servis.OlusturanOnaylayamazKontrolEt("satis@test.com", "Satış Faturası"));
+
+        Assert.Contains("kendi belgesini onaylayamaz", hata.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void OlusturanOnaylayamazKontrolEt_BaskaKullaniciOnaylar_SorunOlmaz()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", kullaniciAdi: "muhasebe@test.com"), YapilandirmaOlustur(null));
+
+        var hata = Record.Exception(() => servis.OlusturanOnaylayamazKontrolEt("satis@test.com", "Satış Faturası"));
+
+        Assert.Null(hata);
+    }
+
+    [Fact]
+    public void OlusturanOnaylayamazKontrolEt_Admin_KendiBelgesiniDeOnaylayabilir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Admin", kullaniciAdi: "admin@test.com"), YapilandirmaOlustur(null));
+
+        var hata = Record.Exception(() => servis.OlusturanOnaylayamazKontrolEt("admin@test.com", "Satış Faturası"));
+
+        Assert.Null(hata);
+    }
+
+    [Fact]
+    public void OlusturanOnaylayamazKontrolEt_OlusturanNull_KontrolUygulanmaz()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", kullaniciAdi: "satis@test.com"), YapilandirmaOlustur(null));
+
+        var hata = Record.Exception(() => servis.OlusturanOnaylayamazKontrolEt(null, "Satış Faturası"));
+
+        Assert.Null(hata);
     }
 }

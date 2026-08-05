@@ -40,6 +40,34 @@ public class CekSenetServiceTests
     }
 
     [Fact]
+    public async Task TahsilEdildiYapAsync_TahsildekiCek_CariAlacaklandirirKasaArttirirDurumuTahsilEdildiYapar()
+    {
+        var (baglam, servis, cari, kasa) = await SenaryoKur();
+        var cekSenet = await TahsilEdildiCekOlustur(servis, cari.Id, tutar: 500);
+
+        await servis.TahsilEdildiYapAsync(cekSenet.Id, bankaHesabiId: null, kasaHesabiId: kasa.Id);
+
+        var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
+        var guncelKasa = await baglam.KasaHesaplari.FindAsync(kasa.Id);
+        var guncelCek = await baglam.CekSenetler.FindAsync(cekSenet.Id);
+        Assert.Equal(-500, guncelCari!.Bakiye);
+        Assert.Equal(1500, guncelKasa!.Bakiye);
+        Assert.Equal(CekSenetDurum.TahsilEdildi, guncelCek!.Durum);
+        Assert.True(baglam.CariFisleri.Single(f => f.CekSenetId == cekSenet.Id).OtomatikOlusturuldu);
+    }
+
+    [Fact]
+    public async Task TahsilEdildiYapAsync_HesapSecilmemisse_HataFirlatir()
+    {
+        var (_, servis, cari, _) = await SenaryoKur();
+        var cekSenet = await TahsilEdildiCekOlustur(servis, cari.Id);
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => servis.TahsilEdildiYapAsync(cekSenet.Id, bankaHesabiId: null, kasaHesabiId: null));
+        Assert.Contains("banka veya kasa hesabı", hata.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task TahsilIptalEtAsync_TahsilEdilmisCek_CariVeKasaBakiyesiniTersineCevirirDurumuTahsildeYapar()
     {
         var (baglam, servis, cari, kasa) = await SenaryoKur();

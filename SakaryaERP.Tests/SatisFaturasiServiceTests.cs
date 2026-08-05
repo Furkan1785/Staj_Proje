@@ -112,6 +112,24 @@ public class SatisFaturasiServiceTests
     }
 
     [Fact]
+    public async Task OnaylaAsync_StokYetersizIrsaliyesizFatura_HataFirlatirVeBirSeyDegismez()
+    {
+        // Malzeme başlangıç bakiyesi 5, fatura kalemi 10 istiyor — stok yetersiz.
+        var (baglam, servis, cari, malzeme) = await SenaryoKur(baslangicBakiye: 5);
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id, miktar: 10));
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => servis.OnaylaAsync(fatura.Id));
+        Assert.Contains("stok yetersiz", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelMalzeme = await baglam.Malzemeler.FindAsync(malzeme.Id);
+        var guncelFatura = await baglam.SatisFaturalari.FindAsync(fatura.Id);
+        var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
+        Assert.Equal(5, guncelMalzeme!.Bakiye);
+        Assert.Equal(BelgeDurum.Beklemede, guncelFatura!.Durum);
+        Assert.Equal(0, guncelCari!.Bakiye);
+    }
+
+    [Fact]
     public async Task OnaylaAsync_IrsaliyesizFatura_StokDusururCariArttirirMuhasebeFisiOlusturur()
     {
         var (baglam, servis, cari, malzeme) = await SenaryoKur();
