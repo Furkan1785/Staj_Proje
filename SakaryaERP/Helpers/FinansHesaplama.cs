@@ -31,6 +31,12 @@ public static class FinansHesaplama
     public static decimal KdvTutari(IFiyatliKalem kalem) =>
         Math.Round(kalem.Miktar * kalem.BirimFiyat * (1 - kalem.Iskonto / 100) * kalem.KdvOrani / 100, 2);
 
+    // Birim başına iskonto uygulanmış, KDV hariç fiyat — Alış Faturası onayında
+    // Malzeme.AlisFiyati (COGS'ta kullanılan birim maliyet) bu değerle güncellenir;
+    // sadece BirimFiyat kullanılırsa iskontolu alımlarda maliyet olduğundan yüksek görünür.
+    public static decimal BirimNetFiyat(IFiyatliKalem kalem) =>
+        Math.Round(kalem.BirimFiyat * (1 - kalem.Iskonto / 100), 2);
+
     // Satış Faturası kalemi başına KDV tutarı (Hesaplanan KDV raporu için) — SatisFaturasiSatirToplami
     // ile aynı ara toplam/iskonto zincirini kullanır, KDV üstüne KDV binmesin diye.
     public static decimal SatisFaturasiKdvTutari(IFiyatliKalem kalem) =>

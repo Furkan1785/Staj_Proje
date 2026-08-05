@@ -97,6 +97,19 @@ public class AlisFaturasiServiceTests
     }
 
     [Fact]
+    public async Task OnaylaAsync_IskontoluKalem_MalzemeAlisFiyatiIskontoDusulmusFiyatiAlir()
+    {
+        var (baglam, servis, cari, malzeme) = await SenaryoKur();
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id),
+            [new AlisFaturasiKalemi { MalzemeId = malzeme.Id, Miktar = 10, BirimFiyat = 50, KdvOrani = 20, Iskonto = 10 }]);
+
+        await servis.OnaylaAsync(fatura.Id);
+
+        var guncelMalzeme = await baglam.Malzemeler.FindAsync(malzeme.Id);
+        Assert.Equal(45, guncelMalzeme!.AlisFiyati);
+    }
+
+    [Fact]
     public async Task OnaylaAsync_Onaylandiginda_MalzemeAlisFiyatiKalemBirimFiyatinaGuncellenir()
     {
         var (baglam, servis, cari, malzeme) = await SenaryoKur();

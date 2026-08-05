@@ -231,9 +231,11 @@ public class AlisFaturasiService : IAlisFaturasiService
         // Malzeme.AlisFiyati, satış tarafındaki COGS anlık görüntüsünün kullandığı "güncel maliyet"
         // alanıdır — burada güncellenmezse zamanla eskiyip gerçek alım fiyatından sapar (satış
         // tarafında zaten fatura onayı anında BirimMaliyet'e kopyalanıyor, bkz. SatisFaturasiService).
+        // İskonto hesaba katılmazsa (sadece BirimFiyat kullanılırsa) iskontolu alımlarda maliyet
+        // olduğundan yüksek görünür ve COGS/brüt kar raporları hatalı çıkar.
         foreach (var kalem in fatura.Kalemler)
         {
-            faturaMalzemeleri[kalem.MalzemeId].AlisFiyati = kalem.BirimFiyat;
+            faturaMalzemeleri[kalem.MalzemeId].AlisFiyati = FinansHesaplama.BirimNetFiyat(kalem);
         }
 
         var toplamTutar = fatura.Kalemler.Sum(FinansHesaplama.SatirToplami);
