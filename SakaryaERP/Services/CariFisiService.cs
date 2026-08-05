@@ -67,6 +67,7 @@ public class CariFisiService : ICariFisiService
 
         var toplamSayi = await _unitOfWork.Repository<CariFisi>().QueryTumu().CountAsync();
         fis.FisNo = $"CF-{toplamSayi + 1:000000}";
+        fis.SubeId = _onayYetkisiService.MevcutKullaniciSubeId();
 
         await _unitOfWork.Repository<CariFisi>().AddAsync(fis);
         await _unitOfWork.SaveChangesAsync();
@@ -75,11 +76,12 @@ public class CariFisiService : ICariFisiService
 
     public async Task<CariFisi?> GetByIdDetayAsync(int id)
     {
-        return await _unitOfWork.Repository<CariFisi>().QueryTumu()
+        var fis = await _unitOfWork.Repository<CariFisi>().QueryTumu()
             .Include(f => f.Cari)
             .Include(f => f.BankaHesabi)
             .Include(f => f.KasaHesabi)
             .FirstOrDefaultAsync(f => f.Id == id);
+        return fis is not null && _onayYetkisiService.SubeErisimVarMi(fis.SubeId) ? fis : null;
     }
 
     // Fiş tutarı/carisi sonradan değiştirilemez (yanlış düzeltme bakiyeleri bozar); tek güvenli
@@ -88,6 +90,8 @@ public class CariFisiService : ICariFisiService
     {
         var fis = await _unitOfWork.Repository<CariFisi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Cari fişi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(fis.SubeId))
+            throw new InvalidOperationException("Bu fiş başka bir şubeye ait, iptal edemezsiniz.");
 
         if (fis.IsDeleted)
             throw new InvalidOperationException("Bu fiş zaten iptal edilmiş.");
@@ -183,6 +187,8 @@ public class CariFisiService : ICariFisiService
     {
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(cariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(cari.SubeId))
+            throw new InvalidOperationException("Bu cari başka bir şubeye ait, ekstresini görüntüleyemezsiniz.");
 
         var tumFisler = await _unitOfWork.Repository<CariFisi>().QueryTumu()
             .Where(f => f.CariId == cariId && !f.IsDeleted)

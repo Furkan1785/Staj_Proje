@@ -8,6 +8,11 @@ public class MusteriTalebi : BaseEntity
     public string? Icerik { get; set; }
     public TalepDurum Durum { get; set; } = TalepDurum.Yeni;
 
+    // Talebi oluşturan kullanıcının şubesi (otomatik doldurulur). Null ise eski kayıt
+    // veya şubesiz (merkez) bir kullanıcı tarafından oluşturulmuştur.
+    public int? SubeId { get; set; }
+    public Sube? Sube { get; set; }
+
     public Cari Cari { get; set; } = null!;
     public ICollection<SatisTeklifi> SatisTeklifleri { get; set; } = new List<SatisTeklifi>();
 }

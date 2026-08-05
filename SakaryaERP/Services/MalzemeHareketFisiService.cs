@@ -93,11 +93,12 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
 
     public async Task<MalzemeHareketFisi?> GetByIdDetayAsync(int id)
     {
-        return await _unitOfWork.Repository<MalzemeHareketFisi>().QueryTumu()
+        var fis = await _unitOfWork.Repository<MalzemeHareketFisi>().QueryTumu()
             .Include(f => f.Sube)
             .Include(f => f.Kalemler)
             .ThenInclude(k => k.Malzeme)
             .FirstOrDefaultAsync(f => f.Id == id && !f.IsDeleted);
+        return fis is not null && _onayYetkisiService.SubeErisimVarMi(fis.SubeId) ? fis : null;
     }
 
     // Transfer, aynı şirket içinde şubeler arası taşımayı temsil eder — Malzeme'nin
@@ -108,6 +109,8 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
             .Include(f => f.Kalemler)
             .FirstOrDefaultAsync(f => f.Id == id)
             ?? throw new InvalidOperationException("Malzeme hareket fişi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(fis.SubeId))
+            throw new InvalidOperationException("Bu fiş başka bir şubeye ait, onaylayamazsınız.");
 
         if (fis.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemedeki bir fiş onaylanabilir.");
@@ -142,6 +145,8 @@ public class MalzemeHareketFisiService : IMalzemeHareketFisiService
     {
         var fis = await _unitOfWork.Repository<MalzemeHareketFisi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Malzeme hareket fişi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(fis.SubeId))
+            throw new InvalidOperationException("Bu fiş başka bir şubeye ait, iptal edemezsiniz.");
 
         if (fis.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan fişler iptal edilebilir.");

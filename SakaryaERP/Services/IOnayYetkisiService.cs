@@ -11,4 +11,14 @@ public interface IOnayYetkisiService
     // onaylayamaz. olusturanKullanici null ise (eski kayıt veya sistem/seed
     // tarafından oluşturulmuş) kontrol uygulanmaz.
     void OlusturanOnaylayamazKontrolEt(string? olusturanKullanici, string belgeTuru);
+
+    // Giriş yapmış kullanıcının şubesi (login claim'inden okunur, DB'ye gitmez).
+    // Kullanıcının şubesi yoksa (Admin/Muhasebe gibi merkez rolleri) null döner.
+    int? MevcutKullaniciSubeId();
+
+    // Şube bazlı erişim kontrolü: belgeSubeId null ise (eski kayıt veya merkezi
+    // işlem) herkese açıktır. Admin her zaman erişebilir. Şubesi olmayan kullanıcı
+    // (merkez rolü) da her şubeye erişebilir. Aksi halde kullanıcının şubesi
+    // belgenin şubesiyle eşleşmelidir.
+    bool SubeErisimVarMi(int? belgeSubeId);
 }

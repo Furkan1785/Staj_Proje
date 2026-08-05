@@ -10,6 +10,11 @@ public class SatisSiparisi : BaseEntity
     public BelgeDurum Durum { get; set; } = BelgeDurum.Beklemede;
     public string? Aciklama { get; set; }
 
+    // Siparişi oluşturan kullanıcının şubesi (otomatik doldurulur). Null ise eski kayıt
+    // veya şubesiz (merkez) bir kullanıcı tarafından oluşturulmuştur.
+    public int? SubeId { get; set; }
+    public Sube? Sube { get; set; }
+
     public Cari Cari { get; set; } = null!;
     public SatisTeklifi? SatisTeklifi { get; set; }
     public ICollection<SatisSiparisiKalemi> Kalemler { get; set; } = new List<SatisSiparisiKalemi>();

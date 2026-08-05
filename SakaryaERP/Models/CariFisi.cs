@@ -22,6 +22,11 @@ public class CariFisi : BaseEntity
     public int? SatisFaturasiId { get; set; }
     public int? CekSenetId { get; set; }
 
+    // Fişi oluşturan kullanıcının şubesi (otomatik doldurulur). Null ise eski kayıt
+    // veya şubesiz (merkez) bir kullanıcı tarafından oluşturulmuştur.
+    public int? SubeId { get; set; }
+    public Sube? Sube { get; set; }
+
     public Cari Cari { get; set; } = null!;
     public BankaHesabi? BankaHesabi { get; set; }
     public KasaHesabi? KasaHesabi { get; set; }

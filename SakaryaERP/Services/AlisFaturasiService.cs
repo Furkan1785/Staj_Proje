@@ -59,6 +59,7 @@ public class AlisFaturasiService : IAlisFaturasiService
         fatura.FaturaNo = $"AF-{toplamSayi + 1:000000}";
         fatura.Durum = BelgeDurum.Beklemede;
         fatura.Kalemler = kalemler;
+        fatura.SubeId = _onayYetkisiService.MevcutKullaniciSubeId();
 
         await _unitOfWork.Repository<AlisFaturasi>().AddAsync(fatura);
         await _unitOfWork.SaveChangesAsync();
@@ -108,12 +109,13 @@ public class AlisFaturasiService : IAlisFaturasiService
 
     public async Task<AlisFaturasi?> GetByIdDetayAsync(int id)
     {
-        return await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+        var fatura = await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
             .Include(f => f.Cari)
             .Include(f => f.AlisSiparisi)
             .Include(f => f.AlisIrsaliyesi)
             .Include(f => f.Kalemler).ThenInclude(k => k.Malzeme)
             .FirstOrDefaultAsync(f => f.Id == id);
+        return fatura is not null && _onayYetkisiService.SubeErisimVarMi(fatura.SubeId) ? fatura : null;
     }
 
     public async Task<bool> AktifFaturaVarMiAsync(int alisIrsaliyesiId)
@@ -137,6 +139,8 @@ public class AlisFaturasiService : IAlisFaturasiService
             .Include(f => f.Kalemler)
             .FirstOrDefaultAsync(f => f.Id == id)
             ?? throw new InvalidOperationException("Alış faturası bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(fatura.SubeId))
+            throw new InvalidOperationException("Bu fatura başka bir şubeye ait, onaylayamazsınız.");
 
         if (fatura.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan faturalar onaylanabilir.");
@@ -225,6 +229,8 @@ public class AlisFaturasiService : IAlisFaturasiService
             .Include(f => f.Kalemler)
             .FirstOrDefaultAsync(f => f.Id == id)
             ?? throw new InvalidOperationException("Alış faturası bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(fatura.SubeId))
+            throw new InvalidOperationException("Bu fatura başka bir şubeye ait, iptal edemezsiniz.");
 
         if (fatura.Durum == BelgeDurum.Iptal)
             throw new InvalidOperationException("Bu fatura zaten iptal edilmiş.");

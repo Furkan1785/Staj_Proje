@@ -199,8 +199,15 @@ public class CariController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PasifYap(int id)
     {
-        await _cariService.PasifYapAsync(id);
-        TempData["Basari"] = "Cari pasif yapıldı.";
+        try
+        {
+            await _cariService.PasifYapAsync(id);
+            TempData["Basari"] = "Cari pasif yapıldı.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
         return RedirectToAction(nameof(Index));
     }
 
@@ -208,8 +215,15 @@ public class CariController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AktifEt(int id)
     {
-        await _cariService.AktifEtAsync(id);
-        TempData["Basari"] = "Cari aktif yapıldı.";
+        try
+        {
+            await _cariService.AktifEtAsync(id);
+            TempData["Basari"] = "Cari aktif yapıldı.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
         return RedirectToAction(nameof(Index));
     }
 
@@ -227,20 +241,28 @@ public class CariController : Controller
 
         if (cariId is not null)
         {
-            var (cari, devirBakiye, satirlar) = await _cariFisiService.GetEkstreAsync(cariId.Value, vm.Baslangic, vm.Bitis);
-            vm.CariUnvan = cari.Unvan;
-            vm.DevirBakiye = devirBakiye;
-            vm.Satirlar = satirlar.Select(s => new CariEkstreSatiriViewModel
+            try
             {
-                Tarih = s.Fis.Tarih,
-                FisNo = s.Fis.FisNo,
-                FisTipiText = FisTipiMetni(s.Fis.FisTipi),
-                Aciklama = s.Fis.Aciklama,
-                Borc = s.Fis.FisTipi == FisTipi.Borc ? s.Fis.Tutar : 0,
-                Alacak = s.Fis.FisTipi != FisTipi.Borc ? s.Fis.Tutar : 0,
-                KumulatifBakiye = s.KumulatifBakiye
-            }).ToList();
-            vm.SonBakiye = vm.Satirlar.Count > 0 ? vm.Satirlar[^1].KumulatifBakiye : vm.DevirBakiye;
+                var (cari, devirBakiye, satirlar) = await _cariFisiService.GetEkstreAsync(cariId.Value, vm.Baslangic, vm.Bitis);
+                vm.CariUnvan = cari.Unvan;
+                vm.DevirBakiye = devirBakiye;
+                vm.Satirlar = satirlar.Select(s => new CariEkstreSatiriViewModel
+                {
+                    Tarih = s.Fis.Tarih,
+                    FisNo = s.Fis.FisNo,
+                    FisTipiText = FisTipiMetni(s.Fis.FisTipi),
+                    Aciklama = s.Fis.Aciklama,
+                    Borc = s.Fis.FisTipi == FisTipi.Borc ? s.Fis.Tutar : 0,
+                    Alacak = s.Fis.FisTipi != FisTipi.Borc ? s.Fis.Tutar : 0,
+                    KumulatifBakiye = s.KumulatifBakiye
+                }).ToList();
+                vm.SonBakiye = vm.Satirlar.Count > 0 ? vm.Satirlar[^1].KumulatifBakiye : vm.DevirBakiye;
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Hata"] = ex.Message;
+                vm.CariId = null;
+            }
         }
 
         return View(vm);
@@ -248,7 +270,16 @@ public class CariController : Controller
 
     public async Task<IActionResult> EkstreExcel(int cariId, DateTime baslangic, DateTime bitis)
     {
-        var (cari, devirBakiye, satirlar) = await _cariFisiService.GetEkstreAsync(cariId, baslangic, bitis);
+        Cari cari; decimal devirBakiye; List<(CariFisi Fis, decimal KumulatifBakiye)> satirlar;
+        try
+        {
+            (cari, devirBakiye, satirlar) = await _cariFisiService.GetEkstreAsync(cariId, baslangic, bitis);
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+            return RedirectToAction(nameof(Ekstre), new { cariId, baslangic, bitis });
+        }
 
         using var workbook = new XLWorkbook();
         var sayfa = workbook.Worksheets.Add("Cari Ekstresi");
@@ -294,7 +325,16 @@ public class CariController : Controller
 
     public async Task<IActionResult> EkstrePdf(int cariId, DateTime baslangic, DateTime bitis)
     {
-        var (cari, devirBakiye, satirlar) = await _cariFisiService.GetEkstreAsync(cariId, baslangic, bitis);
+        Cari cari; decimal devirBakiye; List<(CariFisi Fis, decimal KumulatifBakiye)> satirlar;
+        try
+        {
+            (cari, devirBakiye, satirlar) = await _cariFisiService.GetEkstreAsync(cariId, baslangic, bitis);
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+            return RedirectToAction(nameof(Ekstre), new { cariId, baslangic, bitis });
+        }
         var sonBakiye = satirlar.Count > 0 ? satirlar[^1].KumulatifBakiye : devirBakiye;
 
         var belge = Document.Create(container =>

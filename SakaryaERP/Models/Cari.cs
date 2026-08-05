@@ -12,6 +12,12 @@ public class Cari : BaseEntity
     public decimal Bakiye { get; set; }
     public decimal KrediLimiti { get; set; }
 
+    // Cariyi oluşturan kullanıcının şubesi (otomatik doldurulur, bkz. CariService.CreateAsync).
+    // Null ise eski kayıt veya şubesiz (merkez) bir kullanıcı tarafından oluşturulmuştur —
+    // bu durumda tüm şubelerden erişilebilir.
+    public int? SubeId { get; set; }
+    public Sube? Sube { get; set; }
+
     public ICollection<CariFisi> CariFisleri { get; set; } = new List<CariFisi>();
     public ICollection<CekSenet> CekSenetler { get; set; } = new List<CekSenet>();
     public ICollection<MusteriTalebi> MusteriTalepleri { get; set; } = new List<MusteriTalebi>();

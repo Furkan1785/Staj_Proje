@@ -136,6 +136,32 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Şube bazlı erişim kontrolü (IOnayYetkisiService.SubeErisimVarMi) için eklenen
+        // nullable SubeId FK'ları — hepsi oluşturan kullanıcının şubesinden otomatik
+        // doldurulur (bkz. ilgili Service.CreateAsync), Sube tarafında ayrı bir koleksiyon
+        // navigasyonuna ihtiyaç yok.
+        modelBuilder.Entity<Cari>()
+            .HasOne(c => c.Sube).WithMany().HasForeignKey(c => c.SubeId)
+            .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<CariFisi>()
+            .HasOne(f => f.Sube).WithMany().HasForeignKey(f => f.SubeId)
+            .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SatisFaturasi>()
+            .HasOne(f => f.Sube).WithMany().HasForeignKey(f => f.SubeId)
+            .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<AlisFaturasi>()
+            .HasOne(f => f.Sube).WithMany().HasForeignKey(f => f.SubeId)
+            .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SatisSiparisi>()
+            .HasOne(s => s.Sube).WithMany().HasForeignKey(s => s.SubeId)
+            .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SatisTeklifi>()
+            .HasOne(t => t.Sube).WithMany().HasForeignKey(t => t.SubeId)
+            .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<MusteriTalebi>()
+            .HasOne(t => t.Sube).WithMany().HasForeignKey(t => t.SubeId)
+            .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+
         // Kalem tabloları cascade delete
         modelBuilder.Entity<MuhasebeFisiKalemi>()
             .HasOne(k => k.MuhasebeFisi)

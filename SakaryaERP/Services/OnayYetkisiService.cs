@@ -47,4 +47,23 @@ public class OnayYetkisiService : IOnayYetkisiService
             throw new InvalidOperationException(
                 $"Bu {belgeTuru}'nu oluşturan kişi kendi belgesini onaylayamaz, başka bir yetkili onaylamalı.");
     }
+
+    public int? MevcutKullaniciSubeId()
+    {
+        var subeIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("SubeId")?.Value;
+        return subeIdClaim is null ? null : int.Parse(subeIdClaim);
+    }
+
+    public bool SubeErisimVarMi(int? belgeSubeId)
+    {
+        if (belgeSubeId is null)
+            return true;
+
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is null || httpContext.User.IsInRole("Admin"))
+            return true;
+
+        var kullaniciSubeId = MevcutKullaniciSubeId();
+        return kullaniciSubeId is null || kullaniciSubeId == belgeSubeId;
+    }
 }

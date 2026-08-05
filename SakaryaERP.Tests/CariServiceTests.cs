@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
 using SakaryaERP.Data.Repositories;
 using SakaryaERP.Models;
@@ -15,7 +17,8 @@ public class CariServiceTests
         baglam.Cariler.Add(cari);
         baglam.SaveChangesAsync().Wait();
 
-        return (baglam, new CariService(new CariRepository(baglam), unitOfWork), cari);
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        return (baglam, new CariService(new CariRepository(baglam), unitOfWork, onayYetkisiService), cari);
     }
 
     [Fact]

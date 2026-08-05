@@ -44,6 +44,7 @@ builder.Services.AddIdentity<AppUser, AppRole>(options =>
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<AppDbContext>()
+.AddClaimsPrincipalFactory<AppUserClaimsPrincipalFactory>()
 .AddDefaultTokenProviders();
 
 builder.Services.ConfigureApplicationCookie(options =>

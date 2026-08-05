@@ -7,10 +7,12 @@ namespace SakaryaERP.Services;
 public class MusteriTalebiService : IMusteriTalebiService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IOnayYetkisiService _onayYetkisiService;
 
-    public MusteriTalebiService(IUnitOfWork unitOfWork)
+    public MusteriTalebiService(IUnitOfWork unitOfWork, IOnayYetkisiService onayYetkisiService)
     {
         _unitOfWork = unitOfWork;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<MusteriTalebi> CreateAsync(MusteriTalebi talep)
@@ -23,6 +25,7 @@ public class MusteriTalebiService : IMusteriTalebiService
         var toplamSayi = await _unitOfWork.Repository<MusteriTalebi>().QueryTumu().CountAsync();
         talep.TalepNo = $"MT-{toplamSayi + 1:000000}";
         talep.Durum = TalepDurum.Yeni;
+        talep.SubeId = _onayYetkisiService.MevcutKullaniciSubeId();
 
         await _unitOfWork.Repository<MusteriTalebi>().AddAsync(talep);
         await _unitOfWork.SaveChangesAsync();
@@ -72,23 +75,27 @@ public class MusteriTalebiService : IMusteriTalebiService
 
     public async Task<MusteriTalebi?> GetByIdAsync(int id)
     {
-        return await _unitOfWork.Repository<MusteriTalebi>().QueryTumu()
+        var talep = await _unitOfWork.Repository<MusteriTalebi>().QueryTumu()
             .Include(t => t.Cari)
             .FirstOrDefaultAsync(t => t.Id == id);
+        return talep is not null && _onayYetkisiService.SubeErisimVarMi(talep.SubeId) ? talep : null;
     }
 
     public async Task<MusteriTalebi?> GetByIdDetayAsync(int id)
     {
-        return await _unitOfWork.Repository<MusteriTalebi>().QueryTumu()
+        var talep = await _unitOfWork.Repository<MusteriTalebi>().QueryTumu()
             .Include(t => t.Cari)
             .Include(t => t.SatisTeklifleri)
             .FirstOrDefaultAsync(t => t.Id == id);
+        return talep is not null && _onayYetkisiService.SubeErisimVarMi(talep.SubeId) ? talep : null;
     }
 
     public async Task IslemeAlAsync(int id)
     {
         var talep = await _unitOfWork.Repository<MusteriTalebi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Müşteri talebi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(talep.SubeId))
+            throw new InvalidOperationException("Bu talep başka bir şubeye ait, işleme alamazsınız.");
         if (talep.Durum != TalepDurum.Yeni)
             throw new InvalidOperationException("Sadece yeni talepler işleme alınabilir.");
 
@@ -100,6 +107,8 @@ public class MusteriTalebiService : IMusteriTalebiService
     {
         var talep = await _unitOfWork.Repository<MusteriTalebi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Müşteri talebi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(talep.SubeId))
+            throw new InvalidOperationException("Bu talep başka bir şubeye ait, iptal edemezsiniz.");
         if (talep.Durum is not (TalepDurum.Yeni or TalepDurum.Isleniyor))
             throw new InvalidOperationException("Sadece yeni veya işlemedeki talepler iptal edilebilir.");
 

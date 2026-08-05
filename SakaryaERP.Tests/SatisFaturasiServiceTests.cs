@@ -153,8 +153,58 @@ public class SatisFaturasiServiceTests
         Assert.Equal(BelgeDurum.Onaylandi, guncelFatura!.Durum);
     }
 
-    private static HttpContextAccessor KullaniciBaglamiOlustur(string kullaniciAdi, string rol) =>
-        new() { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, kullaniciAdi), new Claim(ClaimTypes.Role, rol)], "TestAuth")) } };
+    private static HttpContextAccessor KullaniciBaglamiOlustur(string kullaniciAdi, string rol, int? subeId = null)
+    {
+        List<Claim> claimler = [new(ClaimTypes.Name, kullaniciAdi), new(ClaimTypes.Role, rol)];
+        if (subeId is not null) claimler.Add(new Claim("SubeId", subeId.Value.ToString()));
+        return new HttpContextAccessor { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claimler, "TestAuth")) } };
+    }
+
+    [Fact]
+    public async Task CreateAsync_SubeliKullanici_FaturaOKullanicininSubesiniAlir()
+    {
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
+        var servis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("bursa@test.com", "Satis", subeId: 1), config));
+
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+
+        Assert.Equal(1, fatura.SubeId);
+    }
+
+    [Fact]
+    public async Task GetByIdDetayAsync_FarkliSubedekiSatisKullanicisi_NullDoner()
+    {
+        var (_, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
+        var olusturanServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("bursa@test.com", "Satis", subeId: 1), config));
+        var fatura = await olusturanServis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+
+        var baskaSubeServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("izmir@test.com", "Satis", subeId: 2), config));
+        Assert.Null(await baskaSubeServis.GetByIdDetayAsync(fatura.Id));
+
+        var ayniSubeServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("bursa2@test.com", "Satis", subeId: 1), config));
+        Assert.NotNull(await ayniSubeServis.GetByIdDetayAsync(fatura.Id));
+
+        var adminServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("admin@test.com", "Admin", subeId: null), config));
+        Assert.NotNull(await adminServis.GetByIdDetayAsync(fatura.Id));
+    }
+
+    [Fact]
+    public async Task OnaylaAsync_FarkliSubedekiSatisKullanicisi_HataFirlatirVeBirSeyDegismez()
+    {
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
+        var olusturanServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("bursa@test.com", "Satis", subeId: 1), config));
+        var fatura = await olusturanServis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+
+        var baskaSubeServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("izmir@test.com", "Satis", subeId: 2), config));
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => baskaSubeServis.OnaylaAsync(fatura.Id));
+        Assert.Contains("başka bir şubeye ait", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelFatura = await baglam.SatisFaturalari.FindAsync(fatura.Id);
+        Assert.Equal(BelgeDurum.Beklemede, guncelFatura!.Durum);
+    }
 
     [Fact]
     public async Task OnaylaAsync_OlusturanKendiFaturasiniOnaylamayaCalisir_HataFirlatirVeBirSeyDegismez()

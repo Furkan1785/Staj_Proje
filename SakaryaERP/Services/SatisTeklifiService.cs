@@ -48,6 +48,7 @@ public class SatisTeklifiService : ISatisTeklifiService
         teklif.TeklifNo = $"ST-{toplamSayi + 1:000000}";
         teklif.Durum = BelgeDurum.Beklemede;
         teklif.Kalemler = kalemler;
+        teklif.SubeId = _onayYetkisiService.MevcutKullaniciSubeId();
 
         await _unitOfWork.Repository<SatisTeklifi>().AddAsync(teklif);
 
@@ -102,11 +103,12 @@ public class SatisTeklifiService : ISatisTeklifiService
 
     public async Task<SatisTeklifi?> GetByIdDetayAsync(int id)
     {
-        return await _unitOfWork.Repository<SatisTeklifi>().QueryTumu()
+        var teklif = await _unitOfWork.Repository<SatisTeklifi>().QueryTumu()
             .Include(t => t.Cari)
             .Include(t => t.MusteriTalebi)
             .Include(t => t.Kalemler).ThenInclude(k => k.Malzeme)
             .FirstOrDefaultAsync(t => t.Id == id);
+        return teklif is not null && _onayYetkisiService.SubeErisimVarMi(teklif.SubeId) ? teklif : null;
     }
 
     public async Task<List<SatisTeklifi>> GetBeklemedeListesiAsync()
@@ -121,6 +123,8 @@ public class SatisTeklifiService : ISatisTeklifiService
     {
         var teklif = await _unitOfWork.Repository<SatisTeklifi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Satış teklifi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(teklif.SubeId))
+            throw new InvalidOperationException("Bu teklif başka bir şubeye ait, onaylayamazsınız.");
         if (teklif.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan teklifler onaylanabilir.");
 
@@ -134,6 +138,8 @@ public class SatisTeklifiService : ISatisTeklifiService
     {
         var teklif = await _unitOfWork.Repository<SatisTeklifi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Satış teklifi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(teklif.SubeId))
+            throw new InvalidOperationException("Bu teklif başka bir şubeye ait, iptal edemezsiniz.");
         if (teklif.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan teklifler iptal edilebilir.");
 

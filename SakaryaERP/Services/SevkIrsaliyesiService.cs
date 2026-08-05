@@ -121,11 +121,12 @@ public class SevkIrsaliyesiService : ISevkIrsaliyesiService
 
     public async Task<SevkIrsaliyesi?> GetByIdDetayAsync(int id)
     {
-        return await _unitOfWork.Repository<SevkIrsaliyesi>().QueryTumu()
+        var irsaliye = await _unitOfWork.Repository<SevkIrsaliyesi>().QueryTumu()
             .Include(i => i.SatisSiparisi).ThenInclude(s => s.Cari)
             .Include(i => i.Sube)
             .Include(i => i.Kalemler).ThenInclude(k => k.Malzeme)
             .FirstOrDefaultAsync(i => i.Id == id);
+        return irsaliye is not null && _onayYetkisiService.SubeErisimVarMi(irsaliye.SubeId) ? irsaliye : null;
     }
 
     public async Task OnaylaAsync(int id)
@@ -134,6 +135,8 @@ public class SevkIrsaliyesiService : ISevkIrsaliyesiService
             .Include(i => i.Kalemler)
             .FirstOrDefaultAsync(i => i.Id == id)
             ?? throw new InvalidOperationException("Sevk irsaliyesi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(irsaliye.SubeId))
+            throw new InvalidOperationException("Bu irsaliye başka bir şubeye ait, onaylayamazsınız.");
 
         if (irsaliye.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan irsaliyeler onaylanabilir.");
@@ -164,6 +167,8 @@ public class SevkIrsaliyesiService : ISevkIrsaliyesiService
     {
         var irsaliye = await _unitOfWork.Repository<SevkIrsaliyesi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Sevk irsaliyesi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(irsaliye.SubeId))
+            throw new InvalidOperationException("Bu irsaliye başka bir şubeye ait, iptal edemezsiniz.");
 
         if (irsaliye.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan irsaliyeler iptal edilebilir.");

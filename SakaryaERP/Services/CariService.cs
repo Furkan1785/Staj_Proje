@@ -9,24 +9,30 @@ public class CariService : ICariService
 {
     private readonly ICariRepository _cariRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IOnayYetkisiService _onayYetkisiService;
 
-    public CariService(ICariRepository cariRepository, IUnitOfWork unitOfWork)
+    public CariService(ICariRepository cariRepository, IUnitOfWork unitOfWork, IOnayYetkisiService onayYetkisiService)
     {
         _cariRepository = cariRepository;
         _unitOfWork = unitOfWork;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<IEnumerable<Cari>> GetAllAsync()
         => await _cariRepository.GetAllAsync();
 
     public async Task<Cari?> GetByIdAsync(int id)
-        => await _cariRepository.GetByIdAsync(id);
+    {
+        var cari = await _cariRepository.GetByIdAsync(id);
+        return cari is not null && _onayYetkisiService.SubeErisimVarMi(cari.SubeId) ? cari : null;
+    }
 
     public async Task<Cari> CreateAsync(Cari cari)
     {
         if (await _cariRepository.KoduKullanimdaMiAsync(cari.CariKodu))
             throw new InvalidOperationException("Bu cari kodu zaten kullanılıyor.");
 
+        cari.SubeId = _onayYetkisiService.MevcutKullaniciSubeId();
         await _cariRepository.AddAsync(cari);
         await _unitOfWork.SaveChangesAsync();
         return cari;
@@ -39,6 +45,8 @@ public class CariService : ICariService
 
         var mevcut = await _cariRepository.GetByIdAsync(cari.Id)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(mevcut.SubeId))
+            throw new InvalidOperationException("Bu cari başka bir şubeye ait, düzenleyemezsiniz.");
 
         if (cari.CariTipi != mevcut.CariTipi)
             await TipDaraltmaKontrolEtAsync(mevcut.Id, mevcut.CariTipi, cari.CariTipi);
@@ -93,6 +101,8 @@ public class CariService : ICariService
     {
         var cari = await _cariRepository.GetByIdAsync(id)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(cari.SubeId))
+            throw new InvalidOperationException("Bu cari başka bir şubeye ait, pasif yapamazsınız.");
 
         _cariRepository.SoftDelete(cari);
         await _unitOfWork.SaveChangesAsync();
@@ -102,6 +112,8 @@ public class CariService : ICariService
     {
         var cari = await _cariRepository.GetByIdTumuAsync(id)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(cari.SubeId))
+            throw new InvalidOperationException("Bu cari başka bir şubeye ait, aktif yapamazsınız.");
 
         cari.IsDeleted = false;
         await _unitOfWork.SaveChangesAsync();

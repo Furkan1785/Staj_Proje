@@ -52,6 +52,7 @@ public class SatisSiparisiService : ISatisSiparisiService
         siparis.SiparisNo = $"SS-{toplamSayi + 1:000000}";
         siparis.Durum = BelgeDurum.Beklemede;
         siparis.Kalemler = kalemler;
+        siparis.SubeId = _onayYetkisiService.MevcutKullaniciSubeId();
 
         await _unitOfWork.Repository<SatisSiparisi>().AddAsync(siparis);
         await _unitOfWork.SaveChangesAsync();
@@ -102,12 +103,13 @@ public class SatisSiparisiService : ISatisSiparisiService
 
     public async Task<SatisSiparisi?> GetByIdDetayAsync(int id)
     {
-        return await _unitOfWork.Repository<SatisSiparisi>().QueryTumu()
+        var siparis = await _unitOfWork.Repository<SatisSiparisi>().QueryTumu()
             .Include(s => s.Cari)
             .Include(s => s.SatisTeklifi)
             .Include(s => s.Kalemler).ThenInclude(k => k.Malzeme)
             .Include(s => s.SevkIrsaliyeleri).ThenInclude(i => i.Kalemler)
             .FirstOrDefaultAsync(s => s.Id == id);
+        return siparis is not null && _onayYetkisiService.SubeErisimVarMi(siparis.SubeId) ? siparis : null;
     }
 
     public async Task<List<SatisSiparisi>> GetBeklemedeListesiAsync()
@@ -122,6 +124,8 @@ public class SatisSiparisiService : ISatisSiparisiService
     {
         var siparis = await _unitOfWork.Repository<SatisSiparisi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Satış siparişi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(siparis.SubeId))
+            throw new InvalidOperationException("Bu sipariş başka bir şubeye ait, onaylayamazsınız.");
         if (siparis.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan siparişler onaylanabilir.");
 
@@ -135,6 +139,8 @@ public class SatisSiparisiService : ISatisSiparisiService
     {
         var siparis = await _unitOfWork.Repository<SatisSiparisi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Satış siparişi bulunamadı.");
+        if (!_onayYetkisiService.SubeErisimVarMi(siparis.SubeId))
+            throw new InvalidOperationException("Bu sipariş başka bir şubeye ait, iptal edemezsiniz.");
         if (siparis.Durum != BelgeDurum.Beklemede)
             throw new InvalidOperationException("Sadece beklemede olan siparişler iptal edilebilir.");
 

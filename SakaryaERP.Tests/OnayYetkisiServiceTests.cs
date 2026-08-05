@@ -15,11 +15,12 @@ public class OnayYetkisiServiceTests
                 : new Dictionary<string, string?> { ["OnayAyarlari:YuksekTutarEsigi"] = esik.Value.ToString() })
             .Build();
 
-    private static IHttpContextAccessor HttpContextOlustur(string? rol)
+    private static IHttpContextAccessor HttpContextOlustur(string? rol, int? subeId = null)
     {
-        var kimlik = rol is null
-            ? new ClaimsIdentity()
-            : new ClaimsIdentity([new Claim(ClaimTypes.Role, rol)], "TestAuth");
+        List<Claim> claimler = [];
+        if (rol is not null) claimler.Add(new Claim(ClaimTypes.Role, rol));
+        if (subeId is not null) claimler.Add(new Claim("SubeId", subeId.Value.ToString()));
+        var kimlik = claimler.Count == 0 ? new ClaimsIdentity() : new ClaimsIdentity(claimler, "TestAuth");
         var context = new DefaultHttpContext { User = new ClaimsPrincipal(kimlik) };
         return new HttpContextAccessor { HttpContext = context };
     }
@@ -74,5 +75,61 @@ public class OnayYetkisiServiceTests
         var hata = Record.Exception(() => servis.YuksekTutarKontrolEt(75000, "Satış Faturası"));
 
         Assert.Null(hata);
+    }
+
+    [Fact]
+    public void SubeErisimVarMi_BelgeSubesizse_HerkeseAcik()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", subeId: 1), YapilandirmaOlustur(null));
+
+        Assert.True(servis.SubeErisimVarMi(null));
+    }
+
+    [Fact]
+    public void SubeErisimVarMi_FarkliSubedekiKullanici_ErisemezFalseDoner()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", subeId: 1), YapilandirmaOlustur(null));
+
+        Assert.False(servis.SubeErisimVarMi(2));
+    }
+
+    [Fact]
+    public void SubeErisimVarMi_AyniSubedekiKullanici_Erisir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", subeId: 1), YapilandirmaOlustur(null));
+
+        Assert.True(servis.SubeErisimVarMi(1));
+    }
+
+    [Fact]
+    public void SubeErisimVarMi_Admin_HerZamanErisir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Admin", subeId: 1), YapilandirmaOlustur(null));
+
+        Assert.True(servis.SubeErisimVarMi(2));
+    }
+
+    [Fact]
+    public void SubeErisimVarMi_SubesizMerkezKullanici_HerSubeyeErisir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Muhasebe"), YapilandirmaOlustur(null));
+
+        Assert.True(servis.SubeErisimVarMi(2));
+    }
+
+    [Fact]
+    public void MevcutKullaniciSubeId_ClaimVarsa_DegeriDoner()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", subeId: 3), YapilandirmaOlustur(null));
+
+        Assert.Equal(3, servis.MevcutKullaniciSubeId());
+    }
+
+    [Fact]
+    public void MevcutKullaniciSubeId_ClaimYoksa_NullDoner()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Muhasebe"), YapilandirmaOlustur(null));
+
+        Assert.Null(servis.MevcutKullaniciSubeId());
     }
 }
