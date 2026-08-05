@@ -159,19 +159,27 @@ public class AlisFaturasiService : IAlisFaturasiService
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
 
+        var faturaMalzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+        var faturaMalzemeleri = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+            .Where(m => faturaMalzemeIdleri.Contains(m.Id))
+            .ToDictionaryAsync(m => m.Id);
+
         // İrsaliyeden gelen faturalarda stok zaten irsaliye onayında artırılmıştır;
         // irsaliyesiz (doğrudan girilen) faturalarda burada artırılır.
         if (fatura.AlisIrsaliyesiId is null)
         {
-            var malzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
-            var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
-                .Where(m => malzemeIdleri.Contains(m.Id))
-                .ToDictionaryAsync(m => m.Id);
-
             foreach (var kalem in fatura.Kalemler)
             {
-                malzemeler[kalem.MalzemeId].Bakiye += kalem.Miktar;
+                faturaMalzemeleri[kalem.MalzemeId].Bakiye += kalem.Miktar;
             }
+        }
+
+        // Malzeme.AlisFiyati, satış tarafındaki COGS anlık görüntüsünün kullandığı "güncel maliyet"
+        // alanıdır — burada güncellenmezse zamanla eskiyip gerçek alım fiyatından sapar (satış
+        // tarafında zaten fatura onayı anında BirimMaliyet'e kopyalanıyor, bkz. SatisFaturasiService).
+        foreach (var kalem in fatura.Kalemler)
+        {
+            faturaMalzemeleri[kalem.MalzemeId].AlisFiyati = kalem.BirimFiyat;
         }
 
         var toplamTutar = fatura.Kalemler.Sum(FinansHesaplama.SatirToplami);
