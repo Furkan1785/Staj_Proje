@@ -88,6 +88,34 @@ public class CariFisiServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_DovizHesabiSecilirse_HataFirlatirVeBirSeyDegismez()
+    {
+        var (baglam, unitOfWork, cari, _, _) = TemelVeriKur();
+        var dovizHesabi = new BankaHesabi { HesapAdi = "Dolar Hesabı", BankaAdi = "X Bank", ParaBirimi = "USD", Bakiye = 1000 };
+        baglam.BankaHesaplari.Add(dovizHesabi);
+        await baglam.SaveChangesAsync();
+
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        var servis = new CariFisiService(unitOfWork, onayYetkisiService);
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => servis.CreateAsync(new CariFisi
+        {
+            CariId = cari.Id,
+            Tarih = DateTime.Today,
+            FisTipi = FisTipi.Alacak,
+            Tutar = 300,
+            OdemeYontemi = OdemeYontemi.Havale,
+            BankaHesabiId = dovizHesabi.Id
+        }));
+        Assert.Contains("kur çevrimi", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
+        var guncelHesap = await baglam.BankaHesaplari.FindAsync(dovizHesabi.Id);
+        Assert.Equal(0, guncelCari!.Bakiye);
+        Assert.Equal(1000, guncelHesap!.Bakiye);
+    }
+
+    [Fact]
     public async Task CreateAsync_SifirVeyaNegatifTutar_HataFirlatir()
     {
         var (_, servis, cari, _, kasa) = SenaryoKur();

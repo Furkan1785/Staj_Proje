@@ -47,15 +47,29 @@ public class CariFisiService : ICariFisiService
             fis.KasaHesabiId = null;
         }
 
+        // Banka hesabı, herhangi bir bakiye mutasyonundan önce çözülür ki para birimi kontrolü
+        // (aşağıda) reddederse hiçbir alan (cari/banka bakiyesi) yarım yamalak değişmiş olmasın.
+        BankaHesabi? banka = null;
+        if (fis.BankaHesabiId is not null)
+        {
+            banka = await _unitOfWork.Repository<BankaHesabi>().GetByIdAsync(fis.BankaHesabiId.Value)
+                ?? throw new InvalidOperationException("Banka hesabı bulunamadı.");
+            // Sistemde kur çevrimi/döviz altyapısı yok (bkz. Dashboard'daki sabit USD kuru notu) —
+            // Tutar alanı hep TL kabul edilip doğrudan bir döviz hesabının bakiyesinden düşülürse
+            // sessizce yanlış (kur çevrilmemiş) bir bakiye oluşur. Farklı para birimli bir hesap
+            // seçilirse işlemi engellemek, yanlış hesaplamaktan daha güvenli.
+            if (banka.ParaBirimi != "TRY")
+                throw new InvalidOperationException(
+                    $"{banka.HesapAdi} hesabı {banka.ParaBirimi} para biriminde — sistemde kur çevrimi desteklenmediği için bu hesapla Cari Fişi işlenemez.");
+        }
+
         // Borç fişi carinin bize olan borcunu artırır (bakiye +); Alacak/Mahsup azaltır (bakiye -).
         // Karşılığında ilişkili banka/kasa hesabında ters yönde hareket olur (Borç = ödeme yapıldı/çıkış, Alacak = tahsilat/giriş).
         var cariYonu = CariYonKatsayisi(fis.FisTipi);
         cari.Bakiye += cariYonu * fis.Tutar;
 
-        if (fis.BankaHesabiId is not null)
+        if (banka is not null)
         {
-            var banka = await _unitOfWork.Repository<BankaHesabi>().GetByIdAsync(fis.BankaHesabiId.Value)
-                ?? throw new InvalidOperationException("Banka hesabı bulunamadı.");
             banka.Bakiye -= cariYonu * fis.Tutar;
         }
         else if (fis.KasaHesabiId is not null)
