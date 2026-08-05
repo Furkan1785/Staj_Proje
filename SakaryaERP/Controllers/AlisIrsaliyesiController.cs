@@ -19,19 +19,22 @@ public class AlisIrsaliyesiController : Controller
     private readonly ICariService _cariService;
     private readonly ISubeService _subeService;
     private readonly IMalzemeService _malzemeService;
+    private readonly IOnayYetkisiService _onayYetkisiService;
 
     public AlisIrsaliyesiController(
         IAlisIrsaliyesiService alisIrsaliyesiService,
         IAlisSiparisiService alisSiparisiService,
         ICariService cariService,
         ISubeService subeService,
-        IMalzemeService malzemeService)
+        IMalzemeService malzemeService,
+        IOnayYetkisiService onayYetkisiService)
     {
         _alisIrsaliyesiService = alisIrsaliyesiService;
         _alisSiparisiService = alisSiparisiService;
         _cariService = cariService;
         _subeService = subeService;
         _malzemeService = malzemeService;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public IActionResult Index() => View();
@@ -132,7 +135,9 @@ public class AlisIrsaliyesiController : Controller
             {
                 Tarih = vm.Tarih,
                 CariId = vm.CariId!.Value,
-                SubeId = vm.SubeId!.Value,
+                // Şubeye bağlı kullanıcı formdaki Şube dropdown'ını manipüle edip başka bir şube
+                // adına irsaliye oluşturamasın diye seçilen değil, etkin (yetkiye göre sabitlenmiş) şube kullanılıyor.
+                SubeId = _onayYetkisiService.EfektifSube(vm.SubeId)!.Value,
                 AlisSiparisiId = vm.AlisSiparisiId,
                 Aciklama = vm.Aciklama
             };
@@ -296,8 +301,11 @@ public class AlisIrsaliyesiController : Controller
             .Select(c => new SelectListItem($"{c.CariKodu} - {c.Unvan}", c.Id.ToString()));
 
         var subeler = await _subeService.GetAllAsync();
-        vm.SubeListesi = subeler.Where(s => !s.IsDeleted)
-            .Select(s => new SelectListItem(s.SubeAdi, s.Id.ToString()));
+        var kullaniciSubeId = _onayYetkisiService.MevcutKullaniciSubeId();
+        var gorunurSubeler = User.IsInRole("Admin") || kullaniciSubeId is null
+            ? subeler.Where(s => !s.IsDeleted)
+            : subeler.Where(s => !s.IsDeleted && s.Id == kullaniciSubeId);
+        vm.SubeListesi = gorunurSubeler.Select(s => new SelectListItem(s.SubeAdi, s.Id.ToString()));
 
         var malzemeler = await _malzemeService.GetTumListeAsync();
         ViewData["MalzemeListesiJson"] = malzemeler

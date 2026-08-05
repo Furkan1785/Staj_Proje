@@ -55,7 +55,7 @@ public class StokRaporuController : Controller
     {
         // Şubeye bağlı kullanıcı query string'e başka bir subeId yazarak başka şubenin
         // kardeksini göremesin diye istenen değer değil, etkin (yetkiye göre sabitlenmiş) değer kullanılıyor.
-        var etkinSubeId = _onayYetkisiService.EfektifRaporSubesi(subeId);
+        var etkinSubeId = _onayYetkisiService.EfektifSube(subeId);
         var vm = new MalzemeGecmisiViewModel { MalzemeId = malzemeId, Baslangic = baslangic, Bitis = bitis, SubeId = etkinSubeId };
 
         var malzemeler = await _malzemeService.GetTumListeAsync();

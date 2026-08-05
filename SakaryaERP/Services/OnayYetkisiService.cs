@@ -91,7 +91,7 @@ public class OnayYetkisiService : IOnayYetkisiService
             throw new InvalidOperationException(hataMesaji);
     }
 
-    public int? EfektifRaporSubesi(int? istenenSubeId)
+    public int? EfektifSube(int? istenenSubeId)
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext is not null && httpContext.User.IsInRole("Admin"))

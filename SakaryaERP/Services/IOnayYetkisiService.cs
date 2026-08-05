@@ -32,10 +32,12 @@ public interface IOnayYetkisiService
     // servislerdeki tekrarlanan "if (!SubeErisimVarMi(...)) throw" bloklarını tekilleştirmek için.
     void SubeErisimKontrolEt(int? belgeSubeId, string hataMesaji);
 
-    // Rapor ekranlarındaki "şube" filtresi için: kullanıcı şubeye bağlıysa (Admin değilse
-    // ve bir SubeId claim'i varsa) istekte ne gönderilmiş olursa olsun kendi şubesine
-    // sabitlenir — aksi halde query string'e elle subeId=<başka şube> yazarak başka bir
-    // şubenin raporunu görüntülemek (IDOR) mümkün olurdu. Admin veya merkez kullanıcısı
-    // (SubeId claim'i yok) için istenen değer aynen kullanılır (null = tüm şubeler dahil).
-    int? EfektifRaporSubesi(int? istenenSubeId);
+    // Rapor filtrelerinde ve belge oluşturma formlarındaki "şube" seçiminde ortak kullanılır:
+    // kullanıcı şubeye bağlıysa (Admin değilse ve bir SubeId claim'i varsa) istekte/formda ne
+    // gönderilmiş olursa olsun kendi şubesine sabitlenir — aksi halde query string'e elle
+    // subeId=<başka şube> yazarak başka bir şubenin raporunu görüntülemek, ya da formdaki
+    // Şube dropdown'ını manipüle ederek başka bir şube adına belge oluşturmak (IDOR) mümkün
+    // olurdu. Admin veya merkez kullanıcısı (SubeId claim'i yok) için istenen değer aynen
+    // kullanılır (rapor filtresinde null = tüm şubeler dahil).
+    int? EfektifSube(int? istenenSubeId);
 }

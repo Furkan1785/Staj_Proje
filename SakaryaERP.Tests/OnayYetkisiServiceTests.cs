@@ -176,36 +176,36 @@ public class OnayYetkisiServiceTests
     }
 
     [Fact]
-    public void EfektifRaporSubesi_SubeliKullaniciBaskaSubeIster_KendiSubesineSabitlenir()
+    public void EfektifSube_SubeliKullaniciBaskaSubeIster_KendiSubesineSabitlenir()
     {
         var servis = new OnayYetkisiService(HttpContextOlustur("Satis", subeId: 1), YapilandirmaOlustur(null));
 
-        Assert.Equal(1, servis.EfektifRaporSubesi(2));
+        Assert.Equal(1, servis.EfektifSube(2));
     }
 
     [Fact]
-    public void EfektifRaporSubesi_SubeliKullaniciTumSubeleriIster_KendiSubesineSabitlenir()
+    public void EfektifSube_SubeliKullaniciTumSubeleriIster_KendiSubesineSabitlenir()
     {
         var servis = new OnayYetkisiService(HttpContextOlustur("Satis", subeId: 1), YapilandirmaOlustur(null));
 
-        Assert.Equal(1, servis.EfektifRaporSubesi(null));
+        Assert.Equal(1, servis.EfektifSube(null));
     }
 
     [Fact]
-    public void EfektifRaporSubesi_Admin_IstenenDegerAynenKullanilir()
+    public void EfektifSube_Admin_IstenenDegerAynenKullanilir()
     {
         var servis = new OnayYetkisiService(HttpContextOlustur("Admin", subeId: 1), YapilandirmaOlustur(null));
 
-        Assert.Equal(2, servis.EfektifRaporSubesi(2));
-        Assert.Null(servis.EfektifRaporSubesi(null));
+        Assert.Equal(2, servis.EfektifSube(2));
+        Assert.Null(servis.EfektifSube(null));
     }
 
     [Fact]
-    public void EfektifRaporSubesi_SubesizMerkezKullanici_IstenenDegerAynenKullanilir()
+    public void EfektifSube_SubesizMerkezKullanici_IstenenDegerAynenKullanilir()
     {
         var servis = new OnayYetkisiService(HttpContextOlustur("Muhasebe"), YapilandirmaOlustur(null));
 
-        Assert.Equal(2, servis.EfektifRaporSubesi(2));
-        Assert.Null(servis.EfektifRaporSubesi(null));
+        Assert.Equal(2, servis.EfektifSube(2));
+        Assert.Null(servis.EfektifSube(null));
     }
 }
