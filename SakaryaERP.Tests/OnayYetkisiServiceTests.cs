@@ -174,4 +174,38 @@ public class OnayYetkisiServiceTests
 
         Assert.Null(hata);
     }
+
+    [Fact]
+    public void EfektifRaporSubesi_SubeliKullaniciBaskaSubeIster_KendiSubesineSabitlenir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", subeId: 1), YapilandirmaOlustur(null));
+
+        Assert.Equal(1, servis.EfektifRaporSubesi(2));
+    }
+
+    [Fact]
+    public void EfektifRaporSubesi_SubeliKullaniciTumSubeleriIster_KendiSubesineSabitlenir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Satis", subeId: 1), YapilandirmaOlustur(null));
+
+        Assert.Equal(1, servis.EfektifRaporSubesi(null));
+    }
+
+    [Fact]
+    public void EfektifRaporSubesi_Admin_IstenenDegerAynenKullanilir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Admin", subeId: 1), YapilandirmaOlustur(null));
+
+        Assert.Equal(2, servis.EfektifRaporSubesi(2));
+        Assert.Null(servis.EfektifRaporSubesi(null));
+    }
+
+    [Fact]
+    public void EfektifRaporSubesi_SubesizMerkezKullanici_IstenenDegerAynenKullanilir()
+    {
+        var servis = new OnayYetkisiService(HttpContextOlustur("Muhasebe"), YapilandirmaOlustur(null));
+
+        Assert.Equal(2, servis.EfektifRaporSubesi(2));
+        Assert.Null(servis.EfektifRaporSubesi(null));
+    }
 }

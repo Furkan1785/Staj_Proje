@@ -17,6 +17,7 @@ public class StokRaporuController : Controller
     private readonly ISatisFaturasiService _satisFaturasiService;
     private readonly IAlisFaturasiService _alisFaturasiService;
     private readonly ISubeService _subeService;
+    private readonly IOnayYetkisiService _onayYetkisiService;
 
     public StokRaporuController(
         IMalzemeService malzemeService,
@@ -25,7 +26,8 @@ public class StokRaporuController : Controller
         IAlisIrsaliyesiService alisIrsaliyesiService,
         ISatisFaturasiService satisFaturasiService,
         IAlisFaturasiService alisFaturasiService,
-        ISubeService subeService)
+        ISubeService subeService,
+        IOnayYetkisiService onayYetkisiService)
     {
         _malzemeService = malzemeService;
         _malzemeHareketFisiService = malzemeHareketFisiService;
@@ -34,6 +36,7 @@ public class StokRaporuController : Controller
         _satisFaturasiService = satisFaturasiService;
         _alisFaturasiService = alisFaturasiService;
         _subeService = subeService;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<IActionResult> AnlikDurum()
@@ -50,13 +53,20 @@ public class StokRaporuController : Controller
 
     public async Task<IActionResult> MalzemeGecmisi(int? malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId)
     {
-        var vm = new MalzemeGecmisiViewModel { MalzemeId = malzemeId, Baslangic = baslangic, Bitis = bitis, SubeId = subeId };
+        // Şubeye bağlı kullanıcı query string'e başka bir subeId yazarak başka şubenin
+        // kardeksini göremesin diye istenen değer değil, etkin (yetkiye göre sabitlenmiş) değer kullanılıyor.
+        var etkinSubeId = _onayYetkisiService.EfektifRaporSubesi(subeId);
+        var vm = new MalzemeGecmisiViewModel { MalzemeId = malzemeId, Baslangic = baslangic, Bitis = bitis, SubeId = etkinSubeId };
 
         var malzemeler = await _malzemeService.GetTumListeAsync();
         vm.MalzemeListesi = malzemeler.Select(m => new SelectListItem($"{m.MalzemeKodu} - {m.MalzemeAdi}", m.Id.ToString()));
 
         var subeler = await _subeService.GetAllAsync();
-        vm.SubeListesi = subeler.Where(s => !s.IsDeleted).Select(s => new SelectListItem(s.SubeAdi, s.Id.ToString()));
+        var kullaniciSubeId = _onayYetkisiService.MevcutKullaniciSubeId();
+        var gorunurSubeler = User.IsInRole("Admin") || kullaniciSubeId is null
+            ? subeler.Where(s => !s.IsDeleted)
+            : subeler.Where(s => !s.IsDeleted && s.Id == kullaniciSubeId);
+        vm.SubeListesi = gorunurSubeler.Select(s => new SelectListItem(s.SubeAdi, s.Id.ToString()));
 
         if (malzemeId is not null)
         {
@@ -91,7 +101,7 @@ public class StokRaporuController : Controller
             }
             else
             {
-                vm.Satirlar = (await TumHareketleriGetirAsync(malzemeId.Value, baslangic, bitis, subeId))
+                vm.Satirlar = (await TumHareketleriGetirAsync(malzemeId.Value, baslangic, bitis, etkinSubeId))
                     .OrderBy(s => s.Tarih)
                     .ToList();
             }

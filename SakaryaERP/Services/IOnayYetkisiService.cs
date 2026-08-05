@@ -31,4 +31,11 @@ public interface IOnayYetkisiService
     // SubeErisimVarMi'yi çağırıp false ise hataMesaji ile InvalidOperationException fırlatır —
     // servislerdeki tekrarlanan "if (!SubeErisimVarMi(...)) throw" bloklarını tekilleştirmek için.
     void SubeErisimKontrolEt(int? belgeSubeId, string hataMesaji);
+
+    // Rapor ekranlarındaki "şube" filtresi için: kullanıcı şubeye bağlıysa (Admin değilse
+    // ve bir SubeId claim'i varsa) istekte ne gönderilmiş olursa olsun kendi şubesine
+    // sabitlenir — aksi halde query string'e elle subeId=<başka şube> yazarak başka bir
+    // şubenin raporunu görüntülemek (IDOR) mümkün olurdu. Admin veya merkez kullanıcısı
+    // (SubeId claim'i yok) için istenen değer aynen kullanılır (null = tüm şubeler dahil).
+    int? EfektifRaporSubesi(int? istenenSubeId);
 }

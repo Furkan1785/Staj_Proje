@@ -90,4 +90,13 @@ public class OnayYetkisiService : IOnayYetkisiService
         if (!SubeErisimVarMi(belgeSubeId))
             throw new InvalidOperationException(hataMesaji);
     }
+
+    public int? EfektifRaporSubesi(int? istenenSubeId)
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is not null && httpContext.User.IsInRole("Admin"))
+            return istenenSubeId;
+
+        return MevcutKullaniciSubeId() ?? istenenSubeId;
+    }
 }
