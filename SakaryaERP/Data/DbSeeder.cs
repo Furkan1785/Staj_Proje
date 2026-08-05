@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -27,17 +29,46 @@ public static class DbSeeder
         var userManager = services.GetRequiredService<UserManager<AppUser>>();
         if (!await userManager.Users.AnyAsync())
         {
-            var admin = new AppUser { UserName = "admin@sakaryaerp.com", Email = "admin@sakaryaerp.com", AdSoyad = "Sistem Yöneticisi", EmailConfirmed = true };
-            await userManager.CreateAsync(admin, "Admin123!");
-            await userManager.AddToRoleAsync(admin, "Admin");
+            var environment = services.GetRequiredService<IWebHostEnvironment>();
+            if (environment.IsDevelopment())
+            {
+                // Sabit demo şifreleri SADECE local development kolaylığıdır — Production'da
+                // aynı hesaplar herkesin bildiği şifrelerle (kaynak kodda görünür) oluşmuş
+                // olurdu, bu da ilk deploy ile operatörün şifreleri değiştirdiği an arasında
+                // gerçek bir güvenlik açığı yaratır. Bu yüzden Production'da hiç çalışmaz.
+                var admin = new AppUser { UserName = "admin@sakaryaerp.com", Email = "admin@sakaryaerp.com", AdSoyad = "Sistem Yöneticisi", EmailConfirmed = true };
+                await userManager.CreateAsync(admin, "Admin123!");
+                await userManager.AddToRoleAsync(admin, "Admin");
 
-            var muhasebeci = new AppUser { UserName = "muhasebe@sakaryaerp.com", Email = "muhasebe@sakaryaerp.com", AdSoyad = "Muhasebe Kullanıcısı", EmailConfirmed = true };
-            await userManager.CreateAsync(muhasebeci, "Muhasebe123!");
-            await userManager.AddToRoleAsync(muhasebeci, "Muhasebe");
+                var muhasebeci = new AppUser { UserName = "muhasebe@sakaryaerp.com", Email = "muhasebe@sakaryaerp.com", AdSoyad = "Muhasebe Kullanıcısı", EmailConfirmed = true };
+                await userManager.CreateAsync(muhasebeci, "Muhasebe123!");
+                await userManager.AddToRoleAsync(muhasebeci, "Muhasebe");
 
-            var satisci = new AppUser { UserName = "satis@sakaryaerp.com", Email = "satis@sakaryaerp.com", AdSoyad = "Satış Kullanıcısı", EmailConfirmed = true };
-            await userManager.CreateAsync(satisci, "Satis123!");
-            await userManager.AddToRoleAsync(satisci, "Satis");
+                var satisci = new AppUser { UserName = "satis@sakaryaerp.com", Email = "satis@sakaryaerp.com", AdSoyad = "Satış Kullanıcısı", EmailConfirmed = true };
+                await userManager.CreateAsync(satisci, "Satis123!");
+                await userManager.AddToRoleAsync(satisci, "Satis");
+            }
+            else
+            {
+                // Production'da (veya başka bir non-Development ortamda) tek bir Admin hesabı,
+                // operatörün Seed:AdminEmail/Seed:AdminPassword ile verdiği bilgilerle oluşturulur.
+                // Diğer kullanıcılar (Muhasebe/Satış) ilk girişten sonra Kullanıcı Yönetimi
+                // ekranından elle eklenir — sabit/tahmin edilebilir şifreyle otomatik oluşturulmaz.
+                var configuration = services.GetRequiredService<IConfiguration>();
+                var adminEmail = configuration["Seed:AdminEmail"];
+                var adminPassword = configuration["Seed:AdminPassword"];
+                if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
+                    throw new InvalidOperationException(
+                        "Seed:AdminEmail ve Seed:AdminPassword yapılandırılmamış — güvenlik nedeniyle " +
+                        "Production'da sabit/tahmin edilebilir şifreli bir Admin hesabı otomatik oluşturulmaz.");
+
+                var admin = new AppUser { UserName = adminEmail, Email = adminEmail, AdSoyad = "Sistem Yöneticisi", EmailConfirmed = true };
+                var sonuc = await userManager.CreateAsync(admin, adminPassword);
+                if (!sonuc.Succeeded)
+                    throw new InvalidOperationException(
+                        "Seed:AdminPassword geçerli bir şifre değil: " + string.Join(", ", sonuc.Errors.Select(e => e.Description)));
+                await userManager.AddToRoleAsync(admin, "Admin");
+            }
         }
 
         var hesapPlaniService = services.GetRequiredService<IHesapPlaniService>();

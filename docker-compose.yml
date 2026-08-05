@@ -27,6 +27,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-sakaryaerp};Username=${POSTGRES_USER:-sakaryaerp};Password=${POSTGRES_PASSWORD}"
       App__BaseUrl: "${APP_BASE_URL:?APP_BASE_URL gerekli (ör. http://sunucu-ip-adresi) — şifre sıfırlama linki için, Host header'ından güvenlik nedeniyle kurulmaz}"
+      Seed__AdminEmail: "${SEED_ADMIN_EMAIL:?SEED_ADMIN_EMAIL gerekli — ilk kurulumda oluşturulacak yönetici hesabının e-postası}"
+      Seed__AdminPassword: "${SEED_ADMIN_PASSWORD:?SEED_ADMIN_PASSWORD gerekli — güçlü bir şifre belirleyin, ilk girişten sonra Kullanıcı Yönetimi'nden değiştirebilirsiniz}"
       Smtp__Host: "${SMTP_HOST:-}"
       Smtp__Port: "${SMTP_PORT:-587}"
       Smtp__From: "${SMTP_FROM:-noreply@sakaryaerp.com}"

@@ -56,6 +56,8 @@ cp .env.example .env
 nano .env   # POSTGRES_PASSWORD'ü güçlü bir şifreyle değiştir; SMTP bilgilerin varsa doldur;
             # APP_BASE_URL=http://<PUBLIC_IP> satırını ekle (aşağıdaki not) — eklenmezse
             # docker compose up net bir hatayla durur.
+            # SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD ekle (aşağıdaki not) — eklenmezse
+            # aynı şekilde docker compose up net bir hatayla durur.
 ```
 
 **Önemli — `APP_BASE_URL`:** Şifre sıfırlama e-postasındaki link, güvenlik nedeniyle
@@ -64,6 +66,13 @@ gelen isteğin Host header'ından değil bu değerden kurulur (bkz. `AccountCont
 linkini kendi sunucusuna yönlendirip hesap ele geçirmesine izin verirdi). `.env`'e
 `APP_BASE_URL=http://<PUBLIC_IP>` (domain alındığında `https://domain.com` olarak
 güncellenmeli) eklenmeden `docker compose up` başlamaz.
+
+**Önemli — `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`:** İlk kurulumda (veritabanı
+boşken) tek bir Admin hesabı bu bilgilerle oluşturulur (bkz. `DbSeeder.
+SeedFoundationAsync`). Development ortamındaki sabit demo şifreler (`Admin123!` vb.)
+kaynak kodda herkese açık olduğu için Production'da KULLANILMAZ — bu değişkenler
+olmadan uygulama başlamaz. Güçlü, benzersiz bir şifre seçin; diğer kullanıcıları
+(Muhasebe/Satış) ilk girişten sonra Kullanıcı Yönetimi ekranından ekleyin.
 
 ## 5. Ayağa kaldırma
 
