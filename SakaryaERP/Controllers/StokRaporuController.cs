@@ -84,7 +84,14 @@ public class StokRaporuController : Controller
                 // bkz. DemoSeeder — bu yüzden 0'dan ileri doğru değil, bilinen GuncelBakiye'den geriye
                 // doğru yürütülür), sonra sadece görüntüleme için tarih aralığı uygulanır.
                 var tumSatirlar = await TumHareketleriGetirAsync(malzemeId.Value, null, null, null);
-                tumSatirlar = tumSatirlar.OrderByDescending(s => s.Tarih).ToList();
+                // Tarih gün çözünürlüğünde olduğu için aynı güne düşen hareketler arasında DB'den
+                // gelen sıra garanti değildir — OlusturulmaZamani ikincil anahtarıyla sıralama
+                // deterministik hale getiriliyor. Aşağıdaki ASC gösterim sıralaması bu DESC
+                // sıralamanın birebir tersi olmalı (ikisi de aynı ikincil anahtarla), aksi halde
+                // hesaplanan KumulatifBakiye değerleri gösterimde yanlış satıra karışır.
+                tumSatirlar = tumSatirlar
+                    .OrderByDescending(s => s.Tarih).ThenByDescending(s => s.OlusturulmaZamani)
+                    .ToList();
 
                 var bakiye = malzeme.Bakiye;
                 foreach (var satir in tumSatirlar)
@@ -96,13 +103,13 @@ public class StokRaporuController : Controller
 
                 vm.Satirlar = tumSatirlar
                     .Where(s => (baslangic is null || s.Tarih >= baslangic) && (bitis is null || s.Tarih <= bitis))
-                    .OrderBy(s => s.Tarih)
+                    .OrderBy(s => s.Tarih).ThenBy(s => s.OlusturulmaZamani)
                     .ToList();
             }
             else
             {
                 vm.Satirlar = (await TumHareketleriGetirAsync(malzemeId.Value, baslangic, bitis, etkinSubeId))
-                    .OrderBy(s => s.Tarih)
+                    .OrderBy(s => s.Tarih).ThenBy(s => s.OlusturulmaZamani)
                     .ToList();
             }
 
@@ -135,7 +142,8 @@ public class StokRaporuController : Controller
             SubeAdi = k.MalzemeHareketFisi.Sube.SubeAdi,
             Giris = k.MalzemeHareketFisi.HareketTipi == HareketTipi.Giris ? k.Miktar : 0,
             Cikis = k.MalzemeHareketFisi.HareketTipi is HareketTipi.Cikis or HareketTipi.Fire ? k.Miktar : 0,
-            Aciklama = k.Aciklama
+            Aciklama = k.Aciklama,
+            OlusturulmaZamani = k.MalzemeHareketFisi.CreatedAt
         }));
 
         satirlar.AddRange(sevkKalemleri.Select(k => new MalzemeGecmisiSatiriViewModel
@@ -145,7 +153,8 @@ public class StokRaporuController : Controller
             HareketTipiText = "Satış (Sevk İrsaliyesi)",
             SubeAdi = k.SevkIrsaliyesi.Sube.SubeAdi,
             Giris = 0,
-            Cikis = k.Miktar
+            Cikis = k.Miktar,
+            OlusturulmaZamani = k.SevkIrsaliyesi.CreatedAt
         }));
 
         satirlar.AddRange(alisIrsaliyeKalemleri.Select(k => new MalzemeGecmisiSatiriViewModel
@@ -155,7 +164,8 @@ public class StokRaporuController : Controller
             HareketTipiText = "Alış (Alış İrsaliyesi)",
             SubeAdi = k.AlisIrsaliyesi.Sube.SubeAdi,
             Giris = k.Miktar,
-            Cikis = 0
+            Cikis = 0,
+            OlusturulmaZamani = k.AlisIrsaliyesi.CreatedAt
         }));
 
         satirlar.AddRange(dogrudanSatisKalemleri.Select(k => new MalzemeGecmisiSatiriViewModel
@@ -165,7 +175,8 @@ public class StokRaporuController : Controller
             HareketTipiText = "Satış (Doğrudan Fatura)",
             SubeAdi = k.SatisFaturasi.Sube?.SubeAdi ?? "-",
             Giris = 0,
-            Cikis = k.Miktar
+            Cikis = k.Miktar,
+            OlusturulmaZamani = k.SatisFaturasi.CreatedAt
         }));
 
         satirlar.AddRange(dogrudanAlisKalemleri.Select(k => new MalzemeGecmisiSatiriViewModel
@@ -175,7 +186,8 @@ public class StokRaporuController : Controller
             HareketTipiText = "Alış (Doğrudan Fatura)",
             SubeAdi = k.AlisFaturasi.Sube?.SubeAdi ?? "-",
             Giris = k.Miktar,
-            Cikis = 0
+            Cikis = 0,
+            OlusturulmaZamani = k.AlisFaturasi.CreatedAt
         }));
 
         return satirlar;

@@ -35,4 +35,11 @@ public class MalzemeGecmisiSatiriViewModel
     public decimal Cikis { get; set; }
     public string? Aciklama { get; set; }
     public decimal? KumulatifBakiye { get; set; }
+
+    // Tarih sadece gün çözünürlüğünde (saat bilgisi yok) — aynı güne düşen birden fazla
+    // hareket olduğunda sıralamayı ve kümülatif bakiye hesabını deterministik yapmak için
+    // ikincil sıralama anahtarı olarak belgenin gerçek oluşturulma zamanı (BaseEntity.CreatedAt)
+    // kullanılıyor, aksi halde DB'den gelen satır sırası (garanti edilmeyen) her istekte
+    // farklı bir sıraya ve tutarsız kümülatif bakiyeye yol açabilirdi.
+    public DateTime OlusturulmaZamani { get; set; }
 }
