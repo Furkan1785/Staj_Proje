@@ -255,6 +255,19 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<CariFisi>()
             .HasIndex(f => f.FisNo)
             .IsUnique();
+
+        // Belge no üretimi Count()+1 ile yapılıyor (bkz. ilgili Service.CreateAsync) — eş zamanlı
+        // iki oluşturma isteği aynı numarayı üretebilir. Unique index bunu sessiz mükerrerlik yerine
+        // açık bir DbUpdateException'a çevirir (kullanıcı tekrar dener); CariFisi'nde zaten vardı.
+        modelBuilder.Entity<SatisFaturasi>().HasIndex(f => f.FaturaNo).IsUnique();
+        modelBuilder.Entity<AlisFaturasi>().HasIndex(f => f.FaturaNo).IsUnique();
+        modelBuilder.Entity<SatisSiparisi>().HasIndex(s => s.SiparisNo).IsUnique();
+        modelBuilder.Entity<AlisSiparisi>().HasIndex(s => s.SiparisNo).IsUnique();
+        modelBuilder.Entity<SatisTeklifi>().HasIndex(t => t.TeklifNo).IsUnique();
+        modelBuilder.Entity<MusteriTalebi>().HasIndex(t => t.TalepNo).IsUnique();
+        modelBuilder.Entity<SevkIrsaliyesi>().HasIndex(i => i.IrsaliyeNo).IsUnique();
+        modelBuilder.Entity<AlisIrsaliyesi>().HasIndex(i => i.IrsaliyeNo).IsUnique();
+        modelBuilder.Entity<MalzemeHareketFisi>().HasIndex(f => f.FisNo).IsUnique();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
