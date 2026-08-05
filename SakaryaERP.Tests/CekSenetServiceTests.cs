@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -11,7 +13,8 @@ public class CekSenetServiceTests
     {
         var baglam = TestDbContextFactory.OlusturYeniBaglam();
         var unitOfWork = new UnitOfWork(baglam);
-        var cariFisiService = new CariFisiService(unitOfWork);
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        var cariFisiService = new CariFisiService(unitOfWork, onayYetkisiService);
 
         var cari = new Cari { CariKodu = "C001", Unvan = "Test Müşteri", CariTipi = CariTipi.Musteri };
         var kasa = new KasaHesabi { KasaAdi = "Merkez Kasa", Bakiye = 1000 };

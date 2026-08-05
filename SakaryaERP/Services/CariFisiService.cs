@@ -7,10 +7,12 @@ namespace SakaryaERP.Services;
 public class CariFisiService : ICariFisiService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IOnayYetkisiService _onayYetkisiService;
 
-    public CariFisiService(IUnitOfWork unitOfWork)
+    public CariFisiService(IUnitOfWork unitOfWork, IOnayYetkisiService onayYetkisiService)
     {
         _unitOfWork = unitOfWork;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<CariFisi> CreateAsync(CariFisi fis)
@@ -20,6 +22,12 @@ public class CariFisiService : ICariFisiService
 
         if (fis.Tutar <= 0)
             throw new InvalidOperationException("Tutar sıfırdan büyük olmalıdır.");
+
+        // Fatura onayındaki yüksek tutar eşiğiyle aynı kural: Cari Fişi, faturadan farklı
+        // olarak oluşturulduğu anda doğrudan bakiyeye işlediği için (ayrı bir onay adımı yok),
+        // kontrol burada, oluşturma anında yapılmalı — aksi halde bu eşik Cari Fişi üzerinden
+        // by-pass edilebilir.
+        _onayYetkisiService.YuksekTutarKontrolEt(fis.Tutar, "Cari Fişi");
 
         if (fis.FisTipi == FisTipi.Mahsup)
         {

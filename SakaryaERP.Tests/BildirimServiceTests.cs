@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
@@ -36,9 +37,10 @@ public class BildirimServiceTests
         var unitOfWork = new UnitOfWork(baglam);
         var emailSender = new KaydedenEmailSender();
 
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
         var servis = new BildirimService(
             new MalzemeService(unitOfWork),
-            new CekSenetService(unitOfWork, new CariFisiService(unitOfWork)),
+            new CekSenetService(unitOfWork, new CariFisiService(unitOfWork, onayYetkisiService)),
             emailSender,
             new SahteAdminEmailProvider(["admin@sakaryaerp.com"]),
             YapilandirmaOlustur(),

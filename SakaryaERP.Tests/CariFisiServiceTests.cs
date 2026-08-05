@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using SakaryaERP.Data;
 using SakaryaERP.Models;
 using SakaryaERP.Services;
@@ -7,7 +10,7 @@ namespace SakaryaERP.Tests;
 
 public class CariFisiServiceTests
 {
-    private static (AppDbContext Baglam, CariFisiService Servis, Cari Cari, BankaHesabi Banka, KasaHesabi Kasa) SenaryoKur()
+    private static (AppDbContext Baglam, UnitOfWork UnitOfWork, Cari Cari, BankaHesabi Banka, KasaHesabi Kasa) TemelVeriKur()
     {
         var baglam = TestDbContextFactory.OlusturYeniBaglam();
         var unitOfWork = new UnitOfWork(baglam);
@@ -20,7 +23,26 @@ public class CariFisiServiceTests
         baglam.KasaHesaplari.Add(kasa);
         baglam.SaveChangesAsync().Wait();
 
-        return (baglam, new CariFisiService(unitOfWork), cari, banka, kasa);
+        return (baglam, unitOfWork, cari, banka, kasa);
+    }
+
+    private static (AppDbContext Baglam, CariFisiService Servis, Cari Cari, BankaHesabi Banka, KasaHesabi Kasa) SenaryoKur()
+    {
+        var (baglam, unitOfWork, cari, banka, kasa) = TemelVeriKur();
+        var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
+        return (baglam, new CariFisiService(unitOfWork, onayYetkisiService), cari, banka, kasa);
+    }
+
+    private static CariFisiService ServisOlustur(UnitOfWork unitOfWork, decimal? yuksekTutarEsigi, string? kullaniciRolu)
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(yuksekTutarEsigi is null
+                ? []
+                : new Dictionary<string, string?> { ["OnayAyarlari:YuksekTutarEsigi"] = yuksekTutarEsigi.Value.ToString() })
+            .Build();
+        var kimlik = kullaniciRolu is null ? new ClaimsIdentity() : new ClaimsIdentity([new Claim(ClaimTypes.Role, kullaniciRolu)], "TestAuth");
+        var httpContextAccessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(kimlik) } };
+        return new CariFisiService(unitOfWork, new OnayYetkisiService(httpContextAccessor, config));
     }
 
     [Fact]
@@ -142,5 +164,43 @@ public class CariFisiServiceTests
 
         var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
         Assert.Equal(500, guncelCari!.Bakiye);
+    }
+
+    [Fact]
+    public async Task CreateAsync_YuksekTutarAdminOlmayanKullanici_HataFirlatirVeBirSeyDegismez()
+    {
+        var (baglam, unitOfWork, cari, _, kasa) = TemelVeriKur();
+        var servis = ServisOlustur(unitOfWork, yuksekTutarEsigi: 500, kullaniciRolu: "Muhasebe");
+
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => servis.CreateAsync(new CariFisi
+        {
+            CariId = cari.Id,
+            Tarih = DateTime.Today,
+            FisTipi = FisTipi.Alacak,
+            Tutar = 1_000_000,
+            OdemeYontemi = OdemeYontemi.Nakit,
+            KasaHesabiId = kasa.Id
+        }));
+        Assert.Contains("sadece Admin", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelCari = await baglam.Cariler.FindAsync(cari.Id);
+        Assert.Equal(0, guncelCari!.Bakiye);
+    }
+
+    [Fact]
+    public async Task CreateAsync_YuksekTutarAdminKullanici_BasariylaOlusturulur()
+    {
+        var (_, unitOfWork, cari, _, kasa) = TemelVeriKur();
+        var servis = ServisOlustur(unitOfWork, yuksekTutarEsigi: 500, kullaniciRolu: "Admin");
+
+        await servis.CreateAsync(new CariFisi
+        {
+            CariId = cari.Id,
+            Tarih = DateTime.Today,
+            FisTipi = FisTipi.Alacak,
+            Tutar = 1_000_000,
+            OdemeYontemi = OdemeYontemi.Nakit,
+            KasaHesabiId = kasa.Id
+        });
     }
 }
