@@ -18,6 +18,10 @@ public class AlisFaturasiFormViewModel
     [Display(Name = "Açıklama")]
     public string? Aciklama { get; set; }
 
+    [StringLength(50, ErrorMessage = "Tedarikçi fatura no en fazla 50 karakter olabilir.")]
+    [Display(Name = "Tedarikçi Fatura No")]
+    public string? TedarikciFaturaNo { get; set; }
+
     // Dolu ise fatura bu alış irsaliyesinden oluşturulmuştur.
     public int? AlisIrsaliyesiId { get; set; }
     public string? IrsaliyeNoGosterim { get; set; }

@@ -147,7 +147,8 @@ public class AlisFaturasiController : Controller
                 Tarih = vm.Tarih,
                 CariId = vm.CariId!.Value,
                 AlisIrsaliyesiId = vm.AlisIrsaliyesiId,
-                Aciklama = vm.Aciklama
+                Aciklama = vm.Aciklama,
+                TedarikciFaturaNo = vm.TedarikciFaturaNo
             };
             var kalemler = vm.Kalemler.Select(k => new AlisFaturasiKalemi
             {
@@ -290,6 +291,7 @@ public class AlisFaturasiController : Controller
             SiparisNo = fatura.AlisSiparisi?.SiparisNo,
             IrsaliyeNo = fatura.AlisIrsaliyesi?.IrsaliyeNo,
             Aciklama = fatura.Aciklama,
+            TedarikciFaturaNo = fatura.TedarikciFaturaNo,
             Durum = fatura.Durum,
             DurumText = DurumMetni(fatura.Durum),
             Zincir = BelgeZinciriOlustur(fatura),

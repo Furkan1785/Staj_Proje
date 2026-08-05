@@ -13,6 +13,7 @@ public class AlisFaturasiDetayViewModel
     public string? SiparisNo { get; set; }
     public string? IrsaliyeNo { get; set; }
     public string? Aciklama { get; set; }
+    public string? TedarikciFaturaNo { get; set; }
     public BelgeDurum Durum { get; set; }
     public string DurumText { get; set; } = "";
     public List<BelgeZinciriAdimi> Zincir { get; set; } = [];

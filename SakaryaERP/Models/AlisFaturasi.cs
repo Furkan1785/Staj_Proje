@@ -10,6 +10,9 @@ public class AlisFaturasi : BaseEntity
     public BelgeDurum Durum { get; set; } = BelgeDurum.Beklemede;
     public string? Aciklama { get; set; }
 
+    // Tedarikçinin kendi fatura numarası — mükerrer alış faturası/çift ödeme tespiti için.
+    public string? TedarikciFaturaNo { get; set; }
+
     // Faturayı oluşturan kullanıcının şubesi (otomatik doldurulur). Null ise eski kayıt
     // veya şubesiz (merkez) bir kullanıcı tarafından oluşturulmuştur.
     public int? SubeId { get; set; }
