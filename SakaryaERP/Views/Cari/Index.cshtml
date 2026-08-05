@@ -76,11 +76,11 @@
                 order: [[0, 'asc']],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
                 columns: [
-                    { data: 'cariKodu' },
-                    { data: 'unvan' },
-                    { data: 'cariTipiText' },
-                    { data: 'telefon' },
-                    { data: 'eMail' },
+                    { data: 'cariKodu', render: DataTable.render.text() },
+                    { data: 'unvan', render: DataTable.render.text() },
+                    { data: 'cariTipiText', render: DataTable.render.text() },
+                    { data: 'telefon', render: DataTable.render.text() },
+                    { data: 'eMail', render: DataTable.render.text() },
                     {
                         data: 'bakiye',
                         render: function (data) {

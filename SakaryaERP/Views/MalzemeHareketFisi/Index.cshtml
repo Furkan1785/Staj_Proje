@@ -78,17 +78,17 @@
                 order: [[1, 'desc']],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
                 columns: [
-                    { data: 'fisNo' },
+                    { data: 'fisNo', render: DataTable.render.text() },
                     {
                         data: 'tarih',
                         render: function (data) {
                             return new Date(data).toLocaleDateString('tr-TR');
                         }
                     },
-                    { data: 'hareketTipiText' },
-                    { data: 'subeAdi' },
-                    { data: 'kalemSayisi' },
-                    { data: 'durumText' },
+                    { data: 'hareketTipiText', render: DataTable.render.text() },
+                    { data: 'subeAdi', render: DataTable.render.text() },
+                    { data: 'kalemSayisi', render: DataTable.render.text() },
+                    { data: 'durumText', render: DataTable.render.text() },
                     {
                         data: 'id',
                         orderable: false,

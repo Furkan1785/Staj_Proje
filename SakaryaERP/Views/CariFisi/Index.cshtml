@@ -73,24 +73,24 @@
                 order: [[1, 'desc']],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
                 columns: [
-                    { data: 'fisNo' },
+                    { data: 'fisNo', render: DataTable.render.text() },
                     {
                         data: 'tarih',
                         render: function (data) {
                             return new Date(data).toLocaleDateString('tr-TR');
                         }
                     },
-                    { data: 'cariUnvan' },
-                    { data: 'fisTipiText' },
+                    { data: 'cariUnvan', render: DataTable.render.text() },
+                    { data: 'fisTipiText', render: DataTable.render.text() },
                     {
                         data: 'tutar',
                         render: function (data) {
                             return Number(data).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
                         }
                     },
-                    { data: 'odemeYontemiText' },
-                    { data: 'hesapAdi', defaultContent: '' },
-                    { data: 'aciklama', defaultContent: '' },
+                    { data: 'odemeYontemiText', render: DataTable.render.text() },
+                    { data: 'hesapAdi', defaultContent: '', render: DataTable.render.text() },
+                    { data: 'aciklama', defaultContent: '', render: DataTable.render.text() },
                     {
                         data: 'id',
                         orderable: false,

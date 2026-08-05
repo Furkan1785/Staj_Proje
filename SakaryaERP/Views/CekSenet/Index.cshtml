@@ -159,9 +159,9 @@
                 order: [[3, 'asc']],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
                 columns: [
-                    { data: 'belgeTipiText' },
-                    { data: 'belgeNo' },
-                    { data: 'cariUnvan' },
+                    { data: 'belgeTipiText', render: DataTable.render.text() },
+                    { data: 'belgeNo', render: DataTable.render.text() },
+                    { data: 'cariUnvan', render: DataTable.render.text() },
                     {
                         data: 'vadeTarihi',
                         render: function (data) {
@@ -174,9 +174,9 @@
                             return Number(data).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
                         }
                     },
-                    { data: 'bankaAdi', defaultContent: '' },
-                    { data: 'subeAdi', defaultContent: '' },
-                    { data: 'durumText' },
+                    { data: 'bankaAdi', defaultContent: '', render: DataTable.render.text() },
+                    { data: 'subeAdi', defaultContent: '', render: DataTable.render.text() },
+                    { data: 'durumText', render: DataTable.render.text() },
                     {
                         data: 'id',
                         orderable: false,

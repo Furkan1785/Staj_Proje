@@ -106,12 +106,18 @@
                 genelToplamElemani.textContent = sayiFormatla(toplam);
             }
 
+            function escapeHtml(deger) {
+                return String(deger ?? '').replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
             function satirEkle(veri) {
                 veri = veri || { malzemeId: null, miktar: '', birimFiyat: '', iskonto: 0, kdvOrani: 20 };
 
                 var malzemeOptions = '<option value="">Seçiniz</option>' + malzemeListesi.map(function (m) {
                     var secili = veri.malzemeId === m.id ? ' selected' : '';
-                    return '<option value="' + m.id + '" data-birim="' + m.birim + '"' + secili + '>' + m.kod + ' - ' + m.ad + '</option>';
+                    return '<option value="' + m.id + '" data-birim="' + escapeHtml(m.birim) + '"' + secili + '>' + escapeHtml(m.kod) + ' - ' + escapeHtml(m.ad) + '</option>';
                 }).join('');
 
                 var tr = document.createElement('tr');

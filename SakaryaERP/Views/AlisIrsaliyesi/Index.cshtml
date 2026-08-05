@@ -84,17 +84,17 @@
                 order: [[1, 'desc']],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' },
                 columns: [
-                    { data: 'irsaliyeNo' },
+                    { data: 'irsaliyeNo', render: DataTable.render.text() },
                     {
                         data: 'tarih',
                         render: function (data) {
                             return new Date(data).toLocaleDateString('tr-TR');
                         }
                     },
-                    { data: 'cariUnvan' },
-                    { data: 'subeAdi' },
-                    { data: 'siparisNo', orderable: false, searchable: false },
-                    { data: 'durumText' },
+                    { data: 'cariUnvan', render: DataTable.render.text() },
+                    { data: 'subeAdi', render: DataTable.render.text() },
+                    { data: 'siparisNo', orderable: false, searchable: false , render: DataTable.render.text()},
+                    { data: 'durumText', render: DataTable.render.text() },
                     {
                         data: 'id',
                         orderable: false,
