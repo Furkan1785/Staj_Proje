@@ -100,8 +100,15 @@ public class KasaHesabiController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PasifYap(int id)
     {
-        await _kasaHesabiService.PasifYapAsync(id);
-        TempData["Basari"] = "Kasa hesabı pasif yapıldı.";
+        try
+        {
+            await _kasaHesabiService.PasifYapAsync(id);
+            TempData["Basari"] = "Kasa hesabı pasif yapıldı.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Hata"] = ex.Message;
+        }
         return RedirectToAction(nameof(Index));
     }
 

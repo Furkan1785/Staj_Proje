@@ -41,6 +41,9 @@ public class KasaHesabiService : IKasaHesabiService
     {
         var kasaHesabi = await _unitOfWork.Repository<KasaHesabi>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Kasa hesabı bulunamadı.");
+        if (kasaHesabi.Bakiye != 0)
+            throw new InvalidOperationException(
+                $"Bu kasa hesabının kapanmamış bir bakiyesi var ({kasaHesabi.Bakiye.ToString("N2")} TL), pasif yapılamaz.");
 
         _unitOfWork.Repository<KasaHesabi>().SoftDelete(kasaHesabi);
         await _unitOfWork.SaveChangesAsync();
