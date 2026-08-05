@@ -48,9 +48,17 @@ public class SatisFaturasiService : ISatisFaturasiService
             if (await AktifFaturaVarMiIrsaliyeIcinAsync(irsaliye.Id))
                 throw new InvalidOperationException("Bu irsaliye için zaten bir fatura oluşturulmuş.");
 
-            var irsaliyeMalzemeIdleri = irsaliye.Kalemler.Select(k => k.MalzemeId).ToHashSet();
-            if (kalemler.Any(k => !irsaliyeMalzemeIdleri.Contains(k.MalzemeId)))
-                throw new InvalidOperationException("Fatura kalemleri seçilen irsaliyede olmayan bir malzeme içeremez.");
+            var irsaliyeMiktarlari = irsaliye.Kalemler
+                .GroupBy(k => k.MalzemeId)
+                .ToDictionary(g => g.Key, g => g.Sum(k => k.Miktar));
+            foreach (var kalem in kalemler)
+            {
+                if (!irsaliyeMiktarlari.TryGetValue(kalem.MalzemeId, out var sevkMiktari))
+                    throw new InvalidOperationException("Fatura kalemleri seçilen irsaliyede olmayan bir malzeme içeremez.");
+                if (kalem.Miktar > sevkMiktari)
+                    throw new InvalidOperationException(
+                        $"Fatura miktarı ({kalem.Miktar}) sevk edilen miktarı ({sevkMiktari}) aşamaz.");
+            }
 
             fatura.SatisSiparisiId = irsaliye.SatisSiparisiId;
         }
@@ -67,9 +75,17 @@ public class SatisFaturasiService : ISatisFaturasiService
             if (await AktifFaturaVarMiSiparisIcinAsync(siparis.Id))
                 throw new InvalidOperationException("Bu sipariş için zaten bir fatura oluşturulmuş.");
 
-            var siparisMalzemeIdleri = siparis.Kalemler.Select(k => k.MalzemeId).ToHashSet();
-            if (kalemler.Any(k => !siparisMalzemeIdleri.Contains(k.MalzemeId)))
-                throw new InvalidOperationException("Fatura kalemleri seçilen siparişte olmayan bir malzeme içeremez.");
+            var siparisMiktarlari = siparis.Kalemler
+                .GroupBy(k => k.MalzemeId)
+                .ToDictionary(g => g.Key, g => g.Sum(k => k.Miktar));
+            foreach (var kalem in kalemler)
+            {
+                if (!siparisMiktarlari.TryGetValue(kalem.MalzemeId, out var siparisMiktari))
+                    throw new InvalidOperationException("Fatura kalemleri seçilen siparişte olmayan bir malzeme içeremez.");
+                if (kalem.Miktar > siparisMiktari)
+                    throw new InvalidOperationException(
+                        $"Fatura miktarı ({kalem.Miktar}) sipariş miktarını ({siparisMiktari}) aşamaz.");
+            }
         }
 
         var toplamSayi = await _unitOfWork.Repository<SatisFaturasi>().QueryTumu().CountAsync();

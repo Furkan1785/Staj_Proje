@@ -62,6 +62,55 @@ public class SatisFaturasiServiceTests
     private static List<SatisFaturasiKalemi> Kalemler(int malzemeId, decimal miktar = 10) =>
         [new SatisFaturasiKalemi { MalzemeId = malzemeId, Miktar = miktar, BirimFiyat = 50, KdvOrani = 20, Iskonto = 0 }];
 
+    private static async Task<SevkIrsaliyesi> OnaylanmisIrsaliyeOlustur(AppDbContext baglam, int cariId, int malzemeId, decimal sevkMiktari)
+    {
+        var sube = new Sube { SubeAdi = "Test Şube" };
+        baglam.Subeler.Add(sube);
+        var siparis = new SatisSiparisi { SiparisNo = "SS-TEST01", CariId = cariId, Tarih = DateTime.Today, Durum = BelgeDurum.Onaylandi };
+        baglam.SatisSiparisleri.Add(siparis);
+        await baglam.SaveChangesAsync();
+
+        var irsaliye = new SevkIrsaliyesi
+        {
+            IrsaliyeNo = "SI-TEST01",
+            SatisSiparisiId = siparis.Id,
+            SubeId = sube.Id,
+            Tarih = DateTime.Today,
+            Durum = BelgeDurum.Onaylandi,
+            Kalemler = [new SevkIrsaliyesiKalemi { MalzemeId = malzemeId, Miktar = sevkMiktari }]
+        };
+        baglam.SevkIrsaliyeleri.Add(irsaliye);
+        await baglam.SaveChangesAsync();
+        return irsaliye;
+    }
+
+    [Fact]
+    public async Task CreateAsync_IrsaliyedenFazlaMiktarFaturalanmayaCalisilir_HataFirlatir()
+    {
+        var (baglam, servis, cari, malzeme) = await SenaryoKur();
+        var irsaliye = await OnaylanmisIrsaliyeOlustur(baglam, cari.Id, malzeme.Id, sevkMiktari: 5);
+
+        var fatura = YeniFatura(cari.Id);
+        fatura.SevkIrsaliyesiId = irsaliye.Id;
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => servis.CreateAsync(fatura, Kalemler(malzeme.Id, miktar: 10)));
+
+        Assert.Contains("sevk edilen miktarı", hata.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task CreateAsync_IrsaliyedekiMiktarKadarFaturalanir_BasariylaOlusturulur()
+    {
+        var (baglam, servis, cari, malzeme) = await SenaryoKur();
+        var irsaliye = await OnaylanmisIrsaliyeOlustur(baglam, cari.Id, malzeme.Id, sevkMiktari: 5);
+
+        var fatura = YeniFatura(cari.Id);
+        fatura.SevkIrsaliyesiId = irsaliye.Id;
+        var olusan = await servis.CreateAsync(fatura, Kalemler(malzeme.Id, miktar: 5));
+
+        Assert.NotNull(olusan);
+    }
+
     [Fact]
     public async Task OnaylaAsync_IrsaliyesizFatura_StokDusururCariArttirirMuhasebeFisiOlusturur()
     {

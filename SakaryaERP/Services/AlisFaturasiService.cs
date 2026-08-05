@@ -48,9 +48,17 @@ public class AlisFaturasiService : IAlisFaturasiService
             if (await AktifFaturaVarMiAsync(irsaliye.Id))
                 throw new InvalidOperationException("Bu irsaliye için zaten bir fatura oluşturulmuş.");
 
-            var irsaliyeMalzemeIdleri = irsaliye.Kalemler.Select(k => k.MalzemeId).ToHashSet();
-            if (kalemler.Any(k => !irsaliyeMalzemeIdleri.Contains(k.MalzemeId)))
-                throw new InvalidOperationException("Fatura kalemleri seçilen irsaliyede olmayan bir malzeme içeremez.");
+            var irsaliyeMiktarlari = irsaliye.Kalemler
+                .GroupBy(k => k.MalzemeId)
+                .ToDictionary(g => g.Key, g => g.Sum(k => k.Miktar));
+            foreach (var kalem in kalemler)
+            {
+                if (!irsaliyeMiktarlari.TryGetValue(kalem.MalzemeId, out var alinanMiktar))
+                    throw new InvalidOperationException("Fatura kalemleri seçilen irsaliyede olmayan bir malzeme içeremez.");
+                if (kalem.Miktar > alinanMiktar)
+                    throw new InvalidOperationException(
+                        $"Fatura miktarı ({kalem.Miktar}) alınan miktarı ({alinanMiktar}) aşamaz.");
+            }
 
             fatura.AlisSiparisiId = irsaliye.AlisSiparisiId;
         }
