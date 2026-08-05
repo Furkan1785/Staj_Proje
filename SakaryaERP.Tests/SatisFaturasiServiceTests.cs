@@ -161,6 +161,24 @@ public class SatisFaturasiServiceTests
     }
 
     [Fact]
+    public async Task OnaylaAsync_SubeliFatura_OtomatikOlusanCariFisiAyniSubeyiAlir()
+    {
+        var (baglam, servis, cari, malzeme) = await SenaryoKur();
+        var sube = new Sube { SubeAdi = "Test Şube" };
+        baglam.Subeler.Add(sube);
+        await baglam.SaveChangesAsync();
+
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+        fatura.SubeId = sube.Id;
+        await baglam.SaveChangesAsync();
+
+        await servis.OnaylaAsync(fatura.Id);
+
+        var cariFisi = await baglam.CariFisleri.SingleAsync(f => f.SatisFaturasiId == fatura.Id);
+        Assert.Equal(sube.Id, cariFisi.SubeId);
+    }
+
+    [Fact]
     public async Task OnaylaAsync_MaliyetliMalzeme_BirimMaliyetSnapshotAlirVeCogsYevmiyeKaydiOlusturur()
     {
         var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();

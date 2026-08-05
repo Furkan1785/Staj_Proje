@@ -251,7 +251,11 @@ public class AlisFaturasiService : IAlisFaturasiService
             OdemeYontemi = OdemeYontemi.Havale,
             Aciklama = $"Alış Faturası {fatura.FaturaNo}",
             OtomatikOlusturuldu = true,
-            AlisFaturasiId = fatura.Id
+            AlisFaturasiId = fatura.Id,
+            // CariFisiService.CreateAsync üzerinden geçmediği için SubeId burada elle
+            // faturanın kendi şubesinden alınıyor — aksi halde şube filtresi uygulanan
+            // liste/rapor ekranlarında bu otomatik fiş hiçbir şubede görünmezdi.
+            SubeId = fatura.SubeId
         };
 
         // Alacak fişi: tedarikçiye olan borcumuz arttığı için Cari.Bakiye azalır

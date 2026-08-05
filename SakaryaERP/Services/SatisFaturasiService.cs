@@ -295,7 +295,11 @@ public class SatisFaturasiService : ISatisFaturasiService
             OdemeYontemi = OdemeYontemi.Havale,
             Aciklama = $"Satış Faturası {fatura.FaturaNo}",
             OtomatikOlusturuldu = true,
-            SatisFaturasiId = fatura.Id
+            SatisFaturasiId = fatura.Id,
+            // CariFisiService.CreateAsync üzerinden geçmediği için SubeId burada elle
+            // faturanın kendi şubesinden alınıyor — aksi halde şube filtresi uygulanan
+            // liste/rapor ekranlarında bu otomatik fiş hiçbir şubede görünmezdi.
+            SubeId = fatura.SubeId
         };
 
         // Borç fişi: müşteri bize borçlanır, Cari.Bakiye artar (CariFisiService'teki yön kuralıyla aynı).
