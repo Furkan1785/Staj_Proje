@@ -169,6 +169,7 @@ public class SatisFaturasiService : ISatisFaturasiService
             throw new InvalidOperationException("Sadece beklemede olan faturalar onaylanabilir.");
 
         _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami), "Satış Faturası");
+        _onayYetkisiService.OlusturanOnaylayamazKontrolEt(fatura.CreatedBy, "Satış Faturası");
 
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");

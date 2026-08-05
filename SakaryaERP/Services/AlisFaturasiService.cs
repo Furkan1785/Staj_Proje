@@ -142,6 +142,7 @@ public class AlisFaturasiService : IAlisFaturasiService
             throw new InvalidOperationException("Sadece beklemede olan faturalar onaylanabilir.");
 
         _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(FinansHesaplama.SatirToplami), "Alış Faturası");
+        _onayYetkisiService.OlusturanOnaylayamazKontrolEt(fatura.CreatedBy, "Alış Faturası");
 
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");

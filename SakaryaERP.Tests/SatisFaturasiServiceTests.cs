@@ -153,6 +153,44 @@ public class SatisFaturasiServiceTests
         Assert.Equal(BelgeDurum.Onaylandi, guncelFatura!.Durum);
     }
 
+    private static HttpContextAccessor KullaniciBaglamiOlustur(string kullaniciAdi, string rol) =>
+        new() { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, kullaniciAdi), new Claim(ClaimTypes.Role, rol)], "TestAuth")) } };
+
+    [Fact]
+    public async Task OnaylaAsync_OlusturanKendiFaturasiniOnaylamayaCalisir_HataFirlatirVeBirSeyDegismez()
+    {
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
+        var servis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(new HttpContextAccessor(), config));
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+        fatura.CreatedBy = "satis@test.com";
+        await baglam.SaveChangesAsync();
+
+        var olusturanServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("satis@test.com", "Satis"), config));
+        var hata = await Assert.ThrowsAsync<InvalidOperationException>(() => olusturanServis.OnaylaAsync(fatura.Id));
+        Assert.Contains("kendi belgesini onaylayamaz", hata.Message, StringComparison.OrdinalIgnoreCase);
+
+        var guncelFatura = await baglam.SatisFaturalari.FindAsync(fatura.Id);
+        Assert.Equal(BelgeDurum.Beklemede, guncelFatura!.Durum);
+    }
+
+    [Fact]
+    public async Task OnaylaAsync_BaskaKullaniciOnaylar_BasariylaOnaylanir()
+    {
+        var (baglam, unitOfWork, cari, malzeme) = await TemelVeriKur();
+        var config = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
+        var servis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(new HttpContextAccessor(), config));
+        var fatura = await servis.CreateAsync(YeniFatura(cari.Id), Kalemler(malzeme.Id));
+        fatura.CreatedBy = "satis@test.com";
+        await baglam.SaveChangesAsync();
+
+        var onaylayanServis = new SatisFaturasiService(unitOfWork, new OnayYetkisiService(KullaniciBaglamiOlustur("muhasebe@test.com", "Muhasebe"), config));
+        await onaylayanServis.OnaylaAsync(fatura.Id);
+
+        var guncelFatura = await baglam.SatisFaturalari.FindAsync(fatura.Id);
+        Assert.Equal(BelgeDurum.Onaylandi, guncelFatura!.Durum);
+    }
+
     [Fact]
     public async Task IptalEtAsync_OnaylıYuksekTutarliFaturaAdminKullanici_BasariylaIptalOlur()
     {
