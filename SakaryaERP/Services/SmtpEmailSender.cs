@@ -30,7 +30,9 @@ public class SmtpEmailSender : IEmailSender
         message.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = htmlMessage };
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(host, port, SecureSocketOptions.Auto);
+        // Auto, sunucu STARTTLS reklamını yapmazsa (veya bir MITM bunu sessizce düşürürse) sessizce
+        // düz metne düşer; StartTls bunu zorunlu kılar, sunucu desteklemiyorsa bağlantı reddedilir.
+        await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
         if (!string.IsNullOrWhiteSpace(kullanici))
             await client.AuthenticateAsync(kullanici, sifre ?? "");
         await client.SendAsync(message);
