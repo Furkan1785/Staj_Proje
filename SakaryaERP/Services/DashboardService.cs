@@ -26,6 +26,10 @@ public class DashboardService : IDashboardService
 
     public async Task<DashboardViewModel> GetDashboardAsync(DashboardAralik aralik, IReadOnlyCollection<int> kategoriIdler)
     {
+        // "Tüm Zamanlar" seçeneği gerçekten tüm geçmişi kapsaması gerektiği için (bkz.
+        // AralikTarihleri: TumZamanlar -> sınırsız), burada bir tarih sınırı uygulanamaz —
+        // sadece belirli bir tarih aralığı istenen ekranlar (KdvRaporuController gibi) için
+        // GetOnaylanmisListeAsync'in yeni opsiyonel tarih parametreleri kullanılabilir.
         var satisFaturalari = await _satisFaturasiService.GetOnaylanmisListeAsync();
         var alisFaturalari = await _alisFaturasiService.GetOnaylanmisListeAsync();
         var kritikStok = await _malzemeService.GetKritikStokListesiAsync();

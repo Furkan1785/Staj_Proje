@@ -135,12 +135,30 @@ public class AlisFaturasiService : IAlisFaturasiService
             .AnyAsync(f => f.AlisIrsaliyesiId == alisIrsaliyesiId && f.Durum != BelgeDurum.Iptal);
     }
 
-    public async Task<List<AlisFaturasi>> GetOnaylanmisListeAsync()
+    public async Task<List<AlisFaturasi>> GetOnaylanmisListeAsync(DateTime? baslangic = null, DateTime? bitis = null)
     {
-        return await _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
+        var query = _unitOfWork.Repository<AlisFaturasi>().QueryTumu()
             .Include(f => f.Cari)
             .Include(f => f.Kalemler).ThenInclude(k => k.Malzeme).ThenInclude(m => m.Kategori)
-            .Where(f => !f.IsDeleted && f.Durum == BelgeDurum.Onaylandi)
+            .Where(f => !f.IsDeleted && f.Durum == BelgeDurum.Onaylandi);
+
+        // Tarih aralığı verilirse SQL'e taşınır — aksi halde tüm onaylı fatura geçmişi belleğe
+        // çekilip sonra filtrelenir, veri arttıkça yavaşlar.
+        if (baslangic is not null)
+            query = query.Where(f => f.Tarih >= baslangic.Value);
+        if (bitis is not null)
+            query = query.Where(f => f.Tarih <= bitis.Value);
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<List<AlisFaturasiKalemi>> GetMalzemeSonAlislariAsync(int malzemeId, int adet)
+    {
+        return await _unitOfWork.Repository<AlisFaturasiKalemi>().QueryTumu()
+            .Include(k => k.AlisFaturasi).ThenInclude(f => f.Cari)
+            .Where(k => k.MalzemeId == malzemeId && k.AlisFaturasi.Durum == BelgeDurum.Onaylandi && !k.AlisFaturasi.IsDeleted)
+            .OrderByDescending(k => k.AlisFaturasi.Tarih)
+            .Take(adet)
             .ToListAsync();
     }
 

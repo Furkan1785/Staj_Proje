@@ -28,12 +28,8 @@ public class KdvRaporuController : Controller
         var araligBaslangic = baslangic ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         var araligBitis = bitis ?? araligBaslangic.AddMonths(1).AddDays(-1);
 
-        var satisFaturalari = (await _satisFaturasiService.GetOnaylanmisListeAsync())
-            .Where(f => f.Tarih.Date >= araligBaslangic.Date && f.Tarih.Date <= araligBitis.Date)
-            .ToList();
-        var alisFaturalari = (await _alisFaturasiService.GetOnaylanmisListeAsync())
-            .Where(f => f.Tarih.Date >= araligBaslangic.Date && f.Tarih.Date <= araligBitis.Date)
-            .ToList();
+        var satisFaturalari = await _satisFaturasiService.GetOnaylanmisListeAsync(araligBaslangic.Date, araligBitis.Date);
+        var alisFaturalari = await _alisFaturasiService.GetOnaylanmisListeAsync(araligBaslangic.Date, araligBitis.Date);
 
         var turkce = new CultureInfo("tr-TR");
         var aylikSatis = satisFaturalari

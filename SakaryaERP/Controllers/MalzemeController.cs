@@ -192,8 +192,8 @@ public class MalzemeController : Controller
         if (malzeme is null) return NotFound();
 
         var sonHareketler = await _malzemeHareketFisiService.GetMalzemeGecmisiAsync(id, null, null);
-        var satisFaturalari = await _satisFaturasiService.GetOnaylanmisListeAsync();
-        var alisFaturalari = await _alisFaturasiService.GetOnaylanmisListeAsync();
+        var sonSatisKalemleri = await _satisFaturasiService.GetMalzemeSonSatislariAsync(id, 5);
+        var sonAlisKalemleri = await _alisFaturasiService.GetMalzemeSonAlislariAsync(id, 5);
 
         return View(new MalzemeDetayViewModel
         {
@@ -228,29 +228,23 @@ public class MalzemeController : Controller
                     Cikis = k.MalzemeHareketFisi.HareketTipi is HareketTipi.Cikis or HareketTipi.Fire ? k.Miktar : 0,
                     Aciklama = k.Aciklama
                 }).ToList(),
-            SonSatislar = satisFaturalari
-                .SelectMany(f => f.Kalemler.Where(k => k.MalzemeId == id).Select(k => new { Fatura = f, Kalem = k }))
-                .OrderByDescending(x => x.Fatura.Tarih)
-                .Take(5)
-                .Select(x => new MalzemeFaturaSatiriViewModel
+            SonSatislar = sonSatisKalemleri
+                .Select(k => new MalzemeFaturaSatiriViewModel
                 {
-                    FaturaId = x.Fatura.Id,
-                    Tarih = x.Fatura.Tarih,
-                    FaturaNo = x.Fatura.FaturaNo,
-                    CariUnvan = x.Fatura.Cari.Unvan,
-                    Miktar = x.Kalem.Miktar
+                    FaturaId = k.SatisFaturasi.Id,
+                    Tarih = k.SatisFaturasi.Tarih,
+                    FaturaNo = k.SatisFaturasi.FaturaNo,
+                    CariUnvan = k.SatisFaturasi.Cari.Unvan,
+                    Miktar = k.Miktar
                 }).ToList(),
-            SonAlislar = alisFaturalari
-                .SelectMany(f => f.Kalemler.Where(k => k.MalzemeId == id).Select(k => new { Fatura = f, Kalem = k }))
-                .OrderByDescending(x => x.Fatura.Tarih)
-                .Take(5)
-                .Select(x => new MalzemeFaturaSatiriViewModel
+            SonAlislar = sonAlisKalemleri
+                .Select(k => new MalzemeFaturaSatiriViewModel
                 {
-                    FaturaId = x.Fatura.Id,
-                    Tarih = x.Fatura.Tarih,
-                    FaturaNo = x.Fatura.FaturaNo,
-                    CariUnvan = x.Fatura.Cari.Unvan,
-                    Miktar = x.Kalem.Miktar
+                    FaturaId = k.AlisFaturasi.Id,
+                    Tarih = k.AlisFaturasi.Tarih,
+                    FaturaNo = k.AlisFaturasi.FaturaNo,
+                    CariUnvan = k.AlisFaturasi.Cari.Unvan,
+                    Miktar = k.Miktar
                 }).ToList()
         });
     }
