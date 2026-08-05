@@ -40,7 +40,7 @@ public class BildirimServiceTests
         var onayYetkisiService = new OnayYetkisiService(new HttpContextAccessor(), new ConfigurationBuilder().AddInMemoryCollection([]).Build());
         var servis = new BildirimService(
             new MalzemeService(unitOfWork),
-            new CekSenetService(unitOfWork, new CariFisiService(unitOfWork, onayYetkisiService)),
+            new CekSenetService(unitOfWork, new CariFisiService(unitOfWork, onayYetkisiService), onayYetkisiService),
             emailSender,
             new SahteAdminEmailProvider(["admin@sakaryaerp.com"]),
             YapilandirmaOlustur(),

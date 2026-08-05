@@ -176,6 +176,9 @@ public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
         modelBuilder.Entity<MusteriTalebi>()
             .HasOne(t => t.Sube).WithMany().HasForeignKey(t => t.SubeId)
             .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<CekSenet>()
+            .HasOne(c => c.Sube).WithMany().HasForeignKey(c => c.SubeId)
+            .IsRequired(false).OnDelete(DeleteBehavior.Restrict);
 
         // Kalem tabloları cascade delete
         modelBuilder.Entity<MuhasebeFisiKalemi>()

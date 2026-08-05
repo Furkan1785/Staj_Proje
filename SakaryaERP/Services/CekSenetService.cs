@@ -8,18 +8,23 @@ public class CekSenetService : ICekSenetService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICariFisiService _cariFisiService;
+    private readonly IOnayYetkisiService _onayYetkisiService;
 
-    public CekSenetService(IUnitOfWork unitOfWork, ICariFisiService cariFisiService)
+    public CekSenetService(IUnitOfWork unitOfWork, ICariFisiService cariFisiService, IOnayYetkisiService onayYetkisiService)
     {
         _unitOfWork = unitOfWork;
         _cariFisiService = cariFisiService;
+        _onayYetkisiService = onayYetkisiService;
     }
 
     public async Task<IEnumerable<CekSenet>> GetAllAsync()
         => await _unitOfWork.Repository<CekSenet>().QueryTumu().Include(c => c.Cari).ToListAsync();
 
     public async Task<CekSenet?> GetByIdAsync(int id)
-        => await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id);
+    {
+        var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id);
+        return cekSenet is not null && _onayYetkisiService.SubeErisimVarMi(cekSenet.SubeId) ? cekSenet : null;
+    }
 
     public async Task<CekSenet> CreateAsync(CekSenet cekSenet)
     {
@@ -27,8 +32,10 @@ public class CekSenetService : ICekSenetService
             ?? throw new InvalidOperationException("Cari bulunamadı.");
         if (cari.CariTipi != CariTipi.Musteri && cari.CariTipi != CariTipi.HerIkisi)
             throw new InvalidOperationException("Çek/Senet sadece müşteri olarak işaretli bir cariye kayıt edilebilir.");
+        _onayYetkisiService.SubeErisimKontrolEt(cari.SubeId, "Bu cari başka bir şubeye ait, çek/senet kaydedemezsiniz.");
 
         cekSenet.Durum = CekSenetDurum.Portfoyde;
+        cekSenet.SubeId = _onayYetkisiService.MevcutKullaniciSubeId();
         await _unitOfWork.Repository<CekSenet>().AddAsync(cekSenet);
         await _unitOfWork.SaveChangesAsync();
         return cekSenet;
@@ -38,6 +45,7 @@ public class CekSenetService : ICekSenetService
     {
         var mevcut = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(cekSenet.Id)
             ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(mevcut.SubeId, "Bu çek/senet başka bir şubeye ait, düzenleyemezsiniz.");
 
         // Durum Portföyde'den ilerlediyse (Tahsilde/Ciro/TahsilEdildi/Karşılıksız) belge zaten
         // bir cari harekete bağlanmış veya el değiştirmiş olabilir; tutar/cari gibi alanların
@@ -116,6 +124,7 @@ public class CekSenetService : ICekSenetService
     {
         var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cekSenet.SubeId, "Bu çek/senet başka bir şubeye ait, tahsile veremezsiniz.");
 
         if (cekSenet.Durum != CekSenetDurum.Portfoyde)
             throw new InvalidOperationException("Sadece portföydeki bir belge tahsile verilebilir.");
@@ -128,6 +137,7 @@ public class CekSenetService : ICekSenetService
     {
         var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cekSenet.SubeId, "Bu çek/senet başka bir şubeye ait, ciro edemezsiniz.");
 
         if (cekSenet.Durum != CekSenetDurum.Portfoyde)
             throw new InvalidOperationException("Sadece portföydeki bir belge ciro edilebilir.");
@@ -144,6 +154,7 @@ public class CekSenetService : ICekSenetService
     {
         var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cekSenet.SubeId, "Bu çek/senet başka bir şubeye ait, karşılıksız işaretleyemezsiniz.");
 
         if (cekSenet.Durum != CekSenetDurum.Tahsilde)
             throw new InvalidOperationException("Sadece tahsildeki bir belge karşılıksız işaretlenebilir.");
@@ -159,6 +170,7 @@ public class CekSenetService : ICekSenetService
     {
         var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cekSenet.SubeId, "Bu çek/senet başka bir şubeye ait, tahsil edildi yapamazsınız.");
 
         if (cekSenet.Durum != CekSenetDurum.Tahsilde)
             throw new InvalidOperationException("Sadece tahsildeki bir belge tahsil edildi yapılabilir.");
@@ -179,8 +191,9 @@ public class CekSenetService : ICekSenetService
             KasaHesabiId = kasaHesabiId,
             Aciklama = $"{(cekSenet.BelgeTipi == BelgeTipi.Cek ? "Çek" : "Senet")} tahsilatı - Belge No: {cekSenet.BelgeNo}",
             OtomatikOlusturuldu = true,
-            CekSenetId = cekSenet.Id
-        });
+            CekSenetId = cekSenet.Id,
+            SubeId = cekSenet.SubeId
+        }, belgeTuru: "Çek/Senet Tahsilatı");
 
         cekSenet.Durum = CekSenetDurum.TahsilEdildi;
         await _unitOfWork.SaveChangesAsync();
@@ -192,6 +205,7 @@ public class CekSenetService : ICekSenetService
     {
         var cekSenet = await _unitOfWork.Repository<CekSenet>().GetByIdAsync(id)
             ?? throw new InvalidOperationException("Çek/Senet kaydı bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cekSenet.SubeId, "Bu çek/senet başka bir şubeye ait, tahsilatını geri alamazsınız.");
 
         if (cekSenet.Durum != CekSenetDurum.TahsilEdildi)
             throw new InvalidOperationException("Sadece tahsil edildi durumundaki bir belgenin tahsilatı geri alınabilir.");

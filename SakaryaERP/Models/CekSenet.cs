@@ -12,5 +12,11 @@ public class CekSenet : BaseEntity
     public string? SubeAdi { get; set; }
     public CekSenetDurum Durum { get; set; } = CekSenetDurum.Portfoyde;
 
+    // Belgeyi kaydeden kullanıcının şubesi (otomatik doldurulur) — SubeAdi'dan farklı, o çekin
+    // üzerindeki BANKA şubesinin adıdır (serbest metin). Null ise eski kayıt veya şubesiz
+    // (merkez) bir kullanıcı tarafından oluşturulmuştur.
+    public int? SubeId { get; set; }
+    public Sube? Sube { get; set; }
+
     public Cari Cari { get; set; } = null!;
 }

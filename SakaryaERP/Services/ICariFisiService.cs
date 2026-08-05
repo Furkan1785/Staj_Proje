@@ -4,7 +4,10 @@ namespace SakaryaERP.Services;
 
 public interface ICariFisiService
 {
-    Task<CariFisi> CreateAsync(CariFisi fis);
+    // belgeTuru, yüksek tutar eşiği aşıldığında hata mesajında gösterilen etiket — doğrudan
+    // manuel Cari Fişi oluşturmada "Cari Fişi", CekSenetService gibi bir kaynaktan otomatik
+    // oluşturmada (ör. "Çek/Senet Tahsilatı") çağıran belirtebilsin diye parametreleştirildi.
+    Task<CariFisi> CreateAsync(CariFisi fis, string belgeTuru = "Cari Fişi");
 
     Task<CariFisi?> GetByIdDetayAsync(int id);
 

@@ -15,10 +15,11 @@ public class CariFisiService : ICariFisiService
         _onayYetkisiService = onayYetkisiService;
     }
 
-    public async Task<CariFisi> CreateAsync(CariFisi fis)
+    public async Task<CariFisi> CreateAsync(CariFisi fis, string belgeTuru = "Cari Fişi")
     {
         var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fis.CariId)
             ?? throw new InvalidOperationException("Cari bulunamadı.");
+        _onayYetkisiService.SubeErisimKontrolEt(cari.SubeId, "Bu cari başka bir şubeye ait, cari fişi oluşturamazsınız.");
 
         if (fis.Tutar <= 0)
             throw new InvalidOperationException("Tutar sıfırdan büyük olmalıdır.");
@@ -27,7 +28,7 @@ public class CariFisiService : ICariFisiService
         // olarak oluşturulduğu anda doğrudan bakiyeye işlediği için (ayrı bir onay adımı yok),
         // kontrol burada, oluşturma anında yapılmalı — aksi halde bu eşik Cari Fişi üzerinden
         // by-pass edilebilir.
-        _onayYetkisiService.YuksekTutarKontrolEt(fis.Tutar, "Cari Fişi");
+        _onayYetkisiService.YuksekTutarKontrolEt(fis.Tutar, belgeTuru);
 
         if (fis.FisTipi == FisTipi.Mahsup)
         {
