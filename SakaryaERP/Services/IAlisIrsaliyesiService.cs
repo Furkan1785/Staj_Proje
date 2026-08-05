@@ -11,6 +11,10 @@ public interface IAlisIrsaliyesiService
 
     Task<AlisIrsaliyesi?> GetByIdDetayAsync(int id);
 
+    // Kardeks (Malzeme Geçmişi raporu) için: bir malzemenin onaylı alış irsaliyeleri üzerinden
+    // stoğa eklendiği hareketler.
+    Task<List<AlisIrsaliyesiKalemi>> GetMalzemeHareketleriAsync(int malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId);
+
     // Onaylandığında ilgili malzemelerin stok bakiyesini artırır (transaction: tek SaveChangesAsync).
     Task OnaylaAsync(int id);
     Task IptalEtAsync(int id);

@@ -38,6 +38,11 @@
         <span class="badge bg-secondary">Güncel Bakiye: @Model.GuncelBakiye.ToString("N2") @Model.Birim</span>
     </div>
 
+    @if (!Model.KumulatifBakiyeGosterilebilir)
+    {
+        <div class="alert alert-info">Şube filtresi uygulandığında kümülatif bakiye sütunu gösterilmez — satırlar tüm hareketlerin bir alt kümesi olduğu için güncel bakiyeyle karşılaştırılabilir bir toplam üretilemez.</div>
+    }
+
     <div class="table-responsive">
         <table class="table table-striped table-bordered align-middle">
             <thead>
@@ -48,14 +53,26 @@
                     <th>Şube</th>
                     <th class="text-end">Giriş</th>
                     <th class="text-end">Çıkış</th>
+                    @if (Model.KumulatifBakiyeGosterilebilir)
+                    {
+                        <th class="text-end">Kümülatif Bakiye</th>
+                    }
                     <th>Açıklama</th>
                 </tr>
             </thead>
             <tbody>
+                @if (Model.KumulatifBakiyeGosterilebilir)
+                {
+                    <tr class="table-light">
+                        <td colspan="6" class="text-end"><strong>Devir Bakiyesi</strong></td>
+                        <td class="text-end"><strong>@Model.DevirBakiye.ToString("N2")</strong></td>
+                        <td></td>
+                    </tr>
+                }
                 @if (Model.Satirlar.Count == 0)
                 {
                     <tr>
-                        <td colspan="7" class="text-center text-muted">Bu tarih aralığında onaylanmış hareket bulunamadı.</td>
+                        <td colspan="8" class="text-center text-muted">Bu tarih aralığında onaylanmış hareket bulunamadı.</td>
                     </tr>
                 }
                 @foreach (var s in Model.Satirlar)
@@ -67,6 +84,10 @@
                         <td>@s.SubeAdi</td>
                         <td class="text-end">@(s.Giris > 0 ? s.Giris.ToString("N2") : "")</td>
                         <td class="text-end">@(s.Cikis > 0 ? s.Cikis.ToString("N2") : "")</td>
+                        @if (Model.KumulatifBakiyeGosterilebilir)
+                        {
+                            <td class="text-end">@s.KumulatifBakiye?.ToString("N2")</td>
+                        }
                         <td>@s.Aciklama</td>
                     </tr>
                 }
@@ -76,6 +97,10 @@
                     <td colspan="4" class="text-end"><strong>Toplam</strong></td>
                     <td class="text-end"><strong>@Model.ToplamGiris.ToString("N2")</strong></td>
                     <td class="text-end"><strong>@Model.ToplamCikis.ToString("N2")</strong></td>
+                    @if (Model.KumulatifBakiyeGosterilebilir)
+                    {
+                        <td></td>
+                    }
                     <td></td>
                 </tr>
             </tfoot>

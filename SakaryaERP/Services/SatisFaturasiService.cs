@@ -198,6 +198,24 @@ public class SatisFaturasiService : ISatisFaturasiService
             .ToListAsync();
     }
 
+    public async Task<List<SatisFaturasiKalemi>> GetMalzemeDogrudanSatisHareketleriAsync(int malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId)
+    {
+        var query = _unitOfWork.Repository<SatisFaturasiKalemi>().QueryTumu()
+            .Include(k => k.SatisFaturasi).ThenInclude(f => f.Sube)
+            .Where(k => k.MalzemeId == malzemeId
+                && k.SatisFaturasi.Durum == BelgeDurum.Onaylandi
+                && k.SatisFaturasi.SevkIrsaliyesiId == null);
+
+        if (baslangic is not null)
+            query = query.Where(k => k.SatisFaturasi.Tarih >= baslangic);
+        if (bitis is not null)
+            query = query.Where(k => k.SatisFaturasi.Tarih <= bitis);
+        if (subeId is not null)
+            query = query.Where(k => k.SatisFaturasi.SubeId == subeId);
+
+        return await query.ToListAsync();
+    }
+
     public async Task<List<SatisFaturasiKalemi>> GetMalzemeSonSatislariAsync(int malzemeId, int adet)
     {
         return await _unitOfWork.Repository<SatisFaturasiKalemi>().QueryTumu()

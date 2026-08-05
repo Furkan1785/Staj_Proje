@@ -160,6 +160,24 @@ public class AlisFaturasiService : IAlisFaturasiService
             .ToListAsync();
     }
 
+    public async Task<List<AlisFaturasiKalemi>> GetMalzemeDogrudanAlisHareketleriAsync(int malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId)
+    {
+        var query = _unitOfWork.Repository<AlisFaturasiKalemi>().QueryTumu()
+            .Include(k => k.AlisFaturasi).ThenInclude(f => f.Sube)
+            .Where(k => k.MalzemeId == malzemeId
+                && k.AlisFaturasi.Durum == BelgeDurum.Onaylandi
+                && k.AlisFaturasi.AlisIrsaliyesiId == null);
+
+        if (baslangic is not null)
+            query = query.Where(k => k.AlisFaturasi.Tarih >= baslangic);
+        if (bitis is not null)
+            query = query.Where(k => k.AlisFaturasi.Tarih <= bitis);
+        if (subeId is not null)
+            query = query.Where(k => k.AlisFaturasi.SubeId == subeId);
+
+        return await query.ToListAsync();
+    }
+
     public async Task<List<AlisFaturasiKalemi>> GetMalzemeSonAlislariAsync(int malzemeId, int adet)
     {
         return await _unitOfWork.Repository<AlisFaturasiKalemi>().QueryTumu()

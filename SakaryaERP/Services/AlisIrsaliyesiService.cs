@@ -139,6 +139,22 @@ public class AlisIrsaliyesiService : IAlisIrsaliyesiService
         return irsaliye is not null && _onayYetkisiService.SubeErisimVarMi(irsaliye.SubeId) ? irsaliye : null;
     }
 
+    public async Task<List<AlisIrsaliyesiKalemi>> GetMalzemeHareketleriAsync(int malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId)
+    {
+        var query = _unitOfWork.Repository<AlisIrsaliyesiKalemi>().QueryTumu()
+            .Include(k => k.AlisIrsaliyesi).ThenInclude(i => i.Sube)
+            .Where(k => k.MalzemeId == malzemeId && k.AlisIrsaliyesi.Durum == BelgeDurum.Onaylandi);
+
+        if (baslangic is not null)
+            query = query.Where(k => k.AlisIrsaliyesi.Tarih >= baslangic);
+        if (bitis is not null)
+            query = query.Where(k => k.AlisIrsaliyesi.Tarih <= bitis);
+        if (subeId is not null)
+            query = query.Where(k => k.AlisIrsaliyesi.SubeId == subeId);
+
+        return await query.ToListAsync();
+    }
+
     public async Task OnaylaAsync(int id)
     {
         var irsaliye = await _unitOfWork.Repository<AlisIrsaliyesi>().QueryTumu()

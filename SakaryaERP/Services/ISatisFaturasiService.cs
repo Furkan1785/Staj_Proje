@@ -24,6 +24,11 @@ public interface ISatisFaturasiService
     // faturalar. Sadece vade tarihi bugünden ileride olmayan/eşik içindeki faturalar SQL'de filtrelenir.
     Task<List<SatisFaturasi>> GetVadesiYaklasanListesiAsync(DateTime yaklasmaSiniri);
 
+    // Kardeks (Malzeme Geçmişi raporu) için: irsaliyesiz (doğrudan) onaylı satış faturalarındaki
+    // stok düşüren kalemler — irsaliyeli faturalar hariç, o hareket zaten SevkIrsaliyesi
+    // tarafında sayılıyor (aksi halde aynı stok düşüşü iki kez sayılır).
+    Task<List<SatisFaturasiKalemi>> GetMalzemeDogrudanSatisHareketleriAsync(int malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId);
+
     // Onaylandığında: irsaliyeden gelmiyorsa stok düşülür (negatif stok kontrolüyle),
     // her durumda cariye borç hareketi (CariFisi) eklenir — tek transaction.
     Task OnaylaAsync(int id);

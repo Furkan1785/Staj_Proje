@@ -22,6 +22,10 @@ public interface IAlisFaturasiService
     // Belge Takip ekranı için: vadesi belirtilen tarihe kadar olan (geçmiş + yaklaşan) onaylı faturalar.
     Task<List<AlisFaturasi>> GetVadesiYaklasanListesiAsync(DateTime yaklasmaSiniri);
 
+    // Kardeks (Malzeme Geçmişi raporu) için: irsaliyesiz (doğrudan) onaylı alış faturalarındaki
+    // stok arttıran kalemler — irsaliyeli faturalar hariç (aksi halde stok artışı iki kez sayılır).
+    Task<List<AlisFaturasiKalemi>> GetMalzemeDogrudanAlisHareketleriAsync(int malzemeId, DateTime? baslangic, DateTime? bitis, int? subeId);
+
     // Onaylandığında cariye alacak hareketi (CariFisi) eklenir ve Cari.Bakiye güncellenir (tek transaction).
     Task OnaylaAsync(int id);
     Task IptalEtAsync(int id);
