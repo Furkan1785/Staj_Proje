@@ -8,8 +8,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-sakaryaerp}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Sadece localhost'a bağlanır (0.0.0.0 değil) — web container'ı zaten Docker'ın
+    # dahili ağı üzerinden "db" host adıyla erişiyor, bu mapping sadece host makinedeki
+    # araçlar (dotnet watch run, psql, pgAdmin) içindir. Aynı compose dosyası VPS'te de
+    # kullanıldığından, 0.0.0.0:5432 açık bırakmak güvenlik listesi/iptables'taki tek bir
+    # yapılandırma hatasında Postgres'i doğrudan internete açardı.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sakaryaerp}"]
       interval: 10s
@@ -27,8 +32,13 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-sakaryaerp};Username=${POSTGRES_USER:-sakaryaerp};Password=${POSTGRES_PASSWORD}"
       App__BaseUrl: "${APP_BASE_URL:?APP_BASE_URL gerekli (ör. http://sunucu-ip-adresi) — şifre sıfırlama linki için, Host header'ından güvenlik nedeniyle kurulmaz}"
-      Seed__AdminEmail: "${SEED_ADMIN_EMAIL:?SEED_ADMIN_EMAIL gerekli — ilk kurulumda oluşturulacak yönetici hesabının e-postası}"
-      Seed__AdminPassword: "${SEED_ADMIN_PASSWORD:?SEED_ADMIN_PASSWORD gerekli — güçlü bir şifre belirleyin, ilk girişten sonra Kullanıcı Yönetimi'nden değiştirebilirsiniz}"
+      # :?required değil (bkz. APP_BASE_URL) — kasıtlı: bu iki değişken sadece web
+      # container'ı için anlamlıdır ama compose TÜM dosyayı interpolate ettiğinden, burada
+      # da :?required kullanmak günlük "docker compose up -d db" akışını gereksiz yere
+      # kırardı. Asıl kilit uygulama tarafında: DbSeeder.SeedFoundationAsync bu değerler
+      # boşken Production'da başlamayı zaten reddediyor (canlı olarak doğrulandı).
+      Seed__AdminEmail: "${SEED_ADMIN_EMAIL:-}"
+      Seed__AdminPassword: "${SEED_ADMIN_PASSWORD:-}"
       Smtp__Host: "${SMTP_HOST:-}"
       Smtp__Port: "${SMTP_PORT:-587}"
       Smtp__From: "${SMTP_FROM:-noreply@sakaryaerp.com}"
