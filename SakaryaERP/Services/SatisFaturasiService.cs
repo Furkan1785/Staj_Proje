@@ -275,6 +275,8 @@ public class SatisFaturasiService : ISatisFaturasiService
             kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["153"].Id, Borc = 0, Alacak = toplamMaliyet, Aciklama = aciklama });
         }
 
+        FinansHesaplama.BorcAlacakDengesiniDogrula(kalemler);
+
         var toplamFisSayisi = await _unitOfWork.Repository<MuhasebeFisi>().QueryTumu().CountAsync();
         return new MuhasebeFisi
         {

@@ -229,6 +229,8 @@ public class AlisFaturasiService : IAlisFaturasiService
         if (kdvTutari > 0)
             kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["191"].Id, Borc = kdvTutari, Alacak = 0, Aciklama = aciklama });
 
+        FinansHesaplama.BorcAlacakDengesiniDogrula(kalemler);
+
         var toplamFisSayisi = await _unitOfWork.Repository<MuhasebeFisi>().QueryTumu().CountAsync();
         return new MuhasebeFisi
         {

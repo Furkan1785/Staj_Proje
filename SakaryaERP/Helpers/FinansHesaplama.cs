@@ -35,4 +35,17 @@ public static class FinansHesaplama
     // ile aynı ara toplam/iskonto zincirini kullanır, KDV üstüne KDV binmesin diye.
     public static decimal SatisFaturasiKdvTutari(IFiyatliKalem kalem) =>
         Math.Round(SatisFaturasiNetTutari(kalem) * kalem.KdvOrani / 100, 2);
+
+    // Çift taraflı muhasebenin temel invariant'ı: bir yevmiye kaydında toplam Borç toplam
+    // Alacak'a eşit olmalı. Hesap kodu bulunamayınca (hesaplar sözlüğünde eksik anahtar) ya da
+    // ileride bir kalem eklenip karşılığı unutulursa bu sessizce dengesiz bir fiş üretmesin diye
+    // savunma amaçlı — MuhasebeFisi kaydedilmeden hemen önce çağrılır.
+    public static void BorcAlacakDengesiniDogrula(IEnumerable<MuhasebeFisiKalemi> kalemler)
+    {
+        var borc = kalemler.Sum(k => k.Borc);
+        var alacak = kalemler.Sum(k => k.Alacak);
+        if (Math.Abs(borc - alacak) > 0.01m)
+            throw new InvalidOperationException(
+                $"Yevmiye kaydı dengesiz: Borç ({borc.ToString("N2")}) Alacak'a ({alacak.ToString("N2")}) eşit değil.");
+    }
 }
