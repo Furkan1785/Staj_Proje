@@ -23,6 +23,7 @@
                 <th>Min Stok</th>
                 <th>Max Stok</th>
                 <th>Durum</th>
+                <th>İşlemler</th>
             </tr>
         </thead>
         <tbody>
@@ -37,6 +38,7 @@
                     <td>@m.MinStokMiktari.ToString("N2")</td>
                     <td>@m.MaxStokMiktari.ToString("N2")</td>
                     <td><span class="badge @m.DurumSinifi">@m.DurumText</span></td>
+                    <td><a asp-controller="Malzeme" asp-action="Detay" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary">Detay</a></td>
                 </tr>
             }
         </tbody>
@@ -51,6 +53,7 @@
         $(function () {
             var tablo = new DataTable('#anlikStokTablosu', {
                 order: [[0, 'asc']],
+                columnDefs: [{ targets: -1, orderable: false, searchable: false }],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' }
             });
 

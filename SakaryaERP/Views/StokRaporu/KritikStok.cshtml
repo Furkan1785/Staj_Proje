@@ -25,6 +25,7 @@ else
                     <th>Bakiye</th>
                     <th>Min Stok</th>
                     <th>Eksik Miktar</th>
+                    <th>İşlemler</th>
                 </tr>
             </thead>
             <tbody>
@@ -38,6 +39,7 @@ else
                         <td>@m.Bakiye.ToString("N2")</td>
                         <td>@m.MinStokMiktari.ToString("N2")</td>
                         <td class="text-danger fw-bold">@((m.MinStokMiktari - m.Bakiye).ToString("N2"))</td>
+                        <td><a asp-controller="Malzeme" asp-action="Detay" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary">Detay</a></td>
                     </tr>
                 }
             </tbody>
@@ -59,6 +61,7 @@ else
 
             var tablo = new DataTable('#kritikStokTablosu', {
                 order: [[5, 'desc']],
+                columnDefs: [{ targets: -1, orderable: false, searchable: false }],
                 language: { url: '@Url.Content("~/lib/datatables/i18n/tr.json")' }
             });
 
