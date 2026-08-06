@@ -9,7 +9,7 @@ adımlar (`docker compose up -d --build` vb.) buradan da yürütülebilir.
 1. https://cloud.oracle.com üzerinden Always Free hesabı aç (kredi kartı istenir,
    Always Free kapsamındaki kaynaklar ücretlendirilmez).
 2. **Compute → Instances → Create Instance**
-   - Name: `sakaryaerp-vps`
+   - Name: `ticarisistem-vps`
    - Image: **Ubuntu 24.04** (Always Free uyumlu)
    - Shape: **VM.Standard.A1.Flex** (ARM, Always Free — 4 OCPU/24GB'a kadar) veya
      **VM.Standard.E2.1.Micro** (AMD, Always Free — 1 OCPU/1GB, 2 adet ücretsiz)
@@ -50,8 +50,8 @@ sudo netfilter-persistent save
 ## 4. Projeyi sunucuya taşıma
 
 ```bash
-git clone <repo-url> sakaryaerp
-cd sakaryaerp
+git clone <repo-url> ticarisistem
+cd ticarisistem
 cp .env.example .env
 nano .env   # POSTGRES_PASSWORD'ü güçlü bir şifreyle değiştir; SMTP bilgilerin varsa doldur;
             # APP_BASE_URL=http://<PUBLIC_IP> satırını ekle (aşağıdaki not) — eklenmezse
@@ -95,20 +95,14 @@ docker compose run --rm web dotnet SakaryaERP.dll --seed-demo
 Bu komut sadece veriyi yükler ve çıkar, web sunucusunu başlatmaz (zaten `docker compose up`
 ile ayrı çalışıyor). Cari tablosu doluysa (ikinci çalıştırmada) hiçbir şey yapmadan çıkar.
 
-## 7. İlk giriş ve ÖNEMLİ güvenlik adımı
+## 7. İlk giriş
 
-`http://<PUBLIC_IP>` adresine git. Varsayılan demo hesapları:
-
-| Rol | E-posta | Şifre |
-|---|---|---|
-| Admin | admin@sakaryaerp.com | Admin123! |
-| Muhasebe | muhasebe@sakaryaerp.com | Muhasebe123! |
-| Satış | satis@sakaryaerp.com | Satis123! |
-
-**Bu şifreler kod içinde sabit (DbSeeder.SeedFoundationAsync) ve herkese açık bir IP'de
-çalışıyor olacak.** Public sunucuya ilk girişten hemen sonra en azından Admin şifresini
-değiştirmen önerilir (uygulama içinde henüz bir "şifre değiştir" ekranı yok — şifremi
-unuttum akışıyla e-posta üzerinden sıfırlanabilir, ya da `dotnet ef`/psql ile elle).
+`http://<PUBLIC_IP>` adresine git ve `.env`'e yazdığın `SEED_ADMIN_EMAIL` /
+`SEED_ADMIN_PASSWORD` ile giriş yap — bu, ilk açılışta oluşturulan tek hesap
+(bkz. `DbSeeder.SeedFoundationAsync`; sabit/tahmin edilebilir şifreli demo
+hesapları SADECE local development'ta oluşur, Production'da hiç oluşmaz).
+Muhasebe/Satış kullanıcılarını Admin girişinden sonra Kullanıcı Yönetimi
+ekranından ekle.
 
 ## 8. Domain ve Let's Encrypt SSL (domain temin edilince)
 

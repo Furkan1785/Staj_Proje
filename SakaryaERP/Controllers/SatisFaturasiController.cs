@@ -255,7 +255,7 @@ public class SatisFaturasiController : Controller
 
                 sayfa.Header().Column(baslikSutunu =>
                 {
-                    baslikSutunu.Item().Text("SakaryaERP").FontSize(18).Bold();
+                    baslikSutunu.Item().Text("TicariSistem").FontSize(18).Bold();
                     baslikSutunu.Item().PaddingTop(8).Text("Satış Faturası").FontSize(14).Bold();
                     baslikSutunu.Item().Text($"Fatura No: {vm.FaturaNo}").FontSize(10);
                     baslikSutunu.Item().Text($"Tarih: {vm.Tarih:dd.MM.yyyy}").FontSize(10);

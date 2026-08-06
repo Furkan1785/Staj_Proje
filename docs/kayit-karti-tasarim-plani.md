@@ -13,7 +13,7 @@
 ## 1. Amaç
 
 Paylaşılan HarmonyERP "Malzeme Kartı" ekran görüntüsündeki profesyonellik seviyesini
-(bilgi yoğunluğu, düzen, gezinme) SakaryaERP'nin **tüm tekil kayıt ekranlarına**
+(bilgi yoğunluğu, düzen, gezinme) TicariSistem'in **tüm tekil kayıt ekranlarına**
 (Detay/Ekle/Düzenle) kazandırmak. Bu doküman projedeki her modülü tek tek ele alır.
 
 **Kapsam:** Sadece mevcut alanların/ekranların *düzeni ve sunumu*. Yeni entity, yeni

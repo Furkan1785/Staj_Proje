@@ -19,7 +19,7 @@ public class SmtpEmailSender : IEmailSender
     {
         var host = _configuration["Smtp:Host"] ?? throw new InvalidOperationException("Smtp:Host yapılandırılmamış.");
         var port = int.Parse(_configuration["Smtp:Port"] ?? "587");
-        var from = _configuration["Smtp:From"] ?? "noreply@sakaryaerp.com";
+        var from = _configuration["Smtp:From"] ?? "noreply@ticarisistem.com";
         var kullanici = _configuration["Smtp:User"];
         var sifre = _configuration["Smtp:Password"];
 

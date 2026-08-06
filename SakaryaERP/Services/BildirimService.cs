@@ -60,7 +60,7 @@ public class BildirimService : IBildirimService
         {
             try
             {
-                await _emailSender.SendEmailAsync(email, "SakaryaERP — Kritik Durum Bildirimi", htmlIcerik);
+                await _emailSender.SendEmailAsync(email, "TicariSistem — Kritik Durum Bildirimi", htmlIcerik);
                 sonuc.GonderilenEpostaSayisi++;
             }
             catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException))
@@ -75,7 +75,7 @@ public class BildirimService : IBildirimService
     private static string HtmlIcerikOlustur(List<Malzeme> kritikStoklar, List<CekSenet> vadesiYaklasanlar, int vadeGunSayisi)
     {
         var sb = new StringBuilder();
-        sb.Append("<h2>SakaryaERP — Kritik Durum Bildirimi</h2>");
+        sb.Append("<h2>TicariSistem — Kritik Durum Bildirimi</h2>");
 
         if (kritikStoklar.Count > 0)
         {

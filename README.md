@@ -1,4 +1,4 @@
-# SakaryaERP
+# TicariSistem
 
 ![CI](https://github.com/Furkan1785/Staj_Proje/actions/workflows/ci.yml/badge.svg)
 
@@ -73,7 +73,7 @@ docker compose up -d db
 # Bağlantı bilgisini user-secrets ile tanımla
 cd SakaryaERP
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
-  "Host=localhost;Port=5432;Database=sakaryaerp;Username=sakaryaerp;Password=<db-sifresi>"
+  "Host=localhost;Port=5432;Database=ticarisistem;Username=ticarisistem;Password=<db-sifresi>"
 
 dotnet ef database update
 dotnet watch run
@@ -111,9 +111,9 @@ alınma adımı bekleniyor.
 
 | Rol | E-posta | Şifre |
 |---|---|---|
-| Admin | admin@sakaryaerp.com | Admin123! |
-| Muhasebe | muhasebe@sakaryaerp.com | Muhasebe123! |
-| Satış | satis@sakaryaerp.com | Satis123! |
+| Admin | admin@ticarisistem.com | Admin123! |
+| Muhasebe | muhasebe@ticarisistem.com | Muhasebe123! |
+| Satış | satis@ticarisistem.com | Satis123! |
 
 ## Testler
 

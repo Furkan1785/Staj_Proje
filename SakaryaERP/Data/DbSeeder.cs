@@ -36,15 +36,15 @@ public static class DbSeeder
                 // aynı hesaplar herkesin bildiği şifrelerle (kaynak kodda görünür) oluşmuş
                 // olurdu, bu da ilk deploy ile operatörün şifreleri değiştirdiği an arasında
                 // gerçek bir güvenlik açığı yaratır. Bu yüzden Production'da hiç çalışmaz.
-                var admin = new AppUser { UserName = "admin@sakaryaerp.com", Email = "admin@sakaryaerp.com", AdSoyad = "Sistem Yöneticisi", EmailConfirmed = true };
+                var admin = new AppUser { UserName = "admin@ticarisistem.com", Email = "admin@ticarisistem.com", AdSoyad = "Sistem Yöneticisi", EmailConfirmed = true };
                 await userManager.CreateAsync(admin, "Admin123!");
                 await userManager.AddToRoleAsync(admin, "Admin");
 
-                var muhasebeci = new AppUser { UserName = "muhasebe@sakaryaerp.com", Email = "muhasebe@sakaryaerp.com", AdSoyad = "Muhasebe Kullanıcısı", EmailConfirmed = true };
+                var muhasebeci = new AppUser { UserName = "muhasebe@ticarisistem.com", Email = "muhasebe@ticarisistem.com", AdSoyad = "Muhasebe Kullanıcısı", EmailConfirmed = true };
                 await userManager.CreateAsync(muhasebeci, "Muhasebe123!");
                 await userManager.AddToRoleAsync(muhasebeci, "Muhasebe");
 
-                var satisci = new AppUser { UserName = "satis@sakaryaerp.com", Email = "satis@sakaryaerp.com", AdSoyad = "Satış Kullanıcısı", EmailConfirmed = true };
+                var satisci = new AppUser { UserName = "satis@ticarisistem.com", Email = "satis@ticarisistem.com", AdSoyad = "Satış Kullanıcısı", EmailConfirmed = true };
                 await userManager.CreateAsync(satisci, "Satis123!");
                 await userManager.AddToRoleAsync(satisci, "Satis");
             }

@@ -1,17 +1,17 @@
-# SakaryaERP — "Gerçek Bir ERP" Olma Yolunda Kapsamlı Boşluk Analizi
+# TicariSistem — "Gerçek Bir ERP" Olma Yolunda Kapsamlı Boşluk Analizi
 
 ## 1. Amaç ve Yöntem
 
 Bu doküman iki soruya cevap arıyor: **(1) Ticari/kurumsal bir ERP'yi ERP yapan
-şey tam olarak nedir?** ve **(2) SakaryaERP bugün bu tanımın neresinde duruyor?**
+şey tam olarak nedir?** ve **(2) TicariSistem bugün bu tanımın neresinde duruyor?**
 
 Yöntem: Güncel (2026) ERP mimarisi, modül kapsamı ve Türkiye'ye özgü mevzuat
 gereksinimleri üzerine araştırma yapıldı (kaynaklar Bölüm 7'de), ardından
-SakaryaERP'nin kod tabanı (Controllers/, Services/, Models/, Program.cs,
+TicariSistem'nin kod tabanı (Controllers/, Services/, Models/, Program.cs,
 appsettings.json, docker-compose.yml, csproj) satır satır tarandı. Bu ikisi
 karşılaştırılarak Bölüm 4'teki boşluk analizi çıkarıldı.
 
-**Bu doküman bir "başarısızlık raporu" değil.** SakaryaERP bilinçli olarak
+**Bu doküman bir "başarısızlık raporu" değil.** TicariSistem bilinçli olarak
 kapsamı daraltılmış bir staj projesi (bkz. CLAUDE.md, GÖREVLER.md); buradaki
 boşlukların çoğu zaten bilerek alınmış kararlar. Amaç, bu kararları **gerçek
 ERP standartlarına karşı çerçeveleyip** hem staj defterine hem de projenin
@@ -79,7 +79,7 @@ kadar geçiş şartı). Teknik olarak bu şu anlama geliyor:
 
 **Sonuç: Türkiye'de gerçek anlamda ticari kullanılabilecek bir ERP/muhasebe
 yazılımı, bugün itibarıyla e-Fatura/e-Arşiv/e-Defter/e-İrsaliye entegrasyonu
-olmadan fiilen var olamaz.** Bu, SakaryaERP'nin GOREVLER.md'de "kapsam dışı"
+olmadan fiilen var olamaz.** Bu, TicariSistem'nin GOREVLER.md'de "kapsam dışı"
 diye not edilen maddeler arasında en ağır basanı.
 
 ### 2.5. Kalite ve DevOps standartları
@@ -90,7 +90,7 @@ ile "demo" arasındaki farkı yaratan) katman: otomatik test (unit + integration
 (APM, health check endpoint), sağlam güvenlik (gizli anahtar yönetimi, güçlü
 şifre politikası, 2FA, KVKK/GDPR uyumu), yedekleme ve felaket kurtarma planı.
 
-## 3. SakaryaERP'nin Bugünkü Envanteri
+## 3. TicariSistem'nin Bugünkü Envanteri
 
 Kod tabanından çıkarılan özet (bu doküman için yeniden tarandı):
 
@@ -113,12 +113,12 @@ Kod tabanından çıkarılan özet (bu doküman için yeniden tarandı):
 
 ## 4. Boşluk Analizi
 
-Her madde için: gerçek ERP'de ne var → SakaryaERP'de ne var/yok → önem
+Her madde için: gerçek ERP'de ne var → TicariSistem'de ne var/yok → önem
 derecesi → staj kapsamında gerçekçi mi.
 
 ### 4.1. Fonksiyonel derinlik boşlukları (modül düzeyinde)
 
-| Boşluk | Gerçek ERP'de | SakaryaERP'de | Önem | Staj kapsamında gerçekçi mi |
+| Boşluk | Gerçek ERP'de | TicariSistem'de | Önem | Staj kapsamında gerçekçi mi |
 |---|---|---|---|---|
 | Üretim/MRP | Ürün ağacı, iş emri, kapasite planlama | Yok (bilerek) | Yüksek (üretici firmalar için) | Hayır — CLAUDE.md'de bilinçli kapsam dışı |
 | Bordro/İK | Personel kartı, puantaj, bordro hesaplama | Yok (bilerek) | Yüksek (her firma için) | Hayır — ayrı bir uzmanlık alanı, 30 günde gerçekçi değil |
@@ -133,7 +133,7 @@ olduğunun" teyididir.
 
 ### 4.2. Yasal/uyumluluk boşluğu (en kritik madde)
 
-| Boşluk | Gerçek ERP'de | SakaryaERP'de | Önem | Staj kapsamında gerçekçi mi |
+| Boşluk | Gerçek ERP'de | TicariSistem'de | Önem | Staj kapsamında gerçekçi mi |
 |---|---|---|---|---|
 | e-Fatura / e-Arşiv | UBL-TR formatına dönüşüm + GİB'e iletim | Yok, sadece PDF çıktısı var | **Kritik** — bugün Türkiye'de bilanço usulü mükellefler için yasal zorunluluk | Kısmen — bir "sandbox/test entegratörü" ile temel akışı göstermek 2-3 günlük iş, tam üretim entegrasyonu değil |
 | e-Defter | Yevmiye/kebir'in GİB formatında dışa aktarımı | Yok | Yüksek | Hayır, basit muhasebe kapsamının çok ötesinde |
@@ -147,7 +147,7 @@ gerektiriyor — bu bir öğrenci projesinin kapsamının doğası gereği dış
 
 ### 4.3. Mimari/altyapı boşlukları
 
-| Boşluk | Gerçek ERP'de | SakaryaERP'de | Önem | Staj kapsamında gerçekçi mi |
+| Boşluk | Gerçek ERP'de | TicariSistem'de | Önem | Staj kapsamında gerçekçi mi |
 |---|---|---|---|---|
 | API katmanı | REST/OData + webhook, mobil/3. parti entegrasyon | Yok, sadece View'lar | Orta-Yüksek | **Evet** — mevcut Service katmanının üstüne ince bir `[ApiController]` katmanı eklemek, mevcut mimariyi bozmadan yapılabilir |
 | Çok kiracılılık (multi-tenant) | Tek kurulumda birden çok firma | Tek şirket varsayımı (Sube var ama tek firma) | Düşük (KOBİ hedefi için gerekli değil) | Hayır, gerekli de değil |
@@ -157,7 +157,7 @@ gerektiriyor — bu bir öğrenci projesinin kapsamının doğası gereği dış
 
 ### 4.4. Kurumsal cross-cutting boşluklar
 
-| Boşluk | Gerçek ERP'de | SakaryaERP'de | Önem | Staj kapsamında gerçekçi mi |
+| Boşluk | Gerçek ERP'de | TicariSistem'de | Önem | Staj kapsamında gerçekçi mi |
 |---|---|---|---|---|
 | Audit trail (alan bazlı geçmiş) | Her değişiklik `before/after` ile append-only log'da | Sadece `UpdatedAt`/`CreatedBy`, hangi alanın ne olduğu geçmişi yok | Yüksek (finansal sistemde denetim için) | **Evet** — genel bir `AuditLog` tablosu + `SaveChangesAsync` override ile EF Core `ChangeTracker` üzerinden otomatik yakalama, orta efor |
 | Workflow/çok kademeli onay | Tutar/rol bazlı onay zinciri | Tek adımlı Onayla/İptal | Orta | Kısmen — "X TL üstü faturayı sadece Admin onaylayabilir" gibi tek kural eklemek küçük bir iş |
@@ -168,7 +168,7 @@ gerektiriyor — bu bir öğrenci projesinin kapsamının doğası gereği dış
 
 ### 4.5. Kalite/DevOps boşlukları
 
-| Boşluk | Gerçek ERP'de | SakaryaERP'de | Önem | Staj kapsamında gerçekçi mi |
+| Boşluk | Gerçek ERP'de | TicariSistem'de | Önem | Staj kapsamında gerçekçi mi |
 |---|---|---|---|---|
 | Otomatik test | Unit + integration + e2e, CI'da zorunlu | **Hiç yok** — CLAUDE.md "her değişiklikten sonra dotnet test" diyor ama test projesi hiç oluşturulmamış | **Yüksek** — bu bir tutarsızlık, kendi kuralımızı bile karşılamıyoruz | **Evet, kesinlikle** — en azından Service katmanı için (stok düşümü, cari bakiye, negatif stok kontrolü gibi kritik iş kuralları) xUnit ile birkaç test |
 | CI/CD | Her push'ta build+test+deploy | Yok | Orta-Yüksek | **Evet** — GitHub Actions ile `dotnet build` + `dotnet test` çalıştıran basit bir workflow, yarım gün iş |
@@ -232,7 +232,7 @@ gerektiriyor — bu bir öğrenci projesinin kapsamının doğası gereği dış
 
 ## 6. Staj Defteri İçin Kapanış Notu Önerisi
 
-> "SakaryaERP'yi HarmonyERP gibi ticari bir ERP'nin gerçek modül yapısına
+> "TicariSistem'i HarmonyERP gibi ticari bir ERP'nin gerçek modül yapısına
 > sadık kalarak, ama kapsamını bilinçli daralttım. Araştırmam sonucunda gördüm
 > ki gerçek bir ERP'yi 'gerçek' yapan şey sadece daha fazla ekran değil; asıl
 > fark denetlenebilirlik (audit trail), yetkilendirme derinliği, otomatik test

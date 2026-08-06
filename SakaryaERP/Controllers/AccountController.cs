@@ -81,7 +81,7 @@ public class AccountController : Controller
             var token = await _userManager.GeneratePasswordResetTokenAsync(kullanici);
             var link = SifreSifirlaLinkiOlustur(vm.Email, token);
 
-            await _emailSender.SendEmailAsync(vm.Email, "SakaryaERP Şifre Sıfırlama",
+            await _emailSender.SendEmailAsync(vm.Email, "TicariSistem Şifre Sıfırlama",
                 $"<p>Şifrenizi sıfırlamak için <a href=\"{link}\">buraya tıklayın</a>.</p>" +
                 "<p>Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.</p>");
         }

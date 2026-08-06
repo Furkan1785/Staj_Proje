@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-sakaryaerp}
+      POSTGRES_USER: ${POSTGRES_USER:-ticarisistem}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD gerekli}
-      POSTGRES_DB: ${POSTGRES_DB:-sakaryaerp}
+      POSTGRES_DB: ${POSTGRES_DB:-ticarisistem}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     # Sadece localhost'a bağlanır (0.0.0.0 değil) — web container'ı zaten Docker'ın
@@ -16,7 +16,7 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sakaryaerp}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ticarisistem}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +30,7 @@ services:
       - "8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-sakaryaerp};Username=${POSTGRES_USER:-sakaryaerp};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:-ticarisistem};Username=${POSTGRES_USER:-ticarisistem};Password=${POSTGRES_PASSWORD}"
       App__BaseUrl: "${APP_BASE_URL:?APP_BASE_URL gerekli (ör. http://sunucu-ip-adresi) — şifre sıfırlama linki için, Host header'ından güvenlik nedeniyle kurulmaz}"
       # :?required değil (bkz. APP_BASE_URL) — kasıtlı: bu iki değişken sadece web
       # container'ı için anlamlıdır ama compose TÜM dosyayı interpolate ettiğinden, burada
@@ -41,7 +41,7 @@ services:
       Seed__AdminPassword: "${SEED_ADMIN_PASSWORD:-}"
       Smtp__Host: "${SMTP_HOST:-}"
       Smtp__Port: "${SMTP_PORT:-587}"
-      Smtp__From: "${SMTP_FROM:-noreply@sakaryaerp.com}"
+      Smtp__From: "${SMTP_FROM:-noreply@ticarisistem.com}"
       Smtp__User: "${SMTP_USER:-}"
       Smtp__Password: "${SMTP_PASSWORD:-}"
     depends_on:

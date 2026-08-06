@@ -1,4 +1,4 @@
-# SakaryaERP — Varlık-İlişki Diyagramı
+# TicariSistem — Varlık-İlişki Diyagramı
 
 > **Not:** Diyagramda gösterilmeyen ama tüm entity'lerde ortak olan `BaseEntity` alanları:
 > `Id (PK)`, `CreatedAt`, `UpdatedAt`, `CreatedBy`, `IsDeleted` (soft delete).
