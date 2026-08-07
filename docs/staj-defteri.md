@@ -203,3 +203,135 @@ kaldı. En büyük teknik zorluk canlıya alma aşamasında çıktı: local'de s
 otomatik uygulanmaması, ağ/firewall katmanları) tamamen farklı sorunlarla
 karşılaşabildiği görüldü — bu, "çalışıyor" ile "deploy edilebilir" arasındaki
 farkın en somut örneğiydi.
+
+---
+
+## Ek: Örnek Kod — Satış Faturası Onay Akışı
+
+Projenin kalbi sayılabilecek entegrasyonu (stok düşümü + otomatik cari hareketi
++ otomatik yevmiye kaydı, tek transaction içinde) gösteren örnek:
+`SakaryaERP/Services/SatisFaturasiService.cs`, satır 237-349.
+
+```csharp
+public async Task OnaylaAsync(int id)
+{
+    var fatura = await _unitOfWork.Repository<SatisFaturasi>().QueryTumu()
+        .Include(f => f.Kalemler)
+        .FirstOrDefaultAsync(f => f.Id == id)
+        ?? throw new InvalidOperationException("Satış faturası bulunamadı.");
+    _onayYetkisiService.SubeErisimKontrolEt(fatura.SubeId, "Bu fatura başka bir şubeye ait, onaylayamazsınız.");
+
+    if (fatura.Durum != BelgeDurum.Beklemede)
+        throw new InvalidOperationException("Sadece beklemede olan faturalar onaylanabilir.");
+
+    _onayYetkisiService.YuksekTutarKontrolEt(fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami), "Satış Faturası");
+    _onayYetkisiService.OlusturanOnaylayamazKontrolEt(fatura.CreatedBy, "Satış Faturası");
+
+    var cari = await _unitOfWork.Repository<Cari>().GetByIdAsync(fatura.CariId)
+        ?? throw new InvalidOperationException("Cari bulunamadı.");
+    _onayYetkisiService.KrediLimitiKontrolEt(
+        cari.Bakiye, cari.KrediLimiti, fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami), cari.Unvan);
+
+    var malzemeIdleri = fatura.Kalemler.Select(k => k.MalzemeId).Distinct().ToList();
+    var malzemeler = await _unitOfWork.Repository<Malzeme>().QueryTumu()
+        .Where(m => malzemeIdleri.Contains(m.Id))
+        .ToDictionaryAsync(m => m.Id);
+
+    // İrsaliyeden gelen faturalarda stok zaten irsaliye onayında düşülmüştür;
+    // irsaliyesiz (doğrudan siparişten veya manuel) faturalarda burada düşülür.
+    if (fatura.SevkIrsaliyesiId is null)
+    {
+        foreach (var kalem in fatura.Kalemler)
+        {
+            var malzeme = malzemeler[kalem.MalzemeId];
+            var yeniBakiye = malzeme.Bakiye - kalem.Miktar;
+            if (yeniBakiye < 0)
+                throw new InvalidOperationException(
+                    $"{malzeme.MalzemeKodu} için stok yetersiz (mevcut: {malzeme.Bakiye}, istenen: {kalem.Miktar}).");
+
+            malzeme.Bakiye = yeniBakiye;
+        }
+    }
+
+    // Brüt kar/COGS hesabı satılan andaki maliyeti kullansın diye Malzeme.AlisFiyati
+    // onay anında kaleme kopyalanır (sonradan AlisFiyati değişse bile geçmiş fatura etkilenmez).
+    foreach (var kalem in fatura.Kalemler)
+        kalem.BirimMaliyet = malzemeler[kalem.MalzemeId].AlisFiyati;
+
+    var toplamTutar = fatura.Kalemler.Sum(FinansHesaplama.SatisFaturasiSatirToplami);
+    var netTutar = fatura.Kalemler.Sum(k => k.Miktar * k.BirimFiyat * (1 - k.Iskonto / 100m));
+    var kdvTutari = toplamTutar - netTutar;
+    var toplamMaliyet = fatura.Kalemler.Sum(k => k.Miktar * k.BirimMaliyet);
+
+    var toplamFisSayisi = await _unitOfWork.Repository<CariFisi>().QueryTumu().CountAsync();
+    var cariFisi = new CariFisi
+    {
+        FisNo = $"CF-{toplamFisSayisi + 1:000000}",
+        CariId = fatura.CariId,
+        Tarih = fatura.Tarih,
+        FisTipi = FisTipi.Borc,
+        Tutar = toplamTutar,
+        OdemeYontemi = OdemeYontemi.Havale,
+        Aciklama = $"Satış Faturası {fatura.FaturaNo}",
+        OtomatikOlusturuldu = true,
+        SatisFaturasiId = fatura.Id,
+        // CariFisiService.CreateAsync üzerinden geçmediği için SubeId burada elle
+        // faturanın kendi şubesinden alınıyor — aksi halde şube filtresi uygulanan
+        // liste/rapor ekranlarında bu otomatik fiş hiçbir şubede görünmezdi.
+        SubeId = fatura.SubeId
+    };
+
+    // Borç fişi: müşteri bize borçlanır, Cari.Bakiye artar (CariFisiService'teki yön kuralıyla aynı).
+    cari.Bakiye += toplamTutar;
+
+    await _unitOfWork.Repository<CariFisi>().AddAsync(cariFisi);
+    await _unitOfWork.Repository<MuhasebeFisi>().AddAsync(
+        await YevmiyeKaydiOlusturAsync(fatura, netTutar, kdvTutari, toplamTutar, toplamMaliyet));
+
+    fatura.Durum = BelgeDurum.Onaylandi;
+    await _unitOfWork.SaveChangesAsync();
+}
+
+// Satış faturası onayında basit yevmiye kaydı: 120 Alıcılar borçlanır,
+// 600 Yurtiçi Satışlar ve 391 Hesaplanan KDV alacaklanır; ayrıca satılan malın maliyeti
+// 621 Satılan Ticari Mallar Maliyeti'ne borç, 153 Ticari Mallar'a alacak yazılır (COGS).
+private async Task<MuhasebeFisi> YevmiyeKaydiOlusturAsync(SatisFaturasi fatura, decimal netTutar, decimal kdvTutari, decimal toplamTutar, decimal toplamMaliyet)
+{
+    var hesaplar = await _unitOfWork.Repository<HesapPlani>().QueryTumu()
+        .Where(h => h.HesapKodu == "120" || h.HesapKodu == "600" || h.HesapKodu == "391" || h.HesapKodu == "621" || h.HesapKodu == "153")
+        .ToDictionaryAsync(h => h.HesapKodu);
+
+    var aciklama = $"Satış Faturası {fatura.FaturaNo}";
+    var kalemler = new List<MuhasebeFisiKalemi>
+    {
+        new() { HesapPlaniId = hesaplar["120"].Id, Borc = toplamTutar, Alacak = 0, Aciklama = aciklama },
+        new() { HesapPlaniId = hesaplar["600"].Id, Borc = 0, Alacak = netTutar, Aciklama = aciklama }
+    };
+    if (kdvTutari > 0)
+        kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["391"].Id, Borc = 0, Alacak = kdvTutari, Aciklama = aciklama });
+    if (toplamMaliyet > 0)
+    {
+        kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["621"].Id, Borc = toplamMaliyet, Alacak = 0, Aciklama = aciklama });
+        kalemler.Add(new MuhasebeFisiKalemi { HesapPlaniId = hesaplar["153"].Id, Borc = 0, Alacak = toplamMaliyet, Aciklama = aciklama });
+    }
+
+    FinansHesaplama.BorcAlacakDengesiniDogrula(kalemler);
+
+    var toplamFisSayisi = await _unitOfWork.Repository<MuhasebeFisi>().QueryTumu().CountAsync();
+    return new MuhasebeFisi
+    {
+        FisNo = $"MF-{toplamFisSayisi + 1:000000}",
+        Tarih = fatura.Tarih,
+        SatisFaturasiId = fatura.Id,
+        Kalemler = kalemler
+    };
+}
+```
+
+**Neden bu metod:** Tek bir `OnaylaAsync` çağrısında görevler ayrılığı
+kontrolü, kredi limiti kontrolü, koşullu stok düşümü, maliyet (COGS)
+kopyalama, otomatik Cari Fişi oluşturma ve otomatik Muhasebe Fişi (yevmiye
+kaydı) oluşturma bir arada yürütülüyor; hepsi tek `SaveChangesAsync()` ile
+tek transaction'da commit ediliyor — ya hepsi başarılı olur ya hiçbiri
+(CLAUDE.md'deki "ya hep ya hiç" kuralı). Tam dosya için:
+[SatisFaturasiService.cs](https://github.com/Furkan1785/Staj_Proje/blob/main/SakaryaERP/Services/SatisFaturasiService.cs).
