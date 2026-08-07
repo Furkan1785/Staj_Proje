@@ -33,9 +33,23 @@ adımlar (`docker compose up -d --build` vb.) buradan da yürütülebilir.
 ```bash
 ssh -i indirilen-key.pem ubuntu@<PUBLIC_IP>
 
-sudo apt update && sudo apt install -y docker.io docker-compose-plugin git
+sudo apt update && sudo apt install -y docker.io docker-compose-v2 git
 sudo usermod -aG docker $USER
 # grup üyeliğinin geçmesi için tekrar SSH ile bağlan (exit && ssh ... tekrar)
+```
+
+**Önemli — `VM.Standard.E2.1.Micro` (1GB RAM) seçtiysen swap ekle:** `docker compose up
+-d --build` sunucunun içinde `dotnet build` çalıştırır; bu, 1GB RAM'de bellek yetersizliği
+(OOM) yüzünden sunucuyu tamamen kilitleyebilir (SSH bile yanıt vermez hale gelir, Console'dan
+Reboot/Reset gerekir). `VM.Standard.A1.Flex` (4 OCPU/24GB'a kadar) kullanıyorsan bu adıma
+gerek yok; E2.1.Micro'daysan build'i denemeden önce 4GB'lık kalıcı bir swap dosyası ekle:
+
+```bash
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
 **Önemli:** Oracle'ın Ubuntu image'ı Security List'e ek olarak kendi `iptables`
