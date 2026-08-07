@@ -107,6 +107,9 @@ var app = builder.Build();
 // Roller ve hesap planı her ortamda gerekli; Development/Production ayrımı yapılmaz.
 using (var scope = app.Services.CreateScope())
 {
+    // Docker/production dağıtımında `dotnet ef database update` çalıştıracak bir adım yok
+    // (final image'da sadece runtime var, SDK değil) — şema burada otomatik kurulur.
+    await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
     await DbSeeder.SeedFoundationAsync(scope.ServiceProvider);
 }
 
