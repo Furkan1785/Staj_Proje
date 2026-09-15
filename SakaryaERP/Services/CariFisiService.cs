@@ -24,10 +24,6 @@ public class CariFisiService : ICariFisiService
         if (fis.Tutar <= 0)
             throw new InvalidOperationException("Tutar sıfırdan büyük olmalıdır.");
 
-        // Fatura onayındaki yüksek tutar eşiğiyle aynı kural: Cari Fişi, faturadan farklı
-        // olarak oluşturulduğu anda doğrudan bakiyeye işlediği için (ayrı bir onay adımı yok),
-        // kontrol burada, oluşturma anında yapılmalı — aksi halde bu eşik Cari Fişi üzerinden
-        // by-pass edilebilir.
         _onayYetkisiService.YuksekTutarKontrolEt(fis.Tutar, belgeTuru);
 
         if (fis.FisTipi == FisTipi.Mahsup)
