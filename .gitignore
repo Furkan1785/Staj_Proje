@@ -45,3 +45,8 @@ Thumbs.db
 # Node (scripts/)
 node_modules/
 package-lock.json
+
+# AI asistan talimat dosyaları (lokalde kalsın, GitHub'a gitmesin)
+CLAUDE.md
+GOREVLER.md
+.claude/
