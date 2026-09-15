@@ -4,7 +4,7 @@
 
 HarmonyERP'nin modül yapısına sadık, ticari döngünün uçtan uca (talep → teklif →
 sipariş → irsaliye → fatura → muhasebe) çalıştığı bir mini ERP. 30 iş günlük bir
-staj projesi kapsamında geliştirildi; gün gün ilerleme planı [GOREVLER.md](GOREVLER.md)'de.
+staj projesi kapsamında geliştirildi; gün gün ilerleme raporu [docs/staj-defteri.md](docs/staj-defteri.md)'de.
 
 ## Ekran Görüntüleri
 

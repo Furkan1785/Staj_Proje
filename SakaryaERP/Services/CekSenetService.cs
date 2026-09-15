@@ -170,7 +170,7 @@ public class CekSenetService : ICekSenetService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    // Sadece bu geçişte otomatik cari hareketi oluşur (CLAUDE.md kuralı): belge fiilen
+    // Sadece bu geçişte otomatik cari hareketi oluşur: belge fiilen
     // tahsil edildiğinde cari alacaklanır ve seçilen banka/kasa hesabına para girer.
     // CariFisi oluşturma + Durum güncellemesi tek transaction'da, ya hep ya hiç yapılır.
     public async Task TahsilEdildiYapAsync(int id, int? bankaHesabiId, int? kasaHesabiId)

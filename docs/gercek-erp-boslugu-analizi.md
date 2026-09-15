@@ -12,7 +12,7 @@ appsettings.json, docker-compose.yml, csproj) satır satır tarandı. Bu ikisi
 karşılaştırılarak Bölüm 4'teki boşluk analizi çıkarıldı.
 
 **Bu doküman bir "başarısızlık raporu" değil.** TicariSistem bilinçli olarak
-kapsamı daraltılmış bir staj projesi (bkz. CLAUDE.md, GÖREVLER.md); buradaki
+kapsamı daraltılmış bir staj projesi (bkz. README.md); buradaki
 boşlukların çoğu zaten bilerek alınmış kararlar. Amaç, bu kararları **gerçek
 ERP standartlarına karşı çerçeveleyip** hem staj defterine hem de projenin
 gelecekte gerçek bir ürüne evrilmesi ihtimaline karşı net bir yol haritası
@@ -79,7 +79,7 @@ kadar geçiş şartı). Teknik olarak bu şu anlama geliyor:
 
 **Sonuç: Türkiye'de gerçek anlamda ticari kullanılabilecek bir ERP/muhasebe
 yazılımı, bugün itibarıyla e-Fatura/e-Arşiv/e-Defter/e-İrsaliye entegrasyonu
-olmadan fiilen var olamaz.** Bu, TicariSistem'nin GOREVLER.md'de "kapsam dışı"
+olmadan fiilen var olamaz.** Bu, TicariSistem'de "kapsam dışı"
 diye not edilen maddeler arasında en ağır basanı.
 
 ### 2.5. Kalite ve DevOps standartları
@@ -120,14 +120,14 @@ derecesi → staj kapsamında gerçekçi mi.
 
 | Boşluk | Gerçek ERP'de | TicariSistem'de | Önem | Staj kapsamında gerçekçi mi |
 |---|---|---|---|---|
-| Üretim/MRP | Ürün ağacı, iş emri, kapasite planlama | Yok (bilerek) | Yüksek (üretici firmalar için) | Hayır — CLAUDE.md'de bilinçli kapsam dışı |
+| Üretim/MRP | Ürün ağacı, iş emri, kapasite planlama | Yok (bilerek) | Yüksek (üretici firmalar için) | Hayır — bilinçli kapsam dışı |
 | Bordro/İK | Personel kartı, puantaj, bordro hesaplama | Yok (bilerek) | Yüksek (her firma için) | Hayır — ayrı bir uzmanlık alanı, 30 günde gerçekçi değil |
 | Proje Yönetimi | Görev, zaman çizelgesi, bütçe takibi | Yok (bilerek) | Orta | Hayır |
 | CRM (bağımsız modül) | Fırsat/pipeline yönetimi, aktivite takibi | Satış içine gömülü (Talep/Teklif) | Düşük-Orta | Hayır, mevcut haliyle yeterli |
 | Kalite Kontrol | Muayene planı, uygunsuzluk takibi | Yok (bilerek) | Orta (üretim firmaları için) | Hayır |
 | E-Ticaret / Dış Ticaret | Pazaryeri entegrasyonu, gümrük/GTİP | Yok (bilerek) | Orta | Hayır |
 
-Bu satır, GOREVLER.md'nin zaten yaptığı kapsam dışı kararların gerçek ERP
+Bu satır, projede zaten yapılan kapsam dışı kararların gerçek ERP
 standartlarına göre "neden gerçekten eksik ama neden de haklı bir karar
 olduğunun" teyididir.
 
@@ -170,7 +170,7 @@ gerektiriyor — bu bir öğrenci projesinin kapsamının doğası gereği dış
 
 | Boşluk | Gerçek ERP'de | TicariSistem'de | Önem | Staj kapsamında gerçekçi mi |
 |---|---|---|---|---|
-| Otomatik test | Unit + integration + e2e, CI'da zorunlu | **Hiç yok** — CLAUDE.md "her değişiklikten sonra dotnet test" diyor ama test projesi hiç oluşturulmamış | **Yüksek** — bu bir tutarsızlık, kendi kuralımızı bile karşılamıyoruz | **Evet, kesinlikle** — en azından Service katmanı için (stok düşümü, cari bakiye, negatif stok kontrolü gibi kritik iş kuralları) xUnit ile birkaç test |
+| Otomatik test | Unit + integration + e2e, CI'da zorunlu | **Hiç yok** — proje kuralı "her değişiklikten sonra dotnet test" diyor ama test projesi hiç oluşturulmamış | **Yüksek** — bu bir tutarsızlık, kendi kuralımızı bile karşılamıyoruz | **Evet, kesinlikle** — en azından Service katmanı için (stok düşümü, cari bakiye, negatif stok kontrolü gibi kritik iş kuralları) xUnit ile birkaç test |
 | CI/CD | Her push'ta build+test+deploy | Yok | Orta-Yüksek | **Evet** — GitHub Actions ile `dotnet build` + `dotnet test` çalıştıran basit bir workflow, yarım gün iş |
 | Yapılandırılmış loglama | Serilog/structured log + merkezi toplama | Varsayılan `ILogger`, sadece konsola | Orta | **Evet** — Serilog + dosyaya JSON log, düşük efor |
 | Health check endpoint | `/health` — DB bağlantısı, disk, bağımlılıklar | Yok | Düşük-Orta | **Evet** — `AddHealthChecks()` ile 15 dakikalık iş |
@@ -198,7 +198,7 @@ gerektiriyor — bu bir öğrenci projesinin kapsamının doğası gereği dış
    `MalzemeHareketFisiService.OnaylaAsync` (negatif stok kontrolü),
    `CariFisiService` (bakiye güncelleme yönü), `SevkIrsaliyesiService`
    (sipariş miktarını aşan sevkiyat engeli) gibi kritik iş kurallarını test
-   etmek. CLAUDE.md zaten "dotnet test" adımını öngörüyor, sadece proje eksik.
+   etmek. Proje kuralı zaten "dotnet test" adımını öngörüyor, sadece proje eksik.
 2. **CI pipeline** — GitHub Actions ile her push'ta `dotnet build` + `dotnet
    test`.
 3. **Yapılandırılmış loglama** — Serilog, dosyaya JSON formatında log.

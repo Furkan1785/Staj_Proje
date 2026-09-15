@@ -170,7 +170,7 @@ bağlı değil (kullanılmıyor) — bu plana dahil edilmiyor, ayrı bir karar/o
 | Modül | Deseni | Not |
 |---|---|---|
 | **Hesap Planı** | Ağaç (kendine özgü) | Zaten hiyerarşik liste, sekmeye çevrilmez — mevcut yapı korunur. |
-| **Muhasebe Fişi** | — | Şu an hiç UI'ı yok (Controller/View yok), sadece fatura onayında otomatik oluşuyor. Bu plan kapsamında yeni bir Detay ekranı **eklenmiyor** (CLAUDE.md: "muhasebe entegrasyonunu tam bir genel muhasebe sistemine çevirmeye çalışma") — istenirse ayrı bir görev olarak ele alınmalı. |
+| **Muhasebe Fişi** | — | Şu an hiç UI'ı yok (Controller/View yok), sadece fatura onayında otomatik oluşuyor. Bu plan kapsamında yeni bir Detay ekranı **eklenmiyor** (kapsam kuralı: "muhasebe entegrasyonunu tam bir genel muhasebe sistemine çevirmeye çalışma") — istenirse ayrı bir görev olarak ele alınmalı. |
 
 ## 5. Kapsam Dışı (onay gerekmeden eklenmeyecek)
 
@@ -196,7 +196,7 @@ bağlı değil (kullanılmıyor) — bu plana dahil edilmiyor, ayrı bir karar/o
 6. Malzeme Hareket Fişi'ne Detay sayfası eklenmesi
 7. Banka Hesabı / Kasa Hesabı / Cari Fişi — sadece stil tutarlılığı (sekme yok)
 
-Her modül tek başına bitirilip commit'lenecek (CLAUDE.md: "bir günde birden fazla
+Her modül tek başına bitirilip commit'lenecek ("bir günde birden fazla
 modülü yarım yamalak başlatma" kuralı burada da geçerli), her biri ayrı feature
 branch'te.
 

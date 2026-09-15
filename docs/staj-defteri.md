@@ -1,8 +1,8 @@
 # Staj Defteri — TicariSistem (30 İş Günü)
 
-Format CLAUDE.md'de tanımlandığı gibi: her gün için Yapılan iş / Kullanılan
-teknoloji-yöntem / Karşılaşılan sorun. Görevler GOREVLER.md'deki 30 günlük
-plana birebir karşılık gelir. Proje sonu itibarıyla: 28 controller, 50 servis,
+Her gün için Yapılan iş / Kullanılan teknoloji-yöntem / Karşılaşılan sorun
+formatında tutuldu. Görevler, projenin başında belirlenen 30 günlük plana
+birebir karşılık gelir. Proje sonu itibarıyla: 28 controller, 50 servis,
 35 entity, 64 ViewModel, 92 Razor view, 21 EF Core migration, 118 xUnit testi.
 
 ---
@@ -333,5 +333,5 @@ kontrolü, kredi limiti kontrolü, koşullu stok düşümü, maliyet (COGS)
 kopyalama, otomatik Cari Fişi oluşturma ve otomatik Muhasebe Fişi (yevmiye
 kaydı) oluşturma bir arada yürütülüyor; hepsi tek `SaveChangesAsync()` ile
 tek transaction'da commit ediliyor — ya hepsi başarılı olur ya hiçbiri
-(CLAUDE.md'deki "ya hep ya hiç" kuralı). Tam dosya için:
+("ya hep ya hiç" kuralı). Tam dosya için:
 [SatisFaturasiService.cs](https://github.com/Furkan1785/Staj_Proje/blob/main/SakaryaERP/Services/SatisFaturasiService.cs).

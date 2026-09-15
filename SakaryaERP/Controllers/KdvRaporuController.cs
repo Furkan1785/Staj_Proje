@@ -9,7 +9,7 @@ namespace SakaryaERP.Controllers;
 
 // Basit dönemsel KDV özeti: Hesaplanan KDV (satış faturaları) vs İndirilecek KDV
 // (alış faturaları). Beyanname üretmez, sadece "bu dönem ne kadar KDV ödenecek/
-// devredecek" sorusuna cevap verir (CLAUDE.md'de kapsam dışı bırakılan "beyannameler"
+// devredecek" sorusuna cevap verir (kapsam dışı bırakılan "beyannameler"
 // maddesinin ötesine geçmez).
 [Authorize(Roles = "Admin,Muhasebe")]
 public class KdvRaporuController : Controller
